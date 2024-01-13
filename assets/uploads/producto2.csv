@@ -1,0 +1,4 @@
+codigo;nombre;marca;modelo;categoria;unidad;precio_x_menor;precio_x_mayor;alerta_cantidad
+10000126;CASE;REYCOM;SAMSUNG A03;CASE;UNIDAD;25;25;2
+10000132;CASE;MUNDO CASE;SAMSUNG A72;CASE;UNIDAD;25;25;2
+10000133;CASE;LIAVEC;SAMSUNG A72;CASE;UNIDAD;25;25;2
