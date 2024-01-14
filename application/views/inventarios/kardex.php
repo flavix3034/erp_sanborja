@@ -3,7 +3,7 @@
 ?>
 <style type="text/css">
     tbody{
-        font-family: Impact,Arial;
+        font-family: Arial,verdana,courier;
     }
 </style>
 
