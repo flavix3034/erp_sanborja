@@ -18,6 +18,7 @@ class Sales extends CI_Controller {
         $this->load->model('sales_model');
 		$this->Igv = 18;  // ojo sistema erp
         $this->digital_file_types = 'zip|pdf|doc|docx|xls|xlsx|jpg|png|gif';
+        $this->load->model("compras_model");
 
     }
 
@@ -173,7 +174,7 @@ class Sales extends CI_Controller {
                         
                         $items[] = $itm;
 
-                        $this->restar_al_stock($item_id, $_SESSION["store_id"], $_REQUEST['quantity'][$i]);
+                        $this->compras_model->disminuir_al_stock($item_id, $_SESSION["store_id"], $_REQUEST['quantity'][$i]);
                     }
 
                     $data = array();
@@ -264,32 +265,6 @@ class Sales extends CI_Controller {
         }
         return false;
     }
-
-    public function restar_al_stock($product_id, $store_id, $quantity){
-        $stock_actual   = $quantity;
-        $product_id     = $product_id;
-        
-        $cSql = "select id, stock from tec_prod_store where product_id = ? and store_id = ?";
-        $query = $this->db->query($cSql,array($product_id, $store_id));
-        $existe = false;
-        $stock = 0;
-        foreach($query->result() as $r){
-            $existe = true;
-            $stock = $r->stock;
-        }
-        
-        if (!$existe){
-            $ar["product_id"]   = $product_id;
-            $ar["store_id"]     = $store_id;
-            
-            $this->db->set($ar)->insert("tec_prod_store");
-        }
-        
-        $quantity = $stock - $quantity;
-        $cSql = "update tec_prod_store set stock = ? where product_id = ? and store_id = ?";
-        $this->db->query($cSql,array($quantity, $product_id, $store_id));
-    }
-
 
     function enviar_anulacion($id){
         //$this->sales_model->enviar_anulacion($id);
@@ -433,10 +408,18 @@ class Sales extends CI_Controller {
            //$this->db->where("sale_id",$id);
            //$this->db->delete("tec_payments");
 
-           //Se resta del stock
-           $this->sales_model->restar_stock($id, $_SESSION["store_id"]);
+           //Se agrega al stock cada item
+            $query = $this->db->select("product_id, quantity")->where("sale_id",$id)->get("tec_sale_items");
+            foreach($query->result() as $r){
+                
+                $product_id = $r->product_id;
+                $cantidad   = $r->quantity;
+                //echo "Pasada:" . $product_id . " " . $cantidad . "<br>";
+                $this->compras_model->agregar_al_stock($product_id, $_SESSION["store_id"], $cantidad);
+            }
+            //die("Fin");
 
-           $objDoc = $this->db->select("*")->where("id",$id)->get("tec_sales")->row();
+            $objDoc = $this->db->select("*")->where("id",$id)->get("tec_sales")->row();
 
             $cad_a = "";
             if($objDoc->tipoDoc == "1" || $objDoc->tipoDoc == "2"){  // Factura, boleta
@@ -444,8 +427,8 @@ class Sales extends CI_Controller {
                 $cad_a = " con envio a Sunat.";
             }
 
-           $ar["rpta"] = "1";
-           $ar["message"] = "Se anula el Documento {$id} {$cad_a}";
+            $ar["rpta"] = "1";
+            $ar["message"] = "Se anula el Documento {$id} {$cad_a}";
         }else{
             $ar["rpta"] = "0";
             $ar["message"] = "No se pudo anular";

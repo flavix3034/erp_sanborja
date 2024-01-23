@@ -346,7 +346,7 @@ class Products extends CI_controller
         echo $respuesta;
     } 
 
-    function getProducts($store_id,$tipo='P',$categoria){
+    function getProducts($store_id,$tipo='P',$categoria=""){
         
         $ar = array();
         $cad_1 = $cad_2 = $cad_3 = "";
@@ -357,7 +357,7 @@ class Products extends CI_controller
 
         if($tipo != '0'){
             if ($tipo == 'P'){ 
-                if($categoria != '0'){
+                if($categoria != '0' && $categoria != ''){
                     $ar[] = $categoria;
                     $cad_2 = " and a.category_id = {$categoria}";
                 }

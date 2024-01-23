@@ -397,7 +397,7 @@ if(isset($existe_apertura)){
 	</div>
 <?php
 	}else{
-		echo "<div class=\"alert alert-danger\" style=\"margin-top:20px;\">INGRESE APERTURA DE CAJA</div>";
+		echo "<div class=\"alert alert-danger\" style=\"margin-top:20px;\">INGRESE APERTURA DE CAJA  &nbsp;&nbsp;&nbsp;<a href=\"" . base_url("caja/aperturar_caja") . "\" class=\"btn btn-primary\">Aperturar</a></div>";
 	}
 }else{
 	echo "INGRESE APERTURA DE CAJA";

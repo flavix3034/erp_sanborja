@@ -121,7 +121,7 @@
             <?php 
                 $cSql = "select a.id, a.code, concat(a.name,' ',a.marca,' ',a.modelo) name, a.price, a.unidad, a.marca, a.modelo, b.stock from tec_products a".
                     " left join tec_prod_store b on a.id = b.product_id and b.store_id = ?".
-                    " order by a.name";
+                    " order by a.name, a.marca, a.modelo";
                 $result = $this->db->query($cSql, array($_SESSION["store_id"]))->result_array();
                 
                 $nx=0;

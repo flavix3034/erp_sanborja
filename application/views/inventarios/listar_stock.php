@@ -1,6 +1,7 @@
 <div class="row">
-	<div class="col-sm-12" style="margin-top:15px;">
+	<div class="col-12 col-sm-11 col-md-8 col-lg-7 col-xl-6" style="margin-top:15px;">
 		<?php
+			/*
 			$estilos = 'padding: 0px 10px 0px 10px; border-style:solid; border-width:1px; border-color:rgb(100,160,230); height:30px;';
 			$est_cab = 'padding: 0px 10px 0px 10px; border-style:solid; border-width:1px; border-color:rgb(100,160,230); height:30px; font-weight:bold; background-color:orange;';
 
@@ -29,6 +30,39 @@
 				}
 				echo "</table>";
 			}
+			*/
 		?>
+
+		<!--<h2 style="margin-bottom:26px">Categorias</h2>-->
+		<table id="example" class="display" style="width:100%; font-size: 12px; margin-bottom: 20px;">
+			<thead>
+				<tr>
+					<!-- "product_id", "name", "marca", "modelo", "stock" -->
+					<th style="max-width: 35px;">Id Producto</th>
+					<th>Nombre</th>
+					<th>Marca</th>
+					<th>Modelo</th>
+					<th>Stock</th>
+				</tr>
+			</thead>
+			<tfoot>
+				<tr>
+					<th></th>
+					<th></th>
+					<th></th>
+					<th></th>
+					<th></th>
+				</tr>
+			</tfoot>
+		</table>
+
 	</div>
 </div>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('#example').DataTable({
+            "ajax": "<?= base_url("inventarios/get_listar_stock") ?>"
+        });
+    });
+</script>

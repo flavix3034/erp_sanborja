@@ -184,21 +184,24 @@
     }
 
     function eliminar(id){
-        if (confirm("Desea eliminar?")){
-            $.ajax({
-                data    :{id:id},
-                type    :"get",
-                url     :"<?= base_url("compras/eliminar") ?>",
-                success :function(res){
-                    var obj = JSON.parse(res)
-                    if (obj.rpta_msg == "success"){
-                        alert("Se logra eliminar dicho Movimiento.")
-                        location.reload()
-                    }else{
-                        alert(obj.message) // "No se puede eliminar..."
+        if(confirm("Estás a punto de eliminar una compra. Ten en cuenta que esta acción puede tener consecuencias importantes en tu inventario y registros de ventas")){
+            if (confirm("Desea eliminar?")){
+                $.ajax({
+                    data    :{id:id},
+                    type    :"get",
+                    url     :"<?= base_url("compras/eliminar") ?>",
+                    success :function(res){
+                        var obj = JSON.parse(res)
+                        if (obj.rpta_msg == "success"){
+                            //alert("Se logra eliminar dicho Movimiento.")
+                            alert(obj.message)
+                            location.reload()
+                        }else{
+                            alert(obj.message) // "No se puede eliminar..."
+                        }
                     }
-                }
-            })
+                })
+            }
         }
     }
 </script>

@@ -58,9 +58,10 @@
                         }
                     }else{
                         foreach($q->result() as $r){
-                            if($r->id == $store_id){
+                            if($r->id == $_SESSION["store_id"]){
                                 $ar[$r->id] = $r->state;
                             }
+                            
                         }
                     }
                     echo form_dropdown('store_id', $ar, $store_id, 'class="form-control tip" id="store_id" required');

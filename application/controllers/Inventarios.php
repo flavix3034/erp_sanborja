@@ -10,6 +10,7 @@ class Inventarios extends CI_Controller {
 		$this->Igv = 18;
         $this->digital_file_types = 'zip|pdf|doc|docx|xls|xlsx|jpg|png|gif';
         $this->load->model('inventarios_model');
+        $this->load->model("compras_model");
     }
 
     function index($cDesde='null', $cHasta='null') {
@@ -103,6 +104,12 @@ class Inventarios extends CI_Controller {
             if ($this->db->set($ar)->insert("tec_movim")){
                 $this->data["rpta_msg"] = "success";
                 $this->data["msg"]      = "Se agrega correctamente.";
+
+                if($ar["tipo_mov"]=='I'){
+                    $this->compras_model->agregar_al_stock($ar["product_id"], $ar["store_id"], $ar["cantidad"]);
+                }else{
+                    $this->compras_model->disminuir_al_stock($ar["product_id"], $ar["store_id"], $ar["cantidad"]);
+                }
             }else{
                 $this->data["rpta_msg"] = "warning";
                 $this->data["msg"]      = "No se pudo grabar, verifique su informacion";
@@ -136,6 +143,10 @@ class Inventarios extends CI_Controller {
             if ($this->db->set($ar)->insert("tec_movim")){
                 $this->data["rpta_msg"] = "success";
                 $this->data["msg"]      = "Se agrega correctamente.";
+
+                // Se disminuye el stock
+                $this->compras_model->disminuir_al_stock($ar["product_id"], $ar["store_id"], $ar["cantidad"]);
+
             }else{
                 $this->data["rpta_msg"] = "warning";
                 $this->data["msg"]      = "No se pudo grabar, verifique su informacion";
@@ -150,6 +161,9 @@ class Inventarios extends CI_Controller {
             if ($this->db->set($ar)->insert("tec_movim")){
                 $this->data["rpta_msg"] = "success";
                 $this->data["msg"]      = "Se agrega correctamente.";
+
+                // Se incrementa el stock
+                $this->compras_model->agregar_al_stock($ar["product_id"], $ar["store_id"], $ar["cantidad"]);
             }else{
                 $this->data["rpta_msg"] = "warning";
                 $this->data["msg"]      = "No se pudo grabar, verifique su informacion";
@@ -215,7 +229,22 @@ class Inventarios extends CI_Controller {
 
     function eliminar_movimiento(){
         $id = $_GET["id"];
+        
+        // debo averiguar product_id, store_id, cantidad
+        $query = $this->db->select("product_id, store_id, cantidad, tipo_mov")->where("id",$id)->get("tec_movim");
+        foreach($query->result() as $r){
+            $product_id = $r->product_id;
+            $store_id   = $r->store_id;
+            $cantidad   = $r->cantidad;
+            $tipo_mov   = $r->tipo_mov;
+        }
+
         if($this->db->where("id",$id)->delete("tec_movim")){
+            if($tipo_mov == 'I'){
+                $this->compras_model->disminuir_al_stock($product_id, $store_id, $cantidad);
+            }else{
+                $this->compras_model->aumentar_al_stock($product_id, $store_id, $cantidad);
+            }
             $rpta = "OK";
         }else{
             $rpta = "KO";
@@ -622,14 +651,17 @@ class Inventarios extends CI_Controller {
     }
 
     function listar_stock(){ // LISTA STOCK DE LA TABLA tec_prod_store
-        //if(isset($_POST["modo"])){
-            //echo $this->inventarios_model->kardex($product_id, $id_inv, $_SESSION["store_id"]);
-            $this->data['q_lista_stock']    = $this->inventarios_model->listar_stock(); // Lista todos los Stocks
-            $this->data['store_id']         = $_SESSION["store_id"];
-        //}
+        $this->data['q_lista_stock']    = $this->inventarios_model->listar_stock(); // Lista todos los Stocks
+        $this->data['store_id']         = $_SESSION["store_id"];
         $this->data['page_title']   = "Listar Stock de todos los Productos";
         $this->template->load('production/index', 'inventarios/listar_stock', $this->data);    
-        
+    }
+
+    function get_listar_stock(){
+        $query = $this->inventarios_model->listar_stock(); // Lista todos los Stocks
+        $result = $query->result_array();
+        $ar_campos = array("product_id", "name", "marca", "modelo", "stock");
+        echo $this->fm->json_datatable($ar_campos, $result);
     }
 
 }

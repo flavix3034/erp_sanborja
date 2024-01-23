@@ -1,11 +1,10 @@
 <?php
     defined('BASEPATH') OR exit('No direct script access allowed');
 ?>
-
 <div class="row" style="margin-top:15px">
-    <div class="col-sx-12 col-sm-12 col-md-12 col-lg-11" style="overflow: scroll;">
+    <div class="col-sx-12 col-sm-12 col-md-12 col-lg-12" style="overflow: scroll;">
         <?php
-            $result = $this->db->select("a.id, a.persona, c.name producto, a.cantidad, d.name store_id, a.fechah, a.inv_id,
+            $result = $this->db->select("a.id, a.persona, concat(c.name,' ',c.marca,' ',c.modelo) producto, a.cantidad, d.name store_id, a.fechah, a.inv_id,
                 a.tipo_mov, a.obs, e.name store_id_destino, a.confirmado, b.metodo, concat('<a href=\"#\" onclick=\"eliminar(',a.id,')\"><i class=\"glyphicon glyphicon-remove\"></i></a>') opciones")
                 ->from('tec_movim a')
                 ->join('tec_metodos_inv b', 'a.metodo = b.id','inner')
@@ -32,22 +31,40 @@
     
 </div>
 <script type="text/javascript">
+
     function eliminar(id){
-        if (confirm("Desea eliminar?")){
-            $.ajax({
-                data    :{id:id},
-                type    :"get",
-                url     :"<?= base_url("inventarios/eliminar_movimiento") ?>",
-                success :function(res){
-                    var obj = JSON.parse(res)
-                    if (obj.rpta == "OK"){
-                        alert("Se logra eliminar dicho Movimiento.")
-                        location.reload()
-                    }else{
-                        alert(res) // "No se puede eliminar..."
+        Swal.fire({
+            title: 'Estás a punto de eliminar un movimiento. Ten en cuenta que esta acción puede tener consecuencias importantes en tu inventario y registros de ventas', showDenyButton: true, showCancelButton: false, 
+            confirmButtonText: 'Aceptar', 
+            denyButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: '¿Desea eliminar la compra?', showDenyButton: true, showCancelButton: false, 
+                    confirmButtonText: 'Sí', 
+                    denyButtonText: 'No'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            data    :{id:id},
+                            type    :"get",
+                            url     :"<?= base_url("inventarios/eliminar_movimiento") ?>",
+                            success :function(res){
+                                var obj = JSON.parse(res)
+                                if (obj.rpta == "OK"){
+                                    Swal.fire("Se logra eliminar dicho Movimiento.", "", "success");
+                                    location.reload()
+                                }
+                            }
+                        })
                     }
-                }
-            })
-        }
+                });
+                
+            }
+        });
+
     }
+
+    
+    
 </script>

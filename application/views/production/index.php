@@ -41,6 +41,7 @@
 		<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
 		<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.dataTables.min.css">
 		<link rel="stylesheet" type="text/css" href="<?= base_url('assets/css/w3.css') ?>">
+		<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 		<script src="https://cdn.datatables.net/fixedcolumns/4.1.0/js/dataTables.fixedColumns.min.js"></script>
 		<script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.colVis.min.js"></script>
@@ -256,7 +257,7 @@ if (!isset($_SESSION["usuario"])){
 				<!--<div class="col-xs-12 col-sm-11 col-md-11 col-lg-11" style="border-style:none; border-color: gray; margin-left:0px">-->
 					<section class="content">
 						<div class="row" style="">
-							<div class="col-sm-9 left_col" style="padding: 5px 0px 5px 15px; height:70px; 
+							<div class="col-12 col-sm-12 col-md-8 left_col" style="padding: 5px 0px 5px 15px; height:70px; 
 							background-color: rgb(46, 134, 193);
 							color:white;border-radius:8px 0px 0px 0px;">
 								<h3>
@@ -269,7 +270,7 @@ if (!isset($_SESSION["usuario"])){
 								?>
 								</h3>
 							</div>
-							<div class="col-sm-3 left_col" style="padding: 0px 0px 5px 15px; background-size: cover; background-position: center; background-image:url(<?= base_url('/assets/images/rueda.jpg') ?>); height:70px; border-radius:0px 8px 0px 0px; border-style: solid; border-color:rgb(46,134,193)"><!-- rgb(86, 174, 233) -->
+							<div class="col-12 col-sm-12 col-md-4 left_col" style="padding: 0px 0px 5px 15px; background-size: cover; background-position: center; background-image:url(<?= base_url('/assets/images/rueda.jpg') ?>); height:70px; border-radius:0px 8px 0px 0px; border-style: solid; border-color:rgb(46,134,193)"><!-- rgb(86, 174, 233) -->
 									<table border="0" style="">
 										<tr>
 											<td style="margin:0px; padding:0px; font-weight: bold;">Fecha:</td>

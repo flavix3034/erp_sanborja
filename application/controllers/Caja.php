@@ -120,7 +120,7 @@ class Caja extends CI_Controller {
 			$this->template->load('production/index', 'caja/aperturar_caja', $this->data);
 		}else{
 			$this->data['page_title'] 	= "Cajas";
-			$this->data['msg'] 			= "Existen cajas abiertas";
+			$this->data['msg'] 			= "Existen cajas abiertas, primero de cerrar cajas de dias anteriores";
 			$this->data['rpta_msg'] 	= "danger";
 			$this->template->load('production/index', 'caja/ver_cajas', $this->data);
 		}

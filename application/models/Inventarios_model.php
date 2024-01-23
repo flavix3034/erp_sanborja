@@ -30,6 +30,7 @@ class Inventarios_model extends CI_Model
     }
 
     function stock($id_inv, $store_id){
+        /*
         // Averiguando la fecha final del inventario
         $fecha_f = "";
         if(isset($id_inv) && strlen($id_inv."") > 0){
@@ -40,7 +41,8 @@ class Inventarios_model extends CI_Model
                 $fecha_f = $r->fecha_f;
             }
         }
-
+        */
+    /*
         if(strlen($fecha_f)>0){
             $cSql = "select a.id, concat(a.name,' ',a.marca,' ',a.modelo,' ',a.color) name, a.alert_cantidad, i.cantidad_inicial, compras.cantidad_comprada, ventas.cantidad_vendida, movim.ingreso, movim.salida,
                 if(isnull(i.cantidad_inicial),0,i.cantidad_inicial) 
@@ -77,7 +79,7 @@ class Inventarios_model extends CI_Model
                 where a.activo='1' and a.prod_serv='P' order by a.name";
             return $this->db->query($cSql);
         }else{
-            //die("Rachel");
+    */
             $cSql = "select a.id, concat(a.name,' ',a.marca,' ',a.modelo,' ',a.color) name, a.alert_cantidad, 0 cantidad_inicial, compras.cantidad_comprada, ventas.cantidad_vendida, movim.ingreso, movim.salida,
                 if(isnull(compras.cantidad_comprada),0,compras.cantidad_comprada) 
                 - if(isnull(ventas.cantidad_vendida),0,ventas.cantidad_vendida) 
@@ -87,25 +89,25 @@ class Inventarios_model extends CI_Model
                 left join (
                     select com_i.product_id, sum(com_i.cantidad) cantidad_comprada from tec_compras com
                     inner join tec_compra_items com_i on com.id = com_i.compra_id
-                    where com.store_id='{$store_id}' and com.fecha_ingreso > '{$fecha_f}'
+                    where com.store_id='{$store_id}'
                     group by com_i.product_id
                 ) compras on a.id = compras.product_id
                 left join (
                     select sxi.product_id, sum(sxi.quantity) cantidad_vendida 
                     from tec_sales sx 
                     inner join tec_sale_items sxi on sx.id = sxi.sale_id
-                    where sx.store_id='{$store_id}' and sx.date > '{$fecha_f}' and sx.anulado != '1'
+                    where sx.store_id='{$store_id}' and sx.anulado != '1'
                     group by sxi.product_id
                 ) ventas on a.id = ventas.product_id
                 left join (
                     select mo.product_id, sum(if(mo.tipo_mov='I', mo.cantidad, 0)) Ingreso, sum(if(mo.tipo_mov='S', mo.cantidad, 0)) Salida
                     from tec_movim mo
-                    where mo.store_id='{$store_id}' and fechah > '{$fecha_f}'
+                    where mo.store_id='{$store_id}'
                     group by mo.product_id 
                 ) movim on a.id = movim.product_id 
                 where a.activo='1' and a.prod_serv='P' order by a.name";
             return $this->db->query($cSql);
-        }
+        //}
     }
 
     function kardex($product_id, $id_inv, $store_id){

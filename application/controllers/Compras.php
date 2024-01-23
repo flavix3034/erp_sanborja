@@ -103,7 +103,6 @@ class Compras extends CI_Controller {
             $this->data["proveedor_id"] = $_POST["proveedor_id"];
             $this->data["redondeo"]     = $_POST["redondeo"];
             $this->data["modo"]         = $_POST["modo"];
-            
 
             // --- RECIEN AQUI SE ABRE EL FICHERO PARA GUARDARLO EN UNA TABLA PROVISIONAL ----
             $file = fopen( "uploads/".$file_name, "r");
@@ -112,8 +111,6 @@ class Compras extends CI_Controller {
                 $dati[] = fgetcsv($file,null,';');
             }
             fclose($file);
-            //print_r($dati);
-            //die();
 
             $this->almaceno_en_temporal($_SESSION["usuario"], $dati);
 
@@ -150,8 +147,9 @@ class Compras extends CI_Controller {
 
                 if($modo_edicion == "1"){
                     $id = $_POST["id_compras"];
-                    $this->db->set("id",$id);
-                    $this->db->replace("tec_compras");    
+                    //$this->db->set("id",$id);
+                    //$this->db->replace("tec_compras");    
+                    $this->db->where("id",$id)->update("tec_compras");
                 }else{
                     $this->db->insert("tec_compras");
                     $id = $this->db->insert_id();
@@ -205,7 +203,7 @@ class Compras extends CI_Controller {
         				$ar["product_name"]     = $_REQUEST['descripo'][$i];
         				
                         $this->db->set($ar)->insert("tec_compra_items");
-                        $this->agregar_al_stock($product_id, $store_id, $cantidad);
+                        $this->compras_model->agregar_al_stock($product_id, $store_id, $cantidad);
         			}
         			
                     if ($this->db->trans_status() === FALSE){
@@ -260,59 +258,6 @@ class Compras extends CI_Controller {
         $this->data["rpta_msg"] = "success";
     }
 
-    // change by fmz
-    public function agregar_al_stock($product_id, $store_id, $quantity){
-        $stock_actual   = $quantity;
-        $product_id     = $product_id;
-        
-        $cSql = "select id, stock from tec_prod_store where product_id = ? and store_id = ?";
-        $query = $this->db->query($cSql,array($product_id, $store_id));
-        $existe = false;
-        $stock = 0;
-        foreach($query->result() as $r){
-            $existe = true;
-            $stock = $r->stock;
-        }
-        
-        if (!$existe){
-            $ar["product_id"]   = $product_id;
-            $ar["store_id"]     = $store_id;
-            
-            $this->db->set($ar)->insert("tec_prod_store");
-        }
-        
-        $quantity = $quantity + $stock;
-        $cSql = "update tec_prod_store set stock = ? where product_id = ? and store_id = ?";
-        $this->db->query($cSql,array($quantity, $product_id, $store_id));
-    }
-
-    public function disminuir_al_stock($product_id, $store_id, $quantity){
-        $stock_actual   = $quantity;
-        $product_id     = $product_id;
-        
-        $cSql = "select id, stock from tec_prod_store where product_id = ? and store_id = ?";
-        $query = $this->db->query($cSql,array($product_id, $store_id));
-        $existe = false;
-        $stock = 0;
-        foreach($query->result() as $r){
-            $existe = true;
-            $stock = $r->stock;
-        }
-        
-        if (!$existe){
-            $ar["product_id"]   = $product_id;
-            $ar["store_id"]     = $store_id;
-            $ar["stock"]        = $quantity;
-            
-            $this->db->set($ar)->insert("tec_prod_store");
-        }
-        
-        $stock = $stock - $quantity > 0 ? $stock - $quantity : 0;
-        
-        $cSql = "update tec_prod_store set stock = ? where product_id = ? and store_id = ?";
-        $this->db->query($cSql,array($stock, $product_id, $store_id));
-    }
-
     function eliminar(){  // Disminuye la cantidad de producto (tabla tec_prod_store) luego elimina la compra.
         
         if(isset($_GET["id"])){
@@ -321,20 +266,20 @@ class Compras extends CI_Controller {
             // Antes de eliminar la compra descuento la tabla stock
             $query_i = $this->db->query("select a.store_id, b.product_id, b.cantidad from tec_compras a inner join tec_compra_items b on a.id=b.compra_id where a.id = {$id}");
             foreach($query_i->result() as $r){
-                $this->disminuir_al_stock($r->product_id, $r->store_id, $r->cantidad);
+                $this->compras_model->disminuir_al_stock($r->product_id, $r->store_id, $r->cantidad);
             }
-
-           // Tec_sales
-           $this->db->where("id",$id);
-           $this->db->delete("tec_compras");
 
            // tec_sale_items:
            $this->db->where("compra_id",$id);
            $this->db->delete("tec_compra_items");
 
            // tec_payments:
-           //$this->db->where("sale_id",$id);
-           //$this->db->delete("tec_payments");
+           $this->db->where("sale_id",$id);
+           $this->db->delete("tec_payments");
+
+           // Tec_sales
+           $this->db->where("id",$id);
+           $this->db->delete("tec_compras");
 
            $ar["rpta_msg"] = "success";
            $ar["message"] = "Se eliminó correctamente el Documento {$id}";

@@ -7,7 +7,7 @@
 ?>
 <style type="text/css">
     tbody{
-        font-family: Impact,Arial;
+        font-family: Arial, courier, verdana;
     }
 </style>
 <div class="row" style="margin-top:10px;">

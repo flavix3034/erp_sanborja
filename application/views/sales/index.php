@@ -39,7 +39,7 @@ if(!isset($store_id)){
 </style>
 
 <!-- SECCION DE FILTROS -->
-<section class="content" style="margin-left: 20px;">
+<section class="content" style="margin-left: 20px; margin-top:10px;">
     <div class="row" style="display:flex;">
         <div class="col-sm-4 col-md-3" style="border-style:none; border-color:red;">
             <div class="form-group">
@@ -247,24 +247,28 @@ if(!isset($store_id)){
     }
 
     function del_documento(id){
-        if(confirm("Confirme que desea eliminar?")){
-            $.ajax({
-                data    : {id:id},
-                url     : '<?= base_url('sales/delete') ?>',
-                type    : 'get',
-                success : function(response){
-                    //alert(response)
-                    var obj = JSON.parse(response)
-                    if(obj.rpta == '1'){
-                        alert(obj.message)
-                    }else{
-                        alert(obj.message)
+        Swal.fire({
+            title: "Desea eliminar la Venta?",
+            showDenyButton: true, showCancelButton: false, confirmButtonText: "Si", denyButtonText: "No"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    data    : {id:id},
+                    url     : '<?= base_url('sales/delete') ?>',
+                    type    : 'get',
+                    success : function(response){
+                        var obj = JSON.parse(response)
+                        if(obj.rpta == '1'){
+                            Swal.fire("Anulación correcta", "", "success");
+                        }else{
+                            alert(obj.message)
+                        }
+                        location.reload()
                     }
-                    location.reload()
+                })
+            }
+        });
 
-                }
-            })
-        }
     }
 
 </script>
