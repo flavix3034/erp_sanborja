@@ -9,6 +9,9 @@ class Compras extends CI_Controller {
         $this->load->model('compras_model');
 		$this->Igv = 18;
         $this->digital_file_types = 'zip|pdf|doc|docx|xls|xlsx|jpg|png|gif';
+        if(!isset($_SESSION["user_id"])){ 
+            die("No tiene sesión disponible. <a href=\"" . base_url("welcome/index") . "\">Login</a>"); 
+        }
     }
 
     function index($store_id='', $cDesde='null', $cHasta='null') {
@@ -169,7 +172,7 @@ class Compras extends CI_Controller {
                             $this->db->where("id",$item_id)->delete("tec_compra_items");
 
                             // En el stock simple
-                            $this->disminuir_al_stock($product_id, $store_id, $cantidad);
+                            $this->compras_model->disminuir_al_stock($product_id, $store_id, $cantidad);
                         }
                     }
 

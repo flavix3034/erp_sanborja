@@ -6,7 +6,9 @@ class Inventarios extends CI_Controller {
         parent::__construct();
 
         session_start();
-        if(!isset($_SESSION["user_id"])){ die("No tiene sesión disponible. <a href=\"" . base_url("welcome/index") . "\">Login</a>"); }
+        if(!isset($_SESSION["user_id"])){ 
+            die("No tiene sesión disponible. <a href=\"" . base_url("welcome/index") . "\">Login</a>"); 
+        }
 		$this->Igv = 18;
         $this->digital_file_types = 'zip|pdf|doc|docx|xls|xlsx|jpg|png|gif';
         $this->load->model('inventarios_model');
@@ -227,6 +229,22 @@ class Inventarios extends CI_Controller {
         return $n;
     }
 
+    function actualizar_stock_products($store_id, $product_id, $stock){
+        $cSql = "select id from tec_prod_store where product_id = ? and store_id = ?";
+        $query = $this->db->query($cSql,array($product_id, $store_id));
+        $existe = false;
+        foreach($query->result() as $r){
+            $existe = true;
+        }
+        if (!$existe){
+            $ar["product_id"]   = $product_id;
+            $ar["store_id"]     = $store_id;
+            $this->db->set($ar)->insert('tec_prod_store');
+        }
+        $cSql = "update tec_prod_store set stock = ? where product_id = ? and store_id = ?";
+        $this->db->query($cSql,array($stock, $product_id, $store_id));
+    }
+
     function eliminar_movimiento(){
         $id = $_GET["id"];
         
@@ -243,7 +261,7 @@ class Inventarios extends CI_Controller {
             if($tipo_mov == 'I'){
                 $this->compras_model->disminuir_al_stock($product_id, $store_id, $cantidad);
             }else{
-                $this->compras_model->aumentar_al_stock($product_id, $store_id, $cantidad);
+                $this->compras_model->agregar_al_stock($product_id, $store_id, $cantidad);
             }
             $rpta = "OK";
         }else{
@@ -433,7 +451,7 @@ class Inventarios extends CI_Controller {
                 
                 $this->db->insert("tec_compra_items");
 
-                $this->agregar_al_stock($product_id, $store_id, $cantidad);
+                $this->compras_model->agregar_al_stock($product_id, $store_id, $cantidad);
             }
             
             if ($this->db->trans_status() === FALSE){
@@ -501,6 +519,7 @@ class Inventarios extends CI_Controller {
                 ) movim on a.id = movim.product_id 
                 where a.activo='1' order by a.name";        
 
+        //die($cSql);
         $result = $this->db->query($cSql)->result_array();
 
         // Ahora recien recorriendo los productos del inventario --------------------------
@@ -522,6 +541,9 @@ class Inventarios extends CI_Controller {
             $ar["fechah"]       = date("Y-m-d H:i");
             $ar["user_id"]      = $_SESSION["usuario"];
 
+            //echo "Stock :" . $stock . "<br>";
+            //die("Stock avanzado:" . $stock_de_inv);
+
             if($stock != $stock_de_inv){
 
                 if($stock > $stock_de_inv){
@@ -537,6 +559,7 @@ class Inventarios extends CI_Controller {
                     $ar["tipo_mov"]     = 'I';
                     $ar["obs"]          = "PARA SINCERAR INVENTARIO ($stock_de_inv - $stock)";
                 }
+                $ar["metodo"] = 4; // otros
 
                 //print_r($ar);
                 if ($this->db->set($ar)->insert("tec_movim")){
@@ -548,20 +571,21 @@ class Inventarios extends CI_Controller {
                 }
             }
 
+            // Grabando el Stock Contador
+            $this->db->set("stock",$stock_de_inv)->where("store_id",$store_id)->where("product_id",$product_id)->update("tec_prod_store");
+
             // Finalizando el inventario
             $cSql = "update tec_maestro_inv set finaliza='1' where id = $inv_id";
             $this->db->query($cSql);
+
+            // Actualizando en stock contador
+            $this->actualizar_stock_products($store_id, $product_id, $stock_de_inv);
         }
         $this->data["rpta_msg"]     = "success";
         $this->data["msg"]          = "Se procesa y finaliza el Inventario";
         $this->data['page_title']   = "Registro de Inventario F&iacute;sico";
         $this->template->load('production/index', 'inventarios/registrar_productos', $this->data);
     }
-
-    /*function pogba(){
-        $result = $this->db->query("select * from tec_categories")->result_array();
-        echo $this->buscar_raw($result, "name", "SERVICIOS", "id");
-    }*/
 
     function buscar_raw($result, $campo, $valor, $campo_res){
         $nLim = count($result);

@@ -388,6 +388,7 @@ $config['sess_save_path'] = NULL;
 $config['sess_match_ip'] = FALSE;
 $config['sess_time_to_update'] = 300;
 $config['sess_regenerate_destroy'] = FALSE;
+session_set_cookie_params(60*60*70);
 
 /*
 |--------------------------------------------------------------------------

@@ -142,7 +142,7 @@ class Recursos extends CI_Controller //MY_Controller
         $bc                     = array(array('link' => '#', 'page' => "recursos"));
         $meta                   = array('page_title' => $this->data['page_title'], 'bc' => $bc);
         
-        $this->page_construct('recursos/agregar_personal', $this->data, $meta);
+        $this->template->load('production/index', 'recursos/agregar_personal', $this->data);
     }
 
     function eliminar_personal(){

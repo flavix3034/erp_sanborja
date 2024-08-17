@@ -1,3 +1,9 @@
+<?php
+$grupo_id = $_SESSION["group_id"];
+$ar_permitidos = $this->db->query("select trim(lower(b.modulo)) modulo from tec_grupo_modulos a
+	inner join tec_modulos b on a.modulo_id = b.id
+	where a.grupo_id = $grupo_id")->result_array();
+?>
 <!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -15,6 +21,25 @@
 		<!-- Font Awesome -->
 		<link href="<?= base_url() ?>vendors/font-awesome/css/font-awesome.min.css" rel="stylesheet">
 
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+	<script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+	<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+	<script src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+	<script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.html5.min.js"></script>
+	<script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.print.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.dataTables.min.css">
+	<link rel="stylesheet" type="text/css" href="<?= base_url('assets/css/w3.css') ?>">
+
+	<script src="https://cdn.datatables.net/fixedcolumns/4.1.0/js/dataTables.fixedColumns.min.js"></script>
+	<script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.colVis.min.js"></script>
+
+	<link href="<?= base_url('assets/plugins/font-awesome/css/font-awesome.css') ?>" rel="stylesheet" type="text/css" />
+	<script type="text/javascript" src="<?= base_url('assets/js/funciones.js') ?>"></script>
 
 
 		<!-- iCheck -->
@@ -30,25 +55,7 @@
 		<!-- Custom Theme Style -->
 		<link href="<?= base_url() ?>build/css/custom.css" rel="stylesheet">
 
-		<script src="https://code.jquery.com/jquery-3.5.1.js"></script>
-		<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-		<script src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
-		<script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.html5.min.js"></script>
-		<script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.print.min.js"></script>
-		<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
-		<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.dataTables.min.css">
-		<link rel="stylesheet" type="text/css" href="<?= base_url('assets/css/w3.css') ?>">
-		<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-		<script src="https://cdn.datatables.net/fixedcolumns/4.1.0/js/dataTables.fixedColumns.min.js"></script>
-		<script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.colVis.min.js"></script>
-
-		<link href="<?= base_url('assets/plugins/font-awesome/css/font-awesome.css') ?>" rel="stylesheet" type="text/css" />
-		<script type="text/javascript" src="<?= base_url('assets/js/funciones.js') ?>"></script>
-
+		
 		<style type="text/css">
 			body{
 					/*background-color: rgb(250,250,200);  amarillo perla */
@@ -88,15 +95,16 @@ if (!isset($_SESSION["usuario"])){
 								<ul class="nav side-menu">
 									<li><a><i class="fa fa-home"></i> Home <span class="fa fa-chevron-down"></span></a>
 										<ul class="nav child_menu">
-											<li><a href="<?= base_url('welcome/home'); ?>">Inicio</a></li>
-											<li><a href="<?= base_url('caja/ver_cajas'); ?>">Apertura/Cierre Cajas</a></li>
-											<li><a href="<?= base_url('caja/analisis_mensual'); ?>">An&aacute;lisis Mensual</a></li>
+											<!--<li><a href="<?= base_url('welcome/home'); ?>">Inicio</a></li>-->
+											<?= opcion("welcome/home",$ar_permitidos,"Inicio") ?>
+											<?= opcion("caja/ver_cajas",$ar_permitidos,"Apertura/Cierre Cajas") ?>
+											<!--<li><a href="<?= base_url('caja/analisis_mensual'); ?>">An&aacute;lisis Mensual</a></li>-->
 										</ul>
 									</li>
 									<li><a><i class="fa fa-clone" style="font-size:20px;color:red"></i>&nbsp;&nbsp;Ventas <span class="fa fa-chevron-down"></span></a>
 										<ul class="nav child_menu">
-											<li><a href="<?= base_url('sales/index'); ?>">Listar</a></li>
-											<li><a href="<?= base_url('sales/add'); ?>">Agregar</a></li>
+											<?= opcion("sales/index",$ar_permitidos,"Listar") ?>
+											<?= opcion("sales/add",$ar_permitidos,"Agregar") ?>
 										</ul>
 									</li>
 
@@ -123,25 +131,22 @@ if (!isset($_SESSION["usuario"])){
 									<li><a><i class="fa fa-bar-chart-o" style="color:rgb(50,230,50)"></i> Productos <span class="fa fa-chevron-down"></span></a>
 										<ul class="nav child_menu">
 											<li><a href="<?= base_url('products/index'); ?>">Listar</a></li>
-											<li><a href="<?= base_url('products/add'); ?>">Agregar Productos</a></li>
-											<li><a href="<?= base_url('products/add_servicio'); ?>">Agregar Servicios</a></li>
-											<li><a href="<?= base_url('inventarios/stock_productos'); ?>">STOCKS</a></li>
-											<li>
-												<a href="<?= base_url('products/print_inicial'); ?>">
-													<span>Codigo de Barras</span>
-											</a>
-											<li>
-												<a href="<?= base_url('products/importacion'); ?>">
-													<span>Importaci&oacute;n</span>
-											</a>
-								</li>
-
+											<?php 
+											if(in_array($grupo_id,array(1,2))){ ?>
+												<li><a href="<?= base_url('products/add'); ?>">Agregar Productos</a></li>
+												<li><a href="<?= base_url('products/add_servicio'); ?>">Agregar Servicios</a></li>
+												<li><a href="<?= base_url('inventarios/stock_productos'); ?>">STOCKS</a></li>
+											<?php } ?>
+											<!--<li><a href="<?= base_url('products/print_inicial'); ?>"><span>C&oacute;digo de Barras</span></a></li>-->
+											<li><a href="<?= base_url('products/print_compra'); ?>"><span>C&oacute;digo de Barras x Compra</span></a></li>
 										</ul>
 									</li>
 									<li><a><i class="glyphicon glyphicon-tags" style="font-size:16px;color:lime"></i>&nbsp;&nbsp; Categorias <span class="fa fa-chevron-down"></span></a>
 										<ul class="nav child_menu">
 											<li><a href="<?= base_url('categorias/index'); ?>">Listar</a></li>
-											<li><a href="<?= base_url('categorias/add'); ?>">Agregar</a></li>
+											<?php if(in_array($grupo_id,array(1,2))){ ?>
+												<li><a href="<?= base_url('categorias/add'); ?>">Agregar</a></li>
+											<?php } ?>
 										</ul>
 									</li>
 
@@ -166,12 +171,12 @@ if (!isset($_SESSION["usuario"])){
 										</ul>
 									</li>
 
-									<li><a><i class="fa fa-table" style="color:skyblue"></i> Ctas por Cobrar<span class="fa fa-chevron-down"></span></a>
+									<!--<li><a><i class="fa fa-table" style="color:skyblue"></i> Ctas por Cobrar<span class="fa fa-chevron-down"></span></a>
 										<ul class="nav child_menu">
 												<li><a href="<?= base_url('cuentas_cobrar/listar'); ?>">Listar Ctas x Cobrar</a></li>
 												<li><a href="<?= base_url('cuentas_cobrar/saldar'); ?>">Saldar Cuentas</a></li>
 										</ul>
-									</li>
+									</li>-->
 
 									<li><a><i class="glyphicon glyphicon-tag" style="font-size:18px;color:rgb(240,100,100)"></i> &nbsp;Medios de Pago <span class="fa fa-chevron-down"></span></a>
 										<ul class="nav child_menu">
@@ -180,20 +185,20 @@ if (!isset($_SESSION["usuario"])){
 										</ul>
 									</li>
 
-									<li><a><i class="glyphicon glyphicon-user" style="font-size:18px;color:skyblue"></i> &nbsp;RR.HH <span class="fa fa-chevron-down"></span></a>
+									<!--<li><a><i class="glyphicon glyphicon-user" style="font-size:18px;color:skyblue"></i> &nbsp;RR.HH <span class="fa fa-chevron-down"></span></a>
 										<ul class="nav child_menu">
 											<li><a href="<?= base_url('recursos/ver_personal'); ?>">Ver Personal</a></li>
 											<li><a href="<?= base_url('recursos/agregar_personal'); ?>">Agregar Personal</a></li>
 											<li><a href="<?= base_url('recursos/ver_contratos'); ?>">Ver Contratos</a></li>
 											<li><a href="<?= base_url('recursos/agregar_contratos'); ?>">Agregar Contratos</a></li>
 										</ul>
-									</li>
+									</li>-->
 
 									<li><a><i class="glyphicon glyphicon-signal" style="font-size:18px;color:rgb(200,150,0)"></i> &nbsp;Reportes <span class="fa fa-chevron-down"></span></a>
 										<ul class="nav child_menu">
 											<li><a href="<?= base_url('reportes/ventas_detalles_prod'); ?>">Ventas x Producto</a></li>
 											<li><a href="<?= base_url('reportes/ventas_por_forma_pago'); ?>">Ventas x Forma de Pago</a></li>
-											<li><a href="<?= base_url('reportes/grafico_mensual_ventas'); ?>">Grafico mensual Ventas</a></li>
+											<!--<li><a href="<?= base_url('reportes/grafico_mensual_ventas'); ?>">Grafico mensual Ventas</a></li>-->
 											<li><a href="<?= base_url('reportes/ganancias'); ?>">Ganancias Diarias</a></li>
 											<li><a href="<?= base_url('reportes/ganancias_detallado'); ?>">Ganancia Detalles</a></li>
 											<li><a href="<?= base_url('reportes/productos_sin_compra'); ?>">Productos sin compra</a></li>
@@ -201,10 +206,21 @@ if (!isset($_SESSION["usuario"])){
 										</ul>
 									</li>
 
-									<li><a><i class="glyphicon glyphicon-user" style="font-size:20px;color:rgb(0,100,255)"></i> &nbsp;Usuarios <span class="fa fa-chevron-down"></span></a>
+									<li><a><i class="glyphicon glyphicon-user" style="font-size:20px;color:rgb(0,140,255)"></i> &nbsp;Usuarios <span class="fa fa-chevron-down"></span></a>
 										<ul class="nav child_menu">
-											<li><a href="<?= base_url('usuarios/ver_usuarios'); ?>">Ver Usuarios</a></li>
-											<li><a href="<?= base_url('usuarios/add'); ?>">Agregar Usuarios</a></li>
+											<!--<li><a href="<?= base_url('usuarios/ver_usuarios'); ?>">Ver Usuarios</a></li>
+											<li><a href="<?= base_url('usuarios/add'); ?>">Agregar Usuarios</a></li>-->
+											<?= opcion("usuarios/ver_usuarios",$ar_permitidos,"Ver Usuarios") ?>
+											<?= opcion("usuarios/add",$ar_permitidos,"Agregar Usuarios") ?>
+										</ul>
+									</li>
+
+									<li><a>
+											<i class="glyphicon glyphicon-cog" style="font-size:20px;color:rgb(40,140,255)"></i>
+										 	&nbsp;Ajustes <span class="fa fa-chevron-down"></span>
+										</a>
+										<ul class="nav child_menu">
+											<li><a href="<?= base_url('ajustes/index'); ?>">Ajustes</a></li>
 										</ul>
 									</li>
 
@@ -270,6 +286,7 @@ if (!isset($_SESSION["usuario"])){
 								?>
 								</h3>
 							</div>
+
 							<div class="col-12 col-sm-12 col-md-4 left_col" style="padding: 0px 0px 5px 15px; background-size: cover; background-position: center; background-image:url(<?= base_url('/assets/images/rueda.jpg') ?>); height:70px; border-radius:0px 8px 0px 0px; border-style: solid; border-color:rgb(46,134,193)"><!-- rgb(86, 174, 233) -->
 									<table border="0" style="">
 										<tr>
@@ -294,12 +311,12 @@ if (!isset($_SESSION["usuario"])){
 					<?php if(isset($msg)){ ?>
 					<div class="row">
 						<div class="col-xs-12 col-sm-7 left_col" style="margin-top:7px;background-color: white;">
-							<div class="alert alert-<?= isset($rpta_msg) ? $rpta_msg : 'success' ?>"> <?= $msg ?> </div>
+							<div class="alert alert-<?= isset($rpta_msg) ? $rpta_msg : 'success' ?>"> <?= $msg ?></div>
 						</div>
 					</div>
 					<?php } ?>
 
-					<?= $contents ?>      
+					<?= $contents ?>
 
 				<!--</div>-->
 				</div>
@@ -359,4 +376,27 @@ if (!isset($_SESSION["usuario"])){
 	
 	</body>
 </html>
-<?php } ?>
+<?php } 
+function opcion($ruta,$ar_permitidos,$etiqueta){
+	$rpta = "";
+	$grupo_id = $_SESSION["group_id"];
+	$ar_partes = explode("/", $ruta);
+	for($i=0; $i < count($ar_partes); $i++){
+		$palabra = $ar_partes[$i];
+		if (busca_en($palabra, $ar_permitidos)){
+			$rpta = "<li><a href=\"" . base_url($ruta) . "\">$etiqueta</a></li>";
+			break;
+		}
+	}
+	return $rpta;
+}
+
+function busca_en($palabra, $ar){
+	foreach($ar as $item){
+		if($palabra == $item["modulo"]){
+			return true;
+		}
+	}
+	return false;
+}
+?>

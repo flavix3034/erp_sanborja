@@ -278,7 +278,7 @@ class Inventarios_model extends CI_Model
     function ver_inventario($id_inv){
         $parte1 = "<a href=\"#\" onclick=\"eliminar(";
         $parte2 = ")\">Eliminar</a>";
-        $cSql = "select a.id, a.fecha, a.product_id, b.name productos, a.cantidad, a.unidad, c.descrip des_unidad, mi.store_id,
+        $cSql = "select a.id, a.fecha, a.product_id, concat(b.name,' ',b.marca,' ',b.modelo) productos, a.cantidad, a.unidad, c.descrip des_unidad, mi.store_id,
             concat('{$parte1}',a.id,'{$parte2}') op
             from tec_inventarios a
             inner join tec_maestro_inv mi on a.maestro_id = mi.id
@@ -316,7 +316,7 @@ class Inventarios_model extends CI_Model
         // LISTA TODOS LOS PRODUCTOS
         $cSql = "select b.name, b.marca, b.modelo, a.* from tec_prod_store a".
             " left join tec_products b on a.product_id=b.id".
-            " where a.store_id = ".$_SESSION["store_id"].
+            " where a.store_id = ".$_SESSION["store_id"]." and b.activo='1'".
             " order by b.name, b.marca, b.modelo";
         //echo($cSql);
         return $this->db->query($cSql);

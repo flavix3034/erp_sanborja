@@ -17,7 +17,7 @@ class Products_model extends CI_Model
         }
 
         $cSql = "select a.id, a.code, a.name, a.category_id, a.unidad, a.alert_cantidad, a.price from tec_products a
-            where 1=1" . $cad_cat . 
+            where a.activo='1'" . $cad_cat . 
             " order by a.id desc";
 
         //die($cSql);

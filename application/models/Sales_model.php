@@ -3,28 +3,13 @@
 class Sales_model extends CI_Model
 {
 
-    public $token = "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE2NTU0MjQ1OTEsImV4cCI6NDgwOTAyNDU5MSwidXNlcm5hbWUiOiJmbGF2aW9tb3Jlbm96IiwiY29tcGFueSI6IjIwNjA3Nzg2NjQxIn0.fl55qJyehtcqNum92trDFugL819qjnR3ruWEYGOmhj8A0JDMxk6xXGXe46ymHy8UAYolfIlPO8uKcgP5ZLIm2aMX3aptGrW-P3dJgoKn2y4u2tgeGfcxKPYhMeDD_LPcSmKZAIuR0E5au34-BGExzZchTqOO20UwN7KDq9CbNEUCVpOd0VMgd-kAH_0jPuMZVqP__kiFSI40g9-vO19CsQDoOCcvYIFZgs1ny_a80clRdZ-56L1byeap6pr7Ta9E7t75vIt98KWsGPYndq7tRolcxlS7r3re9ocz2JBHgOJBJ_unNGpV7iyj6n_3pzofstUGd4-vWWvQVL9XgaQHQwyQ2WW-_jLz3MMfNiwiiM-7oNzs_BC_GwEqTPGxc0zMDBwXQbnEd27nKyj_WUsSPa3hAUjZPMLVpctzqifCcqcBaE-6LmI7s065FfrdpUwN7Y36wxKPfls793clgLuAD8LaWL2D8k59J1m0M1_MKnbRt8vb67a2nobGWIPbUctwy6F_CDt1bGbOZwRyiiR_DeEFjtgvnyRo4mb7-0vIlJirsjMPjqGslHkWR6YiNKiy8mS9b1SI8Bb1vX1vIVeaDn5uyt2Ard_b8QKenTz6Xu4LNdWh9LDaKC_LH-eFX8YQwzaZAcE9l63aLJC16FgqnlauWlLR-ThdILk8Qnwg0MQ";
+    public $token = "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJ1c2VybmFtZSI6ImZsYXZpb21vcmVub3oiLCJjb21wYW55IjoiMjA2MTI0NTI4NTgiLCJpYXQiOjE3MjM0MjM3MzYsImV4cCI6ODAzMDYyMzczNn0.iCitQ_JhAZdb3WaC93GgKeL-B3e3RAaWEg2iagJo4wevVhfzk-h5AfAdSH06DDMs4kiwJkcRNZxIIB8kL6m8t-YUQDYiQtwXIgpgHDg0U2r89QvO7SyMtJIO9Om5HnM5KCdhc_9bs6lBdBgpLS2R56dCJpFauSXbrY4Xz62LDWQJ5GxjJjwLQrexph-6qWz9szkbCCRWtSVdQS59PcXtN52oz47qvIdo6mVsGG9lZ6qSB8PH-R1d7uMrohhpnAGimjTuhekhxEegT7VNpMMRwi0NG9C5WwzfK2y3jODmKm07_KtvYyoflJiALJPsHMJ1_g1-kr4ZV80G2DMk5CK-EaG1UaxOnJeFQ7CddCLT2nt9n7scY8j2R8Y8_tVNV_ZvB-XEWXRZom3oZg4NQcWQXhNfXZuvb6EDeahphp1lrZhPeWxxDUmOku7Vm33CM0agbmNN_V-Q7SfdEpfYdtOva-s8q3Qd-GRAxb2imzm5I2_9OCbAaaZ-tRox6q4NsZ_ILkWvUJTi6zEgfYhLU6q-Q-BumkGCg5NPRtpkzWbSj1dijOGniTG8QvgsqihE9ElxQlWIOSbl7nDlji719Mk-x3rD8eBH-DZOP0ttSsJLj5UfuW9a-enplMNA39jay_wgLJBcb3bPGIPwMMDTurqfZiihxBnM1Jfp3CgKtsmjM2k";
 
     public function __construct(){
         parent::__construct();
     }
 
 	function customer_id($dni_cliente, $name_cliente){
-		/*
-        $cSql = "insert into tec_customers(name, cf1, cf2) values (?,?,?)";
-		$cf1 = $cf2 = "";
-		if(strlen($dni_cliente)==8){
-			$cf1 = $dni_cliente;
-		}elseif($dni_cliente==11){
-			$cf2 = $dni_cliente;
-		}
-
-		$this->db->set("name", $name_cliente);
-		$this->db->set("cf1", $cf1);
-		$this->db->set("cf2", $cf2);
-		$this->db->insert("tec_customers");
-		return $this->db->insert_id();
-        */
         $query = $this->db->select("id, name, cf1, cf2")->from("tec_customers")->where("cf1",$dni_cliente)->get();
         foreach($query->result() as $r){
             return $r->id;
@@ -100,42 +85,22 @@ class Sales_model extends CI_Model
 		return $query;
 	}
 
+    function view_interno($idx){
+        $this->db->select('a.tipoDoc, e.descrip tipo_documento,concat(a.serie,\'-\',a.correlativo) recibo, a.customer_name razon, concat(d.cf1,\' \',d.cf2) doc_personal, date(a.date) as fecha, a.id, a.total, a.total_discount, a.total_tax, a.grand_total, b.product_id, b.product_name, if(b.discount is null,0,b.discount) discount, c.name, c.marca, c.modelo, c.color, b.quantity, b.unit_price, b.net_unit_price, (b.net_unit_price - if(b.discount is null,0,b.discount))*b.quantity as subtotal, b.series');
+        $this->db->from('tec_sales as a');
+        $this->db->join('tec_sale_items as b','a.id=b.sale_id','left');
+        $this->db->join('tec_products as c','b.product_id=c.id', 'left');
+        $this->db->join('tec_customers as d','a.customer_id=d.id','left');
+        $this->db->join('tec_tipos_doc as e','a.tipoDoc = e.id','left');
+        $this->db->where('a.id',$idx);
+        
+        $query = $this->db->get();
+        
+        return $query;
+    }
+
     public function enviar_doc_sunat_individual($sale_id){ // , $data, $items, $tipo_envio
         
-        /*
-                $this->data["msg"] = "grabacion Correcta de ".$this->serie($tipoDoc). "-" .$correlativo." ".
-                    '<button type="button" onclick="ver_documento('.$id.')" class="btn btn-info">Imprimir</button>';
-                
-                $this->data["error"] = false;
-            
-                $Lim = count($_REQUEST['item']);
-
-                $items = array();
-                for ($i = 0; $i < $Lim; $i++){
-                    $item_id = $_REQUEST['item'][$i];
-
-                    $ard = array();
-                    
-                    $ard["sale_id"]     = $id;
-                    $ard["product_id"]  = $item_id;
-                    $ard["quantity"]    = $_REQUEST['quantity'][$i];
-                    $ard["tax"]         = $_REQUEST['impuestos'][$i];
-                    
-                    $precio_unitario = $_REQUEST['cost'][$i];
-                    $costo_unitario =  $precio_unitario / (1+($_REQUEST['impuestos'][$i]/100));
-                    $subtotal_      = $costo_unitario * ($_REQUEST['quantity'][$i] * 1);
-
-                    $ard["unit_price"]      = $precio_unitario;
-                    $ard["net_unit_price"]  = $costo_unitario;
-                    $ard["subtotal"]        = $subtotal_;
-                    $ard["real_unit_price"] = $precio_unitario;
-                    $ard["product_name"]    = $_REQUEST['descripo'][$i];
-                    $ard["compra_id"]       = $this->enlazar_compra($_SESSION["store_id"], $item_id, $_REQUEST['quantity'][$i]);
-
-                    $this->db->insert("tec_sale_items", $ard);
-                }
-        */
-
         // *** CONSTRUYENDO ARRAY DATA **************************************
         $cSql = "select date(date) fecha, store_id, tipoDoc, customer_id, total, total_tax, grand_total, serie, correlativo, customer_name, product_tax ".
             " from tec_sales where id = ?";
@@ -163,26 +128,6 @@ class Sales_model extends CI_Model
         }
 
          $items = array();
-        /*
-            // *** CONSTRUYENDO ARRAY ITEMS **************************************
-            $cSql = "select * from tec_sale_items where sale_id = ?";
-            $query = $this->db->query($cSql,array($sale_id));
-            $itm = array();
-           
-            $nItem=0;
-            foreach($query->result() as $r){
-                $nItem++;
-                $itm["sale_id"]         = $sale_id;
-                $itm["product_id"]      = $nItem;
-                $itm["quantity"]        = $r->quantity;
-                $itm["unit_price"]      = $r->unit_price;
-                $itm["net_unit_price"]  = $r->net_unit_price;
-                $itm["subtotal"]        = $r->subtotal;
-                $itm["real_unit_price"] = $precio_unitario;
-                $itm["product_name"]    = $r->product_name;
-                $items[] = $itm;
-            }
-        */
             
         if($tipoDoc != '5'){
             // ******************************************************************************
@@ -203,7 +148,6 @@ class Sales_model extends CI_Model
                 $this->db->set(array('envio_electronico'=>'1'))->where("id",$sale_id)->update("tec_sales");
             }
 
-            //$this->data['rpta_sunat'] = $rpta_sunat;
             echo $rpta_sunat;
         }
 
@@ -212,13 +156,6 @@ class Sales_model extends CI_Model
     public function enviar_doc_sunat($sale_id, $data, $items, $tipo_envio){
 
         // Token que sale del Loguin de la Empresa.
-
-        /*$cToken = "Bearer ";
-
-        $result = $this->db->select("dato")->where("name","TOKEN")->get("tec_variables")->result();
-        foreach($result as $r){
-            $cToken .= $r->dato;
-        }*/
 
         $result = $this->db->select("tipoDoc")->where("id",$sale_id)->get("tec_sales")->result();
         foreach($result as $r){
@@ -292,12 +229,19 @@ class Sales_model extends CI_Model
             }
             //$grand_total    = $r["grand_total"];
             $total          = $r->total;
-            $tax            = is_null($r->tax) ? $porcentajeIgv : $r->tax;
+            //$tax            = is_null($r->tax) ? $porcentajeIgv : $r->tax;
+
+            // Provisionalmente se hara esto, ya que muchas veces no le ponen IGV:
+            $tax            = $porcentajeIgv;
+            
             $Cliente        = $r->customer_name;
             $codProdSunat   = ""; //$r->codProdSunat;
             //$fecha_venc     = $r->fec 
         }
 
+        traza("");
+        traza("$serie - $correlativo");
+        traza("tax : $tax");
         $nTotal             = $total * (1 + ($tax/100)) * 1;
         $nTotal             = round($nTotal,2);
 
@@ -353,6 +297,7 @@ class Sales_model extends CI_Model
             }
           },";
 
+        
         $campus4                = "";
         $acu_mtoBaseIgv = $mtoOperGravadas  = $mtoIGV = $valorVenta = $acu_subTotal = $acu_totalImpuestos = 0;
         foreach ($query->result() as $r){
@@ -363,8 +308,13 @@ class Sales_model extends CI_Model
             $mtoValorUnitario   = round($r->net_unit_price,2)*1;
             $mtoValorVenta      = round($r->net_unit_price * $cantidad * 1,2);
             $mtoBaseIgv         = round($r->net_unit_price * $cantidad * 1,2); //round($cantidad * $mtoValorUnitario,2);
-            $porcentajeIgv_     = !is_null($r->tax) ? $r->tax*1 : 0;
+            
+            // Se realiza en forma provisional ya que no siempre colocan el valor correcto en los productos
+            //$porcentajeIgv_     = !is_null($r->tax) ? $r->tax*1 : 0;
+            $porcentajeIgv_       = $porcentajeIgv;
+
             $igv                = round($mtoBaseIgv * ($porcentajeIgv_/100),2); // round($r->subtotal - round($r->net_unit_price,2),2);
+            traza("igv : $igv");
             
             $tipAfeIgv          = 10;
             $totalImpuestos     = $igv;
@@ -395,6 +345,7 @@ class Sales_model extends CI_Model
             $mtoIGV             += $igv;
             $valorVenta         += $mtoValorVenta;
             $acu_totalImpuestos += $totalImpuestos;
+            //traza("acu_totalImpuestos : $acu_totalImpuestos");
             $acu_subTotal       += $mtoPrecioUnitario * $cantidad * 1;
         }    
         
@@ -414,7 +365,7 @@ class Sales_model extends CI_Model
           \"redondeo\": $redondeo,
           \"mtoImpVenta\": {$acu_subTotal},
           \"details\": [";
-        
+        traza($campus3);
 
         $cValor         = $acu_subTotal . "";
         $pos            = strpos($cValor, ".");

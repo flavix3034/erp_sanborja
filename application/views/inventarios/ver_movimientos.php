@@ -4,6 +4,17 @@
 <div class="row" style="margin-top:15px">
     <div class="col-sx-12 col-sm-12 col-md-12 col-lg-12" style="overflow: scroll;">
         <?php
+
+            /*$cora = $this->db->select("a.id, a.persona, concat(c.name,' ',c.marca,' ',c.modelo) producto, a.cantidad, d.name store_id, a.fechah, a.inv_id,
+                a.tipo_mov, a.obs, e.name store_id_destino, a.confirmado, b.metodo, concat('<a href=\"#\" onclick=\"eliminar(',a.id,')\"><i class=\"glyphicon glyphicon-remove\"></i></a>') opciones")
+                ->from('tec_movim a')
+                ->join('tec_metodos_inv b', 'a.metodo = b.id','inner')
+                ->join('tec_products c','a.product_id = c.id')
+                ->join('tec_stores d','a.store_id = d.id')
+                ->join('tec_stores e','a.store_id_destino = e.id','left')
+                ->order_by('a.id','desc')->get_compiled_select();
+            die($cora);*/
+
             $result = $this->db->select("a.id, a.persona, concat(c.name,' ',c.marca,' ',c.modelo) producto, a.cantidad, d.name store_id, a.fechah, a.inv_id,
                 a.tipo_mov, a.obs, e.name store_id_destino, a.confirmado, b.metodo, concat('<a href=\"#\" onclick=\"eliminar(',a.id,')\"><i class=\"glyphicon glyphicon-remove\"></i></a>') opciones")
                 ->from('tec_movim a')

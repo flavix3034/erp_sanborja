@@ -25,14 +25,14 @@
 				$recibo 	= $r->recibo;
 				
 				if($tipo == 'Boleta'){ // Boleta : 2
-	            //$tipoDoc_       = "03";
-   	         $tipoDoc_client = "1"; // DNI
-	         }elseif($tipo == 'Factura'){ // Factura : 1
-	            //$tipoDoc_       = "01";
-	            $tipoDoc_client = "6"; // RUC
-	         }else{
-	         	$tipoDoc_client = "1";
-	         }
+	            	//$tipoDoc_       = "03";
+   	        		$tipoDoc_client = "1"; // DNI
+	         	}elseif($tipo == 'Factura'){ // Factura : 1
+	            	//$tipoDoc_       = "01";
+	            	$tipoDoc_client = "6"; // RUC
+	        	}else{
+	         		$tipoDoc_client = "1";
+	         	}
 				$razon 				= $r->razon;
 				$doc_personal 	    = $r->doc_personal;
 				$fecha 				= $r->fecha;
@@ -40,27 +40,25 @@
 				$total_discount = number_format((is_null($r->total_discount) ? 0 : $r->total_discount),2);
 				$total_tax 		= number_format($r->total_tax,2);
 				$grand_total 	= number_format($r->grand_total,2);
-
 			}
 
-			$cSql = "select id, name, code, address1, city as provincia, state as distrito, nombre_empresa, ruc".
+			$cSql = "select id, name, code, address1, city as provincia, state as distrito, nombre_empresa, ruc, nota_pie".
 				" from tec_stores where id = ?";
 			
-				//die("store_id:" . $_SESSION["store_id"]);
-
 			$query2 = $this->db->query($cSql,array($_SESSION["store_id"]));
 			foreach($query2->result() as $r){
 				$nombre_comercial 	= $r->name;
 				$nombre_empresa 	= $r->nombre_empresa;
 				$direccion 			= $r->address1;
 				$ruc 				= $r->ruc;
+				$nota_pie 			= $r->nota_pie;
 			}
 
-			$ar_datos1 = explode("-",$recibo);
-			$serie 	= $ar_datos1[0];
-			$numero 	= $ar_datos1[1];
+			$ar_datos1 		= explode("-",$recibo);
+			$serie 			= $ar_datos1[0];
+			$numero 		= $ar_datos1[1];
 
-			$RUC 				= $ruc;
+			$RUC 			= $ruc;
 			$TIPO 			= $tipo;
 			$SERIE 			= $serie;
 			$NUMERO 		= $numero;
@@ -223,14 +221,11 @@
 
 			   	<div class="row" style="display:flex;margin-top:15px;">
 			   		<div class="col-sm-10" style="margin:auto;font-size: 11px;">
-			        
-						No se aceptan Devoluciones. Cambio de mercaderia max. 48 horas previa presentacion de su comprobante.<br>
-						GRACIAS POR SU COMPRA
-
+						<!--No se aceptan Devoluciones. Cambio de mercaderia max. 48 horas previa presentacion de su comprobante.<br>
+						GRACIAS POR SU COMPRA-->
+						<?= $nota_pie ?>
 			        </div>
 			    </div>
-
-
 			</div><!-- EXPETO -->
 			
 		</div>

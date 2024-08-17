@@ -7,7 +7,6 @@ class Products extends CI_controller
     
     function __construct() {
         parent::__construct();
-
         session_start();
         $this->load->model('products_model');
     }
@@ -64,6 +63,13 @@ class Products extends CI_controller
     }
 
     function save(){
+        /*
+            if(isset($_POST["modo_api"])){
+                $modo_api   = $_POST["modo_api"];
+            }else{
+                $modo_api   = '0';
+            }
+        */
         $code           = $_POST["code"];
         $name           = $_POST["name"]; 
         $category_id    = $_POST["category_id"];
@@ -82,6 +88,7 @@ class Products extends CI_controller
         $modo = strtolower($_POST["modo"]);
 
         if(strlen($code)==0){
+            /*
             $cSql = "select max(code)+1 nu_codigo from tec_products where activo='1' and length(code)=8";
             $query = $this->db->query($cSql);
             
@@ -90,7 +97,22 @@ class Products extends CI_controller
                     $nu_codigo = $r->nu_codigo;
                 }
             }
+            */
+
+            // VOLVIENDO EL CODE GENERADO ALEATORIO:
+            $continua = true; $ix = 0;
+            while ($continua) {
+                $nu_codigo = ("" . random_int(1,9)) . random_int(0,999999999999);
+                $row = $this->db->select("code")->where("code",$nu_codigo)->get("tec_products")->row();
+                if($row){
+                    $nada = 'nada';
+                }else{
+                    $continua = false;
+                }
+            }
+
             $code = $nu_codigo;
+
         }else{
             $code = strtoupper($code);
             // Verifico que no exista
@@ -124,8 +146,6 @@ class Products extends CI_controller
             $ _FILES ['file'] ['type'] - el tipo MIME del archivo cargado.
             $ _FILES ['file'] ['error'] - el código de error asociado con la carga de este archivo.
         */
-
-        
 
         $file_tmp   = $_FILES['archivo']['tmp_name'];
         
@@ -197,8 +217,148 @@ class Products extends CI_controller
         
         $this->data["modo"]         = 'insert'; 
         $this->data['page_title']   = "Agregar Producto:";
-        $this->template->load("production/index", 'products/add', $this->data);
+        
+        if($modo_api == '1'){
+            echo json_encode(array("msg"=>$this->data["msg"]));
+        }else{
+            $this->template->load("production/index", 'products/add', $this->data);
+        }
 
+    }
+
+    function save1(){
+        
+        if(isset($_POST["modo_api"])){
+            $modo_api   = $_POST["modo_api"];
+            //die("Macromedia");
+        }else{
+            $modo_api   = '0';
+            //die("Flash");
+        }
+
+        $code           = $_POST["code"];
+        $name           = $_POST["name"]; 
+        $category_id    = $_POST["category_id"];
+        $unidad         = $_POST["unidad"]; 
+        $alert_cantidad = $_POST["alert_cantidad"]; 
+        $price          = $_POST["price"];
+        $imagen         = (isset($_POST["imagen"]) ? $_POST["imagen"] : "");
+        $marca          = $_POST["marca"];
+        $modelo         = $_POST["modelo"];
+        $color          = $_POST["color"];
+        $precio_x_mayor = $_POST["precio_x_mayor"];
+
+        $validacion = true;
+        $nu_codigo = 10000001;
+
+        if(isset($_POST["modo"])){
+            $modo = strtolower($_POST["modo"]);
+        }else{
+            $modo = "insert";
+        }
+    
+        // Valida que nombre marca y modelo no esten vacios
+        if($name!='' && $marca!='' && $modelo!='' && $price!='' && $category_id!='' && $unidad!='' && $alert_cantidad!=''){
+            $algo = "";
+        }else{
+            $validacion = false;
+        }
+
+        if(strlen($code)==0){
+
+            // VOLVIENDO EL CODE GENERADO ALEATORIO:
+            $continua = true; $ix = 0;
+            while ($continua) {
+                $nu_codigo = ("" . random_int(1,9)) . random_int(0,999999999999);
+                $row = $this->db->select("code")->where("code",$nu_codigo)->get("tec_products")->row();
+                if($row){
+                    $nada = 'nada';
+                }else{
+                    $continua = false;
+                }
+            }
+
+            $code = $nu_codigo;
+
+        }else{
+            $code = strtoupper($code);
+            // Verifico que no exista
+            if($modo == 'insert'){
+                $cSql = "select * from tec_products where activo='1' and code = ?";
+                $query = $this->db->query($cSql,array($code));
+                $n=0;
+                foreach($query->result() as $r){ $n++;}
+                if($n>0){ $validacion = false; }
+            }
+        }
+    
+        $ar["code"]         = strtoupper($code);
+        $ar["name"]         = strtoupper($name);
+        $ar["category_id"]  = $category_id;
+        $ar["unidad"]       = $unidad;
+        $ar["alert_cantidad"] = $alert_cantidad;
+        $ar["price"]        = $price;
+        $ar["marca"]        = $marca;
+        $ar["modelo"]       = $modelo;
+        $ar["color"]        = $color;
+        $ar["precio_x_mayor"] = $precio_x_mayor;
+        $ar["impuesto"]     = $this->Igv;
+        $ar["prod_serv"]    = "P"; // Producto
+    
+        $id_producto = "";
+        if($validacion == true){
+
+            if($modo == 'insert'){
+
+                $cSql = "select max(id)+1 nuevo from tec_products where id < 99999";
+                $ar["id"] = $this->db->query($cSql)->row()->nuevo;
+                
+
+                if($this->db->insert("tec_products", $ar)){
+                    $id_producto = $this->db->insert_id();
+                    $this->data['msg']      = "Se guarda correctamente";
+                    $this->data["rpta_msg"] = "success";
+                }else{
+                    $this->data['msg']      = "No se ha podido guardar"; 
+                    $this->data["rpta_msg"] = "danger";
+                }
+
+            }else{
+
+                $id = $_POST['id'];
+                // update
+                if($this->db->set($ar)->where('id',$id)->update("tec_products")){
+                    $this->data['msg']      = "Se actualiza correctamente";
+                    $this->data["rpta_msg"] = "success";
+                }else{
+                    $this->data['msg']      = "No se ha podido guardar"; 
+                    $this->data["rpta_msg"] = "danger";
+                }
+
+            }
+
+        }else{
+
+            $this->data['msg']      = "Hay informacion que debe cambiarse, codigo de barra ya existe o faltan datos";
+            $this->data["rpta_msg"] = "danger";
+
+        }
+        
+        $this->data["modo"]         = 'insert'; 
+        $this->data['page_title']   = "Agregar Producto:";
+        
+        $rpta = "OK";
+        if($validacion==false){
+            $rpta = "KO";
+        }
+
+        if($modo_api == '1'){
+            echo json_encode(array("rpta"=>$rpta, "msg"=>$this->data["msg"], "id_producto"=>$id_producto));
+        }else{
+            $this->template->load("production/index", 'products/add', $this->data);
+        }
+    
+    //echo "Ecosistema";
     }
 
     function save_servicio(){
@@ -467,10 +627,9 @@ class Products extends CI_controller
     }
 
     function print_inicial(){
-
         $this->data['page_title'] = "Impresion de Codigos de Barra";
 
-        $this->data["query_codigos"] = $this->db->query("select id, code, name descrip from tec_products where category_id != 7 order by name");
+        $this->data["query_codigos"] = $this->db->query("select id, code, concat(name,' ',marca,' ',modelo) descrip from tec_products where category_id != 7 order by name");
 
         $this->template->load("production/index", 'products/print_inicial', $this->data);
     }
@@ -578,7 +737,21 @@ class Products extends CI_controller
 
     }
 
+    function print_compra($viene_de_guardar=""){
+        
+        
+        $this->data['page_title'] = "Impresion de Codigos de Barra x Compra";
 
+        //$this->data["query_codigos"] = $this->db->query("select id, code, concat(name,' ',marca,' ',modelo) descrip from tec_products where category_id != 7 order by name");
+
+        if(isset($viene_de_guardar)){
+            if($viene_de_guardar=='1'){
+                $this->data["viene_de_guardar"] = $viene_de_guardar;
+            }
+        }
+        $this->template->load("production/index", 'products/print_compra', $this->data);
+    }
+    
     function print_labels() {
         $limit = 10;
         $this->load->helper('pagination');
@@ -796,4 +969,185 @@ class Products extends CI_controller
         $this->template->load('production/index', 'products/importacion', $data);
     }
 
+    public function traer_impresionx(){
+        $cSql = "select a.id, a.product_id, a.compra_id, a.code, a.nombre_producto, a.cantidad
+            from impresionx a";
+
+        $query = $this->db->query($cSql);
+        $result = $query->result_array();
+        return json_encode($result);
+    }
+
+    public function traer_impresionx_api(){
+        $cSql = "select a.id, a.product_id, a.compra_id, a.code, a.nombre_producto, a.cantidad
+            from impresionx a";
+
+        $query = $this->db->query($cSql);
+        $result = $query->result_array();
+        echo json_encode($result);
+    }
+    
+    public function incluir_nro_compra(){
+        // Inserta los productos de una compra a la tabla impresionx luego utiliza traer_impresionx 
+        $nro_compra = $this->input->post("nro_compra");
+
+        $cSql = "select b.product_id, a.id compra_id, c.code, concat(c.name,' ',c.marca,' ',c.modelo) producto, round(b.cantidad,0) cantidad
+            from tec_compras a
+            inner join tec_compra_items b on a.id = b.compra_id
+            inner join tec_products c on b.product_id = c.id
+            where a.id in (" . $nro_compra . ")";
+        
+        $query = $this->db->query($cSql);
+        
+        // llenando tabla impresionx con los items de la compra
+        foreach($query->result() as $r){
+            $ari = array(
+                "product_id"    =>$r->product_id,
+                "cantidad"      =>$r->cantidad,
+                "compra_id"     =>$r->compra_id,
+                "code"          =>$r->code,
+                "nombre_producto" =>$r->producto
+            );
+
+            //echo $this->db->set($ari)->get_compiled_insert("impresionx");
+            $this->db->set($ari)->insert("impresionx");
+        }
+        echo $this->traer_impresionx();
+    }
+    
+
+    /*
+        public function incluir_nro_compra_dt($nro_compra=null){
+            // Inserta los productos de una compra a la tabla impresionx
+            //$nro_compra = $_REQUEST["nro_compra"];
+
+            $cSql = "select b.product_id, a.id compra_id, c.code, concat(c.name,' ',c.marca,' ',c.modelo) producto, round(b.cantidad,0) cantidad
+                from tec_compras a
+                inner join tec_compra_items b on a.id = b.compra_id
+                inner join tec_products c on b.product_id = c.id
+                where a.id in (" . $nro_compra . ")";
+            
+            $query = $this->db->query($cSql);
+            
+            // llenando tabla impresionx con los items de la compra
+            foreach($query->result() as $r){
+                $ari = array(
+                    "product_id"    =>$r->product_id,
+                    "cantidad"      =>$r->cantidad,
+                    "compra_id"     =>$r->compra_id,
+                    "code"          =>$r->code,
+                    "nombre_producto" =>$r->producto
+                );
+
+                //echo $this->db->set($ari)->get_compiled_insert("impresionx");
+                $this->db->set($ari)->insert("impresionx");
+            }
+
+            $cSql = "select a.id, a.product_id, a.compra_id, a.code, a.nombre_producto, a.cantidad
+                from impresionx a";
+
+            $query = $this->db->query($cSql);
+            $result = $query->result_array();
+
+            $ar_campos  = array("id", "product_id", "compra_id", "code", "nombre_producto", "cantidad");
+            echo $this->fm->json_datatable($ar_campos,$result);
+        }
+    */
+
+    public function save_impresionx(){
+        $ar_producto          = $this->input->post("product_id");
+        $ar_cantidad          = $_POST["cantidad"];
+        $ar_compra_id       = $this->input->post("compra_id[]");
+
+        $nLim = count($ar_producto);
+        for($i=0; $i<$nLim;$i++){
+
+            $ari = array();
+            $ari = array(
+                "cantidad"      =>$ar_cantidad[$i]
+            );
+            $this->db->set($ari)->where("product_id",$ar_producto[$i])->where("compra_id",$ar_compra_id[$i])->update("impresionx");
+        }
+        //$data["viene_de_guardar"] = 1;
+        redirect("products/print_compra");
+    }
+
+    public function reset_impresionx(){
+        $this->db->query("delete from impresionx");
+        echo "Se reseta la tabla de impresion";
+    }
+
+    public function elimina_item_impresionx(){
+        $id = $this->input->post("id");
+        $this->db->where("id",$id)->delete("impresionx");
+        echo "OK";
+    }
+
+    function rulo($url, $campos){  // Envia y retorna la respuesta
+        
+        $cToken = "nabucodonosor"; //$this->token;
+        
+        $curl = curl_init();
+
+        curl_setopt($curl, CURLOPT_URL, $url);
+
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); 
+
+        curl_setopt($curl, CURLOPT_POST, true);
+
+        curl_setopt($curl, CURLOPT_POSTFIELDS, $campos);
+
+        curl_setopt($curl, CURLOPT_HTTPHEADER,
+            array(
+                "content-type: application/json",
+                "Authorization: {$cToken}"
+            )
+        );
+
+        $response = curl_exec($curl);
+
+        curl_close($curl);
+
+        return $response;
+    }
+
+    function get_compra_items($nro_compra){
+        $cSql = "select b.product_id, a.id compra_id, c.code, concat(c.name,' ',c.marca,' ',c.modelo) producto, round(b.cantidad,0) cantidad
+            from tec_compras a
+            inner join tec_compra_items b on a.id = b.compra_id
+            inner join tec_products c on b.product_id = c.id
+            where a.id in (" . $nro_compra . ")";
+        
+        $result = $this->db->query($cSql)->result_array();
+
+        echo json_encode($result);
+    }
+    
+
+    public function exportar_csv(){
+        $cSql = "select * from impresionx order by id";
+        $result = $this->db->query($cSql)->result_array();
+        $this->exportarCSV("Codigos_de_impresion", $result);
+        //echo "Se migra a formato CSV en carpeta Descargas";
+    }
+
+    function exportarCSV($nombreArchivo, $datos) {
+        // Establecer encabezados para indicar que es un archivo CSV
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="' . $nombreArchivo . '.csv"');
+
+        // Abrir el archivo en modo de escritura
+        $archivo = fopen('php://output', 'w');
+
+        // Escribir encabezados
+        fputcsv($archivo, array_keys($datos[0]));
+
+        // Escribir datos
+        foreach ($datos as $fila) {
+            fputcsv($archivo, $fila);
+        }
+
+        // Cerrar el archivo
+        fclose($archivo);
+    }
 }

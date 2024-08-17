@@ -14,7 +14,8 @@
         $modo_edicion = "0";
     }
 
-    ?>
+    $id = $code = $name = $marca = $modelo = $color = $alert_cantidad = $price = $precio_x_mayor = "";
+?>
     <script type="text/javascript">
         var ar_items    = new Array();
     </script>
@@ -34,7 +35,10 @@
             $fecha_ingreso  = $r->fecha_ingreso;
         }
 
-        $cSql = "select * from tec_compra_items where compra_id = ?";
+        $cSql = "select a.*, concat(b.name,' ', b.marca,' ', b.modelo) nombre
+            from tec_compra_items a 
+            left join tec_products b on a.product_id = b.id
+            where a.compra_id = ?";
         $query = $this->db->query($cSql,array($id_compras));
         $ni = 0;
         foreach($query->result() as $r){
@@ -46,7 +50,7 @@
             //$costo = $r->precio_con_igv * 
 
             echo "ar_items.push({id:".$r->product_id.", 
-            name:       '".$r->product_name."', 
+            name:       '".$r->nombre."', 
             quantity:   ".$r->cantidad.", 
             cost:       ".$r->precio_sin_igv.", 
             subtotal:   ".($r->cantidad * 1 * $r->precio_sin_igv).",
@@ -165,7 +169,7 @@
             ?>
 
             <div>
-                <label>Producto</label><br>    
+                <label>Producto</label> <a href="#" onclick="document.getElementById('btn_modal_crear_productos').click()">[ + Nuevo ]</a><br>    
                 <input type="text" name="campo" id="campo" class="form-control">
 
                 <ul id="lista"></ul>
@@ -199,7 +203,7 @@
 
         <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2">
             <div class="form-group">
-                <label>Precio</label>
+                <label>Costo</label>
                 <input type="text" name="cost" id="cost" class="form-control">
             </div>
         </div>
@@ -307,6 +311,107 @@
     <form action="" method="post" autocomplete="off">
     </form>
 
+    <!--========= M o d a l   C r e a r   P r o d u c t o s ==============================================-->
+    <div style="display:none">
+        <button id="btn_modal_crear_productos" type="button" class="btn btn-primary" data-toggle="modal" data-target="#modal_crea_producto">
+        Launch demo modal
+        </button>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="modal_crea_producto" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+      <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">Agregar Producto</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+
+                <div class="row filitas"> 
+                
+                    <div class="col-sm-4 col-lg-1 ventas">
+                        <label>Id:</label>
+
+                        <?= form_input('id', $id, 'class="form-control tip" id="id" readonly'); ?>
+                    </div>
+                    
+                    <div class="col-sm-4 col-lg-2 ventas">
+                        <label>Code:</label>
+                        <?= form_input('code', $code, 'class="form-control tip" id="code"'); ?>
+                    </div>
+
+                    <div class="col-sm-4 col-lg-2 ventas" style="margin-left:10px;">
+                        <label>Nombre:</label>
+                        <?= form_input('name', $name, 'class="form-control tip" id="name" required"'); ?>
+                    </div>
+
+                    <div class="col-sm-4 col-lg-2 ventas">
+                        <label>Marca:</label>
+                        <?= form_input('marca', $marca, 'class="form-control tip" id="marca"'); ?>
+                    </div>
+
+                    <div class="col-sm-4 col-lg-2 ventas">
+                        <label>Modelo:</label>
+                        <?= form_input('modelo', $modelo, 'class="form-control tip" id="modelo"'); ?>
+                    </div>
+
+                    <div class="col-sm-4 col-lg-2 ventas">
+                        <label>Color:</label>
+                        <?= form_input('color', $color, 'class="form-control tip" id="color"'); ?>
+                    </div>
+
+                </div>
+                <div class="row filitas"> 
+
+                    <div class="col-sm-4 col-lg-3 ventas">
+                        <label>Categoria:</label>
+                        <?php 
+                            $result_cat = $this->db->query("select id,name from tec_categories order by name")->result_array();
+                            $ar_cat     = $this->fm->conver_dropdown($result_cat,"id","name");
+                            echo form_dropdown('category_id',$ar_cat,'','class="form-control tip" id="category_id" required="required"');
+                        ?>
+
+                    </div>
+
+                    <!-- unidad, alert_cantidad, price, imagen -->
+                    <div class="col-sm-4 col-lg-2 ventas">
+                        <label>Unidad:</label>
+                        <?php 
+                            $result_uni = $this->db->query("select id, descrip from tec_unidades order by id")->result_array();
+                            $ar_uni     = $this->fm->conver_dropdown($result_uni,"id","descrip");
+                            echo form_dropdown('unidad',$ar_uni,'','class="form-control tip" id="unidad" required="required"');
+                        ?>
+                    </div>
+
+                    <div class="col-sm-4 col-lg-2 ventas">
+                        <label>Alerta cantidad:</label>
+                        <?= form_input('alert_cantidad', $alert_cantidad, 'class="form-control tip" id="alert_cantidad" required'); ?>
+                    </div>
+
+                    <div class="col-sm-4 col-lg-2 ventas">
+                        <label>Precio:</label>
+                        <?= form_input('price', $price, 'class="form-control tip" id="price" required'); ?>
+                    </div>
+
+                    <div class="col-sm-4 col-lg-2 ventas">
+                        <label>Precio x Mayor:</label>
+                        <?= form_input('precio_x_mayor', $precio_x_mayor, 'class="form-control tip" id="precio_x_mayor" required'); ?>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="cerrar_modal" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" onclick="guardar_producto()" class="btn btn-primary">Save changes</button>
+                <!--<button type="button" onclick="rellenar()">Rellenar</button>-->
+            </div>
+        </div>
+      </div>
+    </div>
+
+
 </section>
 <script type="text/javascript">
     var gIgv        = 18;
@@ -314,19 +419,66 @@
 
     document.getElementById("campo").addEventListener("keyup", getCodigos)
 
+    function guardar_producto(){
+        $.ajax({
+            data : {
+                modo_api       : '1',
+                code           : document.getElementById("code").value,
+                name           : document.getElementById("name").value, 
+                category_id    : document.getElementById("category_id").value,
+                unidad         : document.getElementById("unidad").value, 
+                alert_cantidad : document.getElementById("alert_cantidad").value,
+                price          : document.getElementById("price").value,
+                //imagen         : document.getElementById("imagen").value,
+                marca          : document.getElementById("marca").value,
+                modelo         : document.getElementById("modelo").value,
+                color          : document.getElementById("color").value,
+                precio_x_mayor : document.getElementById("precio_x_mayor").value
+            },
+            type : 'post',
+            url  : '<?= base_url('products/save1') ?>',
+            success : function(res){
+                var obj = JSON.parse(res);
+                alert(obj.msg);
+                if(obj.rpta == 'OK'){
+                    let name_26     = document.getElementById("name").value
+                    let marca_26    = document.getElementById("marca").value
+                    let modelo_26   = document.getElementById("modelo").value
+                    let color_26    = document.getElementById("color").value
+                    document.getElementById("cerrar_modal").click()
+                    limpiar_productos()
+                    mostrar(obj.id_producto, name_26.trim() + " " + marca_26.trim() + " " + modelo_26.trim() + " " + color_26.trim())
+
+                }
+            }
+        })
+    }
+
+    function limpiar_productos(){
+        //document.getElementById("id").value             = ""
+        document.getElementById("code").value           = ""
+        document.getElementById("name").value           = ""
+        document.getElementById("marca").value          = ""
+        document.getElementById("modelo").value         = ""
+        document.getElementById("color").value          = ""
+        document.getElementById("category_id").value    = ""
+        document.getElementById("unidad").value         = ""
+        document.getElementById("alert_cantidad").value = ""
+        document.getElementById("price").value          = ""
+        document.getElementById("precio_x_mayor").value = ""
+    }
+
     function rellenar(){
-        $("#date").val("2022-09-28T10:15")
-        $("#date_ingreso").val("2022-09-28T09:16")
-        $("#tipoDoc").val("2")
-        $("#nroDoc").val("10526578")
-        $("#proveedor_id").val("7")
-        document.getElementById("importacion").style.display = 'block'
-        $("#opciones_csv").val("2")
+        $("#name").val("SHORT")
+        $("#alert_cantidad").val(5)
+        $("#price").val(55)
+        $("#marca").val("LEVIS")
+        $("#modelo").val("DAMAS CASUAL1")
+        $("#precio_x_mayor").val(49.9)
     }
 
     function getCodigos() {
 
-        console.log("getCodigos....")
         if(lBuscar == true){
 
             let inputCP = document.getElementById("campo").value
@@ -356,7 +508,6 @@
                     url  : '<?= base_url("sales/buscar2") ?>',
                     type : 'post',
                     success : function(res){
-                        //let obji = JSON.parse(res)
                         lista.style.display = 'block'
                         lista.innerHTML = res
                     }
@@ -373,6 +524,7 @@
         lBuscar = false
         $("#campo").val(cp)
         $("#campo").attr("readonly","readonly");
+        $("#quantity").focus()
     }
 
     function validar_gral(){

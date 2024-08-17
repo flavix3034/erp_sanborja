@@ -8,7 +8,7 @@ class Odbc extends CI_Controller {
         $this->load->helper('url');
     }
 
-    public function consulta($consulta){
+    public function consulta($t, $consulta){
         try{
             $cSql = $this->descriptar($consulta);
 
@@ -121,7 +121,7 @@ class Odbc extends CI_Controller {
             }
         } catch (Exception $e) {
                 $ar = array();
-                $ar["Resultado"] = echo 'Excepción capturada: ',  $e->getMessage();
+                $ar["Resultado"] = 'Excepción capturada: ' . $e->getMessage();
                 $data[] = $ar;
                 
                 echo json_encode($data);

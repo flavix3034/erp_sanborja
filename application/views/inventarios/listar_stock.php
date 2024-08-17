@@ -62,6 +62,8 @@
 <script type="text/javascript">
     $(document).ready(function() {
         $('#example').DataTable({
+        	dom: 'Bfrtip',
+            buttons: [ 'copy', 'csv', 'excel', 'pdf', 'print'],
             "ajax": "<?= base_url("inventarios/get_listar_stock") ?>"
         });
     });

@@ -37,6 +37,13 @@
     }   
 </style>
 
+    <div class="row filitas">
+        <div class="col-sm-12 ventas">
+            <a href="<?= base_url() ?>products/importacion"><span style="font-weight:bold;color:blue">Importar Productos....</span></a><hr>
+        </div>
+    </div>
+
+
 <?= form_open_multipart(base_url("products/save"), 'method="post" name="form1" id="form1"'); ?>
 
     <div class="row filitas"> 
@@ -127,7 +134,7 @@
         <div class="col-sm-7 col-lg-5 ventas">
             <label>Subir</label>
             <input type="file" name='archivo' class="form-control tip" id="archivo">
-            <input type="text" name="modo" id="modo" value="<?= $modo ?>">
+            <input type="hidden" name="modo" id="modo" value="<?= $modo ?>">
         </div>
 
     </div>

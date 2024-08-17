@@ -36,6 +36,14 @@ if(!isset($store_id)){
     div.ColVis {
         float: left;
     }
+    .margen-corto{
+        padding: 5px 3px !important;    
+    }
+    .margen-corto2{
+        padding: 10px 3px !important;
+        font-size: 9px;
+    }
+
 </style>
 
 <!-- SECCION DE FILTROS -->
@@ -89,8 +97,8 @@ if(!isset($store_id)){
     </div>
 
     <div class="row" id="grilla">
-        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-11">
-            <table id="example" class="display" style="width:100%; font-size: 12px; margin-bottom: 20px;" data-page-length='12'>
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <table id="example" class="display" style="width:100%; font-size: 12px; margin:0px!important;" data-page-length='14'>
                 <thead>
                     <tr>
                         <th>id</th>
@@ -98,12 +106,14 @@ if(!isset($store_id)){
                         <th>Fecha</th>
                         <th>Cliente</th>
                         <th>recibo</th>
+
                         <th>Anulado</th>
                         <th>subtotal</th>
                         <th>Total</th>
                         <th>Productos</th>
-                        <!--<th>Sunat</th>-->
-    					<th>Actions</th>
+                        <th>Sunat</th>
+    					
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tfoot>
@@ -113,12 +123,14 @@ if(!isset($store_id)){
                         <th></th>
                         <th></th>
                         <th></th>
+
                         <th></th>
                         <th></th>
                         <th></th>
                         <th></th>
-                        <!--<th></th>-->
-    					<th>.</th>
+                        <th></th>
+
+                        <th></th>
                     </tr>
                 </tfoot>
             </table>
@@ -209,8 +221,9 @@ if(!isset($store_id)){
                 if (aData[5] == '1'){ $('td', nRow).css('background-color', 'gray');}
             },
             "columnDefs":[
-                { className: "dt-right", "targets": [4,5]},
-                { "bVisible": false, "aTargets": [5] }
+                { className: "dt-right", "targets": [4,5]}
+                /*,{ "bVisible": false, "aTargets": [5] }
+                ,{ className: "margen-corto", "targets": [0,1,2,3,4,5,6,7,8,9,10]}*/
             ]
 
         });
@@ -238,6 +251,17 @@ if(!isset($store_id)){
     function ver_documento(id){
         $.ajax({
             url     : '<?= base_url('sales/view_popup/') ?>' + id,
+            type    :'get',
+            success : function(response){
+                $(".modal-body").html(response)
+                document.getElementById("myBtn").click()
+            }
+        })
+    }
+
+    function ver_documento_interno(id){
+        $.ajax({
+            url     : '<?= base_url('sales/view_popup_interno/') ?>' + id,
             type    :'get',
             success : function(response){
                 $(".modal-body").html(response)

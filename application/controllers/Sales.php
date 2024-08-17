@@ -9,6 +9,12 @@ class Sales extends CI_Controller {
             redirect('login');
         }*/ 
         
+        /*
+        $parametros_actuales = session_get_cookie_params();
+
+        // Mostrar los valores actuales
+        echo "Tiempo de vida: " . $parametros_actuales['lifetime'] . "<br>";
+        die("   ");*/
         session_start();
 
         if (!isset($_SESSION["store_id"])) {
@@ -24,6 +30,11 @@ class Sales extends CI_Controller {
 
     function index($cDesde='null', $cHasta='null', $cStore_id='null') {
         $this->data['page_title'] = "Ventas";
+        
+        if($cDesde=='null' && $cHasta=='null'){
+            $cDesde = date('Y-m-d', strtotime(date("Y-m-d") .' -7 day'));
+            $cHasta = date("Y-m-d");
+        }
         $this->data['desde'] = $cDesde;
         $this->data['hasta'] = $cHasta;
         $this->data['store_id'] = $cStore_id;
@@ -160,6 +171,9 @@ class Sales extends CI_Controller {
 
                         $ard["product_name"]    = trim($_REQUEST['descripo'][$i]);
                         $ard["comment"]         = trim($observaciones);
+
+                        // Ingresan las series de cada producto
+                        $ard["series"]          = $_REQUEST['series'][$i];
 
                         $this->db->insert("tec_sale_items", $ard);
 
@@ -310,8 +324,10 @@ class Sales extends CI_Controller {
 
         $cSql = "select tec_sales.id, tec_stores.name tienda, tec_sales.date, customer_name, round(total,2) total, round(grand_total,2) grand_total,  tec_users.username created_by, tec_sales.anulado,
             concat(tec_sales.serie,'-',tec_sales.correlativo) recibo, group_concat(substr(lcase(tec_products.name),1,12)) productos,
-            if(tec_sales.envio_electronico = 1, 'Enviado', 'No Enviado') as dir_comprobante,
-            concat('<button onclick=\'ver_documento(', tec_sales.id, ')\'><i style = \'color:blue\' class=\'glyphicon glyphicon-eye-open\'></i></button>','&nbsp;<button onclick=\'del_documento(',tec_sales.id,')\'><i style = \'color:red\' class=\'glyphicon glyphicon-remove\'></i></button>') as actions
+            if(tec_sales.envio_electronico = 1, '<i class=\'glyphicon glyphicon-ok\'></i>', '') as dir_comprobante,
+            concat('<button onclick=\'ver_documento(', tec_sales.id, ')\'><i style = \'color:blue\' class=\'glyphicon glyphicon-eye-open\'></i></button>',
+            '&nbsp;<button onclick=\'ver_documento_interno(',tec_sales.id,')\'><i style = \'color:green\' class=\'glyphicon glyphicon-eye-open\'></i></button>',
+            '&nbsp;<button onclick=\'del_documento(',tec_sales.id,')\'><i style = \'color:red\' class=\'glyphicon glyphicon-remove\'></i></button>') as actions
             from tec_sales
             inner join tec_sale_items on tec_sales.id = tec_sale_items.sale_id
             inner join tec_stores on tec_sales.store_id = tec_stores.id
@@ -319,8 +335,10 @@ class Sales extends CI_Controller {
             left join tec_products on tec_sale_items.product_id = tec_products.id
             where 1=1 " . $cad_desde . $cad_hasta . $cad_store_id.
             " group by tec_sales.id, tec_stores.name, tec_sales.date, customer_name, round(total,2), round(grand_total,2),  tec_users.username, tec_sales.anulado, concat(tec_sales.serie,'-',tec_sales.correlativo), 
-            if(tec_sales.envio_electronico = 1, 'Enviado', 'No Enviado'),
-            concat('<button onclick=\'ver_documento(', tec_sales.id, ')\'><i style = \'color:blue\' class=\'glyphicon glyphicon-eye-open\'></i></button>','&nbsp;<button onclick=\'del_documento(',tec_sales.id,')\'><i style = \'color:red\' class=\'glyphicon glyphicon-remove\'></i></button>')";
+            if(tec_sales.envio_electronico = 1, '<i class=\'glyphicon glyphicon-ok\'></i>', ''),
+            concat('<button onclick=\'ver_documento(', tec_sales.id, ')\'><i style = \'color:blue\' class=\'glyphicon glyphicon-eye-open\'></i></button>',
+            '&nbsp;<button onclick=\'ver_documento_interno(',tec_sales.id,')\'><i style = \'color:green\' class=\'glyphicon glyphicon-eye-open\'></i></button>',
+            '&nbsp;<button onclick=\'del_documento(',tec_sales.id,')\'><i style = \'color:red\' class=\'glyphicon glyphicon-remove\'></i></button>')";
         
         if($opcion == 1){
             //die(":1");
@@ -341,7 +359,7 @@ class Sales extends CI_Controller {
         }
         //die("opcion:".$opcion);
 
-        $ar_campos = array("id","tienda","date","customer_name","recibo","anulado","total","grand_total","productos","actions");  // 
+        $ar_campos = array("id","tienda","date","customer_name","recibo","anulado","total", "grand_total", "productos", "dir_comprobante","actions");  // 
         // ,"dir_comprobante"
 
         //if($this->Admin){
@@ -372,6 +390,16 @@ class Sales extends CI_Controller {
             //print_r($ar);
             //die("llego a casax");
             $this->load->view('sales/view_pop',$ar);
+        }
+    }
+
+    function view_popup_interno($id){
+        if(!is_null($id)){
+            
+            $ar["query"] = $this->sales_model->view_interno($id);
+            //print_r($ar);
+            //die("llego a casax");
+            $this->load->view('sales/view_pop_interno',$ar);
         }
     }
 
@@ -533,7 +561,7 @@ class Sales extends CI_Controller {
                 $n++;
                 $cad .= "{";
                 $cad .= '"id":"' . $r->id . '",'; 
-                $cad .= '"name":"' . str_replace('"','',$r->name . ' ' . $r->marca . ' ' . $r->modelo) . '",';
+                $cad .= '"name":"' . str_replace('"','',$r->name . ' ' . $r->marca . ' ' . $r->modelo . ' ' . $r->color) . '",';
                 $cad .= '"stock":"' . $r->stock . '",';
                 $cad .= '"categoria":"' . $r->categoria . '",'; 
                 $cad .= '"impuesto":"' . $r->impuesto . '",';
@@ -582,7 +610,7 @@ class Sales extends CI_Controller {
                 $cad .= "},";
                 */
 
-                $completo = $r->name . " " . $r->marca . " " . $r->modelo;
+                $completo = $r->name . " " . $r->marca . " " . $r->modelo . " " . $r->color;
                 $cad .= "<li onclick=\"mostrar(" . $r->id . ",'" . $completo . "')\">" . $completo . "</li>";
             }
             if($n>0){

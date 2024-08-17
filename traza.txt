@@ -1,0 +1,186 @@
+igv : 2.13
+acu_totalImpuestos : 2.13
+"mtoOperGravadas": 11.86,
+          "mtoOperExoneradas": 0,
+          "mtoIGV": 2.13,
+          "icbper": 0,
+          "valorVenta": 11.86,
+          "totalImpuestos": 2.13,
+          "subTotal": 13.99,
+          "redondeo": 0,
+          "mtoImpVenta": 13.99,
+          "details": [
+igv : 2.13
+acu_totalImpuestos : 2.13
+"mtoOperGravadas": 11.86,
+          "mtoOperExoneradas": 0,
+          "mtoIGV": 2.13,
+          "icbper": 0,
+          "valorVenta": 11.86,
+          "totalImpuestos": 2.13,
+          "subTotal": 13.99,
+          "redondeo": 0,
+          "mtoImpVenta": 13.99,
+          "details": [
+igv : 2.13
+acu_totalImpuestos : 2.13
+"mtoOperGravadas": 11.86,
+          "mtoOperExoneradas": 0,
+          "mtoIGV": 2.13,
+          "icbper": 0,
+          "valorVenta": 11.86,
+          "totalImpuestos": 2.13,
+          "subTotal": 13.99,
+          "redondeo": 0,
+          "mtoImpVenta": 13.99,
+          "details": [
+igv : 2.13
+acu_totalImpuestos : 2.13
+"mtoOperGravadas": 11.86,
+          "mtoOperExoneradas": 0,
+          "mtoIGV": 2.13,
+          "icbper": 0,
+          "valorVenta": 11.86,
+          "totalImpuestos": 2.13,
+          "subTotal": 13.99,
+          "redondeo": 0,
+          "mtoImpVenta": 13.99,
+          "details": [
+
+tax : 0
+igv : 0
+"mtoOperGravadas": 20,
+          "mtoOperExoneradas": 0,
+          "mtoIGV": 0,
+          "icbper": 0,
+          "valorVenta": 20,
+          "totalImpuestos": 0,
+          "subTotal": 20,
+          "redondeo": 0,
+          "mtoImpVenta": 20,
+          "details": [
+
+tax : 18
+igv : 0
+"mtoOperGravadas": 20,
+          "mtoOperExoneradas": 0,
+          "mtoIGV": 0,
+          "icbper": 0,
+          "valorVenta": 20,
+          "totalImpuestos": 0,
+          "subTotal": 20,
+          "redondeo": 0,
+          "mtoImpVenta": 20,
+          "details": [
+
+tax : 18
+igv : 3.6
+"mtoOperGravadas": 20,
+          "mtoOperExoneradas": 0,
+          "mtoIGV": 3.6,
+          "icbper": 0,
+          "valorVenta": 20,
+          "totalImpuestos": 3.6,
+          "subTotal": 23.6,
+          "redondeo": 0,
+          "mtoImpVenta": 23.6,
+          "details": [
+
+tax : 18
+igv : 3.6
+"mtoOperGravadas": 20,
+          "mtoOperExoneradas": 0,
+          "mtoIGV": 3.6,
+          "icbper": 0,
+          "valorVenta": 20,
+          "totalImpuestos": 3.6,
+          "subTotal": 23.6,
+          "redondeo": 0,
+          "mtoImpVenta": 23.6,
+          "details": [
+
+tax : 18
+igv : 1.52
+igv : 15.26
+"mtoOperGravadas": 93.22,
+          "mtoOperExoneradas": 0,
+          "mtoIGV": 16.78,
+          "icbper": 0,
+          "valorVenta": 93.22,
+          "totalImpuestos": 16.78,
+          "subTotal": 110,
+          "redondeo": 0,
+          "mtoImpVenta": 110,
+          "details": [
+
+tax : 18
+igv : 1.52
+igv : 15.26
+"mtoOperGravadas": 93.22,
+          "mtoOperExoneradas": 0,
+          "mtoIGV": 16.78,
+          "icbper": 0,
+          "valorVenta": 93.22,
+          "totalImpuestos": 16.78,
+          "subTotal": 110,
+          "redondeo": 0,
+          "mtoImpVenta": 110,
+          "details": [
+
+tax : 18
+B001 - 3
+igv : 1.52
+igv : 15.26
+"mtoOperGravadas": 93.22,
+          "mtoOperExoneradas": 0,
+          "mtoIGV": 16.78,
+          "icbper": 0,
+          "valorVenta": 93.22,
+          "totalImpuestos": 16.78,
+          "subTotal": 110,
+          "redondeo": 0,
+          "mtoImpVenta": 110,
+          "details": [
+
+tax : 18
+B001 - 3
+igv : 1.52
+igv : 15.26
+"mtoOperGravadas": 93.22,
+          "mtoOperExoneradas": 0,
+          "mtoIGV": 16.78,
+          "icbper": 0,
+          "valorVenta": 93.22,
+          "totalImpuestos": 16.78,
+          "subTotal": 110,
+          "redondeo": 0,
+          "mtoImpVenta": 110,
+          "details": [
+
+B001 - 4
+tax : 18
+igv : 15.26
+"mtoOperGravadas": 84.75,
+          "mtoOperExoneradas": 0,
+          "mtoIGV": 15.26,
+          "icbper": 0,
+          "valorVenta": 84.75,
+          "totalImpuestos": 15.26,
+          "subTotal": 100.01,
+          "redondeo": 0,
+          "mtoImpVenta": 100.01,
+          "details": [
+
+B001 - 5
+tax : 18
+igv : 12.6
+"mtoOperGravadas": 70,
+          "mtoOperExoneradas": 0,
+          "mtoIGV": 12.6,
+          "icbper": 0,
+          "valorVenta": 70,
+          "totalImpuestos": 12.6,
+          "subTotal": 82.6,
+          "redondeo": 0,
+          "mtoImpVenta": 82.6,
+          "details": [

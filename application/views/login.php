@@ -17,7 +17,6 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 
 	<!-- <script type="text/javascript" src="assets/js/jquery.min.js"></script> -->
-   
     <script src="<?= base_url("assets/plugins/jQuery/jQuery-2.1.4.min.js") ?>"></script>
     <script src="<?= base_url("assets/bootstrap/js/bootstrap.js") ?>"></script>
     <link rel="stylesheet" type="text/css" href="<?= base_url("assets/bootstrap/css/bootstrap.css") ?>" media="all"></link>
@@ -82,7 +81,7 @@
 								<div class="form-group">
 								    <label for="pass">Password:</label>
 								    <div>
-								      <input type="password" name="pass" class="form-control" id="pass" placeholder="Contraseña" value="1357barco">
+								      <input type="password" name="pass" class="form-control" id="pass" placeholder="Contraseña" value="">
 								    </div>
 								</div>
 							</div>

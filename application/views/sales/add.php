@@ -631,6 +631,7 @@ if(isset($existe_apertura)){
         cad += '<tr>'
         cad += '<th>Producto</th>'
         cad += '<th>Obs</th>'
+        cad += '<th>Series</th>'
         cad += '<th>Cant.</th>'
         cad += '<th>Costo U.</th>'
         cad += '<th>Item</th>'
@@ -655,6 +656,9 @@ if(isset($existe_apertura)){
 
             // Obs
             cad 			+= '<td>' + '<input type="text" class="form-control" name="obs[]" id="obs[]">' + "</td>";
+
+            // Series
+            cad 			+= '<td>' + '<input type="text" class="form-control" name="series[]" id="series[]">' + "</td>";
 
             // Cantidad
             cad 			+= '<td><input size="4" style="text-align: right" type="text" name="quantity[]" value="' + ar_items[i]["quantity"] + '"  class="form-control" readonly></td>'
@@ -700,6 +704,7 @@ if(isset($existe_apertura)){
         cad += '        <th class="celdas_totales"></th>'
         cad += '        <th class="celdas_totales"></th>'
         cad += '        <th class="celdas_totales"></th>'
+        cad += '        <th class="celdas_totales"></th>'
         cad += '        <th class="celdas_totales text-right"><span id="gsubtotal">0.00</span></th>'
         cad += '        <th class="celdas_totales"></th>'
         cad += '    </tr>'
@@ -707,6 +712,7 @@ if(isset($existe_apertura)){
         // *** FILA IGV **********
         cad += '    <tr class="active">'
         cad += '        <th class="celdas_totales"><?= lang('igv'); ?></th>'
+        cad += '        <th class="celdas_totales"></th>'
         cad += '        <th class="celdas_totales"></th>'
         cad += '        <th class="celdas_totales"></th>'
         cad += '        <th class="celdas_totales"></th>'
@@ -722,6 +728,7 @@ if(isset($existe_apertura)){
             cad += '        <th class="celdas_totales"></th>'
             cad += '        <th class="celdas_totales"></th>'
             cad += '        <th class="celdas_totales"></th>'
+            cad += '        <th class="celdas_totales"></th>'
             cad += '        <th class="celdas_totales text-right">-'+nDscto+'</th>'
             cad += '        <th class="celdas_totales"></th>'
             cad += '    </tr>'
@@ -730,6 +737,7 @@ if(isset($existe_apertura)){
         // *** FILA TOTAL **********
         cad += '    <tr class="active">'
         cad += '        <th class="celdas_totales">Total</th>'
+        cad += '        <th class="celdas_totales"></th>'
         cad += '        <th class="celdas_totales"></th>'
         cad += '        <th class="celdas_totales"></th>'
         cad += '        <th class="celdas_totales"></th>'

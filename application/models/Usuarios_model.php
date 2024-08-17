@@ -25,6 +25,7 @@ class Usuarios_model extends CI_Model
         return $this->fm->crea_tabla_result($result, $cols, $cols_titulos, $ar_align, $ar_pie);
     }
 
+    // Todavia no se utiliza
     function permiso_usuarios($usuario_id){
         $cSql = "select tm.id, tm.modulo, if(um.id is not null,1,0) califica
             from tec_modulos tm
