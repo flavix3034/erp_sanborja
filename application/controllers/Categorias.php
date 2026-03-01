@@ -39,6 +39,8 @@ class Categorias extends CI_controller
         $ar["name"] = $name;
 
         if($modo == "I"){
+            $maximo = $this->db->query("select max(id) maximo from tec_categories where id < 9000")->row()->maximo;
+            $ar["id"] = $maximo + 1;
             $this->db->insert("tec_categories",$ar);
             $this->index();
         }else{

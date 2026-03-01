@@ -41,7 +41,7 @@ class Compras_model extends CI_Model
             left join tec_tipos_doc c on a.tipoDoc = c.id
             left join tec_proveedores tp on a.proveedor_id = tp.id
             left join tec_users tu on a.created_by = tu.id
-            where 1=1 " . $cad_desde . $cad_hasta . $cad_store_id;
+            where 1=1 " . $cad_desde . $cad_hasta . $cad_store_id . " order by a.id desc limit 2500";
 
         // <i class=\'glyphicon glyphicon-edit\' style=\'font-size:16px\'></i>
 

@@ -42,7 +42,7 @@
         <label>Producto:</label>
         <?php
             // fecha product_id cantidad unidad store_id maestro_id
-            $cSql = "select a.id, concat(a.name,' ',a.marca,' ',a.modelo) name from tec_products a order by a.name,a.marca";
+            $cSql = "select a.id, a.name from tec_products a order by a.name";
             $result = $this->db->query($cSql)->result_array();
             $indice = "id";
             $descrip = "name";

@@ -43,7 +43,24 @@ if(!isset($store_id)){
         padding: 10px 3px !important;
         font-size: 9px;
     }
-
+    @media print {
+      body * {
+        visibility: hidden; /* Oculta todo */
+      }
+      #pizarra, #pizarra * {
+        visibility: visible; /* Muestra solo el modal */
+      }
+      #pizarra {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+      }
+        #caja-fecha{
+            min-width: 150px;
+            color:red!important;
+        }
+    }
 </style>
 
 <!-- SECCION DE FILTROS -->
@@ -98,22 +115,22 @@ if(!isset($store_id)){
 
     <div class="row" id="grilla">
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-            <table id="example" class="display" style="width:100%; font-size: 12px; margin:0px!important;" data-page-length='14'>
+            <table id="example" class="display" style="width:100%; font-size: 12px; margin:0px!important;">
                 <thead>
                     <tr>
-                        <th>id</th>
-                        <th>Tienda</th>
-                        <th>Fecha</th>
-                        <th>Cliente</th>
-                        <th>recibo</th>
+                        <th style="max-width:45px;color:red;text-align:center;">id</th>
+                        <th style="max-width:55px;color:red;text-align:center;">Tienda</th>
+                        <th style="min-width:100px;color:red;">Fecha</th>
+                        <th style="min-width:170px;color:red;">Cliente</th>
+                        <th style="min-width:55px;color:red;">recibo</th>
 
-                        <th>Anulado</th>
-                        <th>subtotal</th>
-                        <th>Total</th>
-                        <th>Productos</th>
-                        <th>Sunat</th>
+                        <th style="max-width:35px;color:red;text-align:center;">Nulo</th>
+                        <th style="min-width:35px;color:red;text-align:center;">subtotal</th>
+                        <th style="min-width:60px;color:red;">Total</th>
+                        <th style="min-width:130px;color:red;">Productos</th>
+                        <th style="min-width:10px;color:red;">Sunat</th>
     					
-                        <th>Actions</th>
+                        <th style="min-width:120px;color:red;">Actions</th>
                     </tr>
                 </thead>
                 <tfoot>
@@ -155,6 +172,7 @@ if(!isset($store_id)){
                   <p>Some text in the modal.</p>
                 </div>
                 <div class="modal-footer">
+                  <button type="button" class="btn btn-default" data-dismiss="modal" onclick="window.print();">Imprimir</button>
                   <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 </div>
               </div>
@@ -168,9 +186,10 @@ if(!isset($store_id)){
     
     $(document).ready(function() {
         $('#example').DataTable({
+            /*pageLength      : 13,*/
             dom:            "Bfrtip",
             order           : [[0,'desc']],
-            scrollY:        "300px",
+            scrollY:        "355px",
             scrollX:        true,
             scrollCollapse: true,
             paging:         false,
@@ -222,8 +241,28 @@ if(!isset($store_id)){
             },
             "columnDefs":[
                 { className: "dt-right", "targets": [4,5]}
-                /*,{ "bVisible": false, "aTargets": [5] }
-                ,{ className: "margen-corto", "targets": [0,1,2,3,4,5,6,7,8,9,10]}*/
+                ,{ 
+                    render:function(data, type, row){
+                        let valore = row[9]
+                        return "<a href='https://cubifact.com/erp-surco/comprobantes/doc_" + row[0] + "_rpta.txt'>" + (valore.trim().length > 0 ? row[9] : ".") + "</a>"
+                    },
+                    "targets":[9]
+                },{
+                    render:function(data, type, row){
+                        
+                        let tamanio = row[9]
+                        let valore = ""
+                        if (tamanio.length > 0){
+                            valore = valore + "<a href=\"#\" onclick=\"ver_documento('" + row[0] + "')\"><i class='glyphicon glyphicon-eye-open' style='font-size:16px;color:lightgreen'></i></a>"
+                        }else{
+                            valore = valore + "&nbsp;<a href=\"#\" onclick=\"ver_documento_interno('" + row[0] + "')\"><i class='glyphicon glyphicon-eye-open' style='font-size:16px;'></i></a>"
+                        }
+                        valore = valore + "&nbsp;<a href=\"#\" onclick=\"del_documento('" + row[0] + "')\"><i class='glyphicon glyphicon-remove' style='font-size:16px;color:red'></i></a>"
+                        return valore
+                    },
+                    "targets":[10]
+                }
+
             ]
 
         });
@@ -270,9 +309,9 @@ if(!isset($store_id)){
         })
     }
 
-    function del_documento(id){
+    function del_documento(id){ // Funcion inteligente (si es Factura le da de baja, si es Nota solo lo anula)
         Swal.fire({
-            title: "Desea eliminar la Venta?",
+            title: "Desea dar de Baja la Venta?",
             showDenyButton: true, showCancelButton: false, confirmButtonText: "Si", denyButtonText: "No"
         }).then((result) => {
             if (result.isConfirmed) {
@@ -283,7 +322,7 @@ if(!isset($store_id)){
                     success : function(response){
                         var obj = JSON.parse(response)
                         if(obj.rpta == '1'){
-                            Swal.fire("Anulación correcta", "", "success");
+                            Swal.fire("Se dio de Baja correctamente", "", "success");
                         }else{
                             alert(obj.message)
                         }
@@ -292,10 +331,12 @@ if(!isset($store_id)){
                 })
             }
         });
-
     }
 
 </script>
 <style type="text/css">
     .table td:nth-child(4) { text-align: right;}
+    #example.dataTable tbody td {
+        padding: 2px 8px; /* reduce aún más el alto */
+    }
 </style>

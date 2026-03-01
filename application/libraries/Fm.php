@@ -250,7 +250,7 @@ class Fm{
 		$d = (int) substr($n,1,2);
 		return (($u == 1)?'ciento':$cientos[$u*100]).' '.$this->decenas($d);
 		}
-		} else return decenas($n);
+		} else return $this->decenas($n);
 	}
 
 	function miles($n) {
@@ -731,7 +731,7 @@ class Fm{
 
     function consulta_ruc($ruc){
         // Datos
-        $token = 'apis-token-2984.2bqYVYjkpZ5a76iPOD1YFz3upAWChzs2';
+        $token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxMTAsImV4cCI6MTc1MTkyNzg4OX0.qLIrY_tWIVGjXng0SOFXQpuRjkXryArOlwh1urAr3Sw';
         //
 
         // Iniciar llamada a API
@@ -739,7 +739,7 @@ class Fm{
 
         // Buscar ruc sunat
         curl_setopt_array($curl, array(
-        CURLOPT_URL => 'https://api.apis.net.pe/v1/ruc?numero=' . $ruc,
+        CURLOPT_URL => 'https://miapi.cloud/v1/ruc/' . $ruc,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_ENCODING => '',
         CURLOPT_MAXREDIRS => 10,
@@ -748,7 +748,7 @@ class Fm{
         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
         CURLOPT_CUSTOMREQUEST => 'GET',
         CURLOPT_HTTPHEADER => array(
-          'Referer: http://apis.net.pe/api-ruc',
+          'Referer: https://miapi.cloud/v1/ruc/',
           'Authorization: Bearer ' . $token
         ),
         ));
@@ -759,60 +759,42 @@ class Fm{
         // Datos de empresas según padron reducido
         $empresa = json_decode($response);
           
-          /*
-            nombre' => string 'JFKSYS EIRL' (length=11)
-            tipoDocumento' => string '6' (length=1)
-            numeroDocumento' => string '10605495063' (length=11)
-            estado' => string 'ACTIVO' (length=6)
-            condicion' => string 'HABIDO' (length=6)
-            direccion' => string 'JR. SAN GENARO NRO 645 DEP. 101 URB. SANTA CATALINA ' (length=58)
-            ubigeo' => string '150115' (length=6)
-            viaTipo' => string 'JR.' (length=3)
-            viaNombre' => string 'SAN GENARO' (length=16)
-            zonaCodigo' => string 'URB.' (length=4)
-            zonaTipo' => string 'SANTA CATALINA' (length=14)
-            numero' => string '645' (length=3)
-            interior' => string '-' (length=1)
-            lote' => string '-' (length=1)
-            dpto' => string '101' (length=3)
-            manzana' => string '-' (length=1)
-            distrito' => string 'LA VICTORIA' (length=11)
-            provincia' => string 'LIMA' (length=4)
-            departamento' => string 'LIMA' (length=4)
-          */
           //var_dump($empresa);
         return $empresa;
     }
 
     function consulta_dni($dni){
-		$token = 'apis-token-2984.2bqYVYjkpZ5a76iPOD1YFz3upAWChzs2';
+        // Datos
+        $token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxMTAsImV4cCI6MTc1MTkyNzg4OX0.qLIrY_tWIVGjXng0SOFXQpuRjkXryArOlwh1urAr3Sw';
+        //
 
-		// Iniciar llamada a API
-		$curl = curl_init();
+        // Iniciar llamada a API
+        $curl = curl_init();
 
-		// Buscar dni
-		curl_setopt_array($curl, array(
-		  CURLOPT_URL => 'https://api.apis.net.pe/v1/dni?numero=' . $dni,
-		  CURLOPT_RETURNTRANSFER => true,
-		  CURLOPT_ENCODING => '',
-		  CURLOPT_MAXREDIRS => 2,
-		  CURLOPT_TIMEOUT => 0,
-		  CURLOPT_FOLLOWLOCATION => true,
-		  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-		  CURLOPT_CUSTOMREQUEST => 'GET',
-		  CURLOPT_HTTPHEADER => array(
-		    'Referer: https://apis.net.pe/consulta-dni-api',
-		    'Authorization: Bearer ' . $token
-		  ),
-		));
+        // Buscar ruc sunat
+        curl_setopt_array($curl, array(
+        CURLOPT_URL => 'https://miapi.cloud/v1/dni/' . $dni,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_ENCODING => '',
+        CURLOPT_MAXREDIRS => 10,
+        CURLOPT_TIMEOUT => 0,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        CURLOPT_CUSTOMREQUEST => 'GET',
+        CURLOPT_HTTPHEADER => array(
+          'Referer: https://miapi.cloud/v1/dni/',
+          'Authorization: Bearer ' . $token
+        ),
+        ));
 
-		$response = curl_exec($curl);
+        $response = curl_exec($curl);
 
-		curl_close($curl);
-		// Datos listos para usar
-		$persona = json_decode($response);
-		//var_dump($persona);
-		return $persona;
+        curl_close($curl);
+        // Datos de empresas según padron reducido
+        $empresa = json_decode($response);
+          
+          //var_dump($empresa);
+        return $empresa;
     }
 
 }

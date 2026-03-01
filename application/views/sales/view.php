@@ -23,18 +23,23 @@
 			foreach($query->result() as $r){
 				$tipo 		= $r->tipo_documento;
 				$recibo 	= $r->recibo;
+				$c_tipo_descrip = "";
 				
 				if($tipo == 'Boleta'){ // Boleta : 2
-	            	//$tipoDoc_       = "03";
    	        		$tipoDoc_client = "1"; // DNI
+   	        		$c_tipo_descrip = 'Boleta de venta eletronica';
+   	        		$cDesComprobante = 'de la Boleta electr&oacute;nica';
 	         	}elseif($tipo == 'Factura'){ // Factura : 1
-	            	//$tipoDoc_       = "01";
 	            	$tipoDoc_client = "6"; // RUC
+	            	$c_tipo_descrip = 'Factura de venta electronica';
+	            	$cDesComprobante = 'de la Factura electr&oacute;nica';
 	        	}else{
 	         		$tipoDoc_client = "1";
+	         		$c_tipo_descrip = $tipo;
+	         		$cDesComprobante = 'del comprobante';
 	         	}
 				$razon 				= $r->razon;
-				$doc_personal 	    = $r->doc_personal;
+				$doc_personal = $r->doc_personal;
 				$fecha 				= $r->fecha;
 				$total1 			= number_format($r->total,2);
 				$total_discount = number_format((is_null($r->total_discount) ? 0 : $r->total_discount),2);
@@ -102,12 +107,14 @@
 		    	}
 			</style>
 
+			
 			<div class="col-sm-6 col-md-5 col-lg-4" style="border-style: none; border-width: 2px; border-color:rgb(60,60,60); padding:3px;"><!-- EXPETO -->
-				<!--<div class="row" style="">
-					<div class="col-sm-12 col-lg-12" style="text-align:center">
+
+				<div class="row" style="margin:auto">
+					<div class="col-xs-12 col-md-12" style="text-align:center">
 						<img src="<?= base_url("imagenes/logo1.png") ?>" height="40px">
 					</div>
-				</div>-->
+				</div>
 
 				<div class="row" style="margin-bottom:10px; margin:auto">
 					<div class="col-sm-12 col-md-12" style="text-align:center">
@@ -120,7 +127,9 @@
 
 				<div class="row" style="margin:auto">
 					<div class="col-sm-12 col-md-12" style="text-align:center">
-						<span style="font-size:16px"><?= $tipo ?>&nbsp;&nbsp;<?= $recibo ?></span>
+						<span style="font-size:16px"><?= $c_tipo_descrip ?><br>
+							<?= $recibo ?>
+						</span>
 					</div>
 				</div>
 
@@ -167,16 +176,49 @@
 							<tbody>
 								<?php
 									$n = 0;
-									foreach($query->result() as $r){
-										$n++;
-										echo "<tr>";
-										//echo $this->fm->celda($r->name . ' ' . $r->marca . ' ' . $r->modelo);
-										echo $this->fm->celda($r->product_name);
-										echo $this->fm->celda(number_format($r->quantity,2),"2");
-										echo $this->fm->celda(number_format($r->net_unit_price,2),"2");
-										//echo $this->fm->celda(number_format($r->discount,2),"2");
-										echo $this->fm->celda(number_format($r->subtotal,2),"2");
-										echo "</tr>";
+									$all_rows = $query->result();
+									$rendered_groups = array();
+
+									foreach($all_rows as $r){
+										if(!empty($r->group_id)){
+											// Item agrupado: solo renderizar una vez por grupo
+											if(!isset($rendered_groups[$r->group_id])){
+												$group_total = 0;
+												foreach($all_rows as $r2){
+													if($r2->group_id == $r->group_id){
+														$group_total += $r2->subtotal;
+													}
+												}
+												$rendered_groups[$r->group_id] = true;
+												$n++;
+												echo "<tr>";
+												echo $this->fm->celda($r->group_name);
+												echo $this->fm->celda("1","2");
+												echo $this->fm->celda(number_format($group_total,2),"2");
+												echo $this->fm->celda(number_format($group_total,2),"2");
+												echo "</tr>";
+											}
+										}else{
+											// Item individual (logica original)
+											$n++;
+											echo "<tr>";
+
+											if(is_null($r->comment)){
+												$nombre_producto = $r->product_name;
+											}else{
+												if (strlen(trim($r->comment)) > 0){
+													$nombre_producto = trim($r->comment);
+												}else{
+													$nombre_producto = $r->product_name;
+												}
+											}
+
+											echo $this->fm->celda($nombre_producto);
+											echo $this->fm->celda(number_format($r->quantity,2),"2");
+											echo $this->fm->celda(number_format($r->net_unit_price,2),"2");
+											echo $this->fm->celda(number_format($r->subtotal,2),"2");
+											echo "</tr>";
+										}
 									}
 								?>
 							</tbody>
@@ -223,7 +265,8 @@
 			   		<div class="col-sm-10" style="margin:auto;font-size: 11px;">
 						<!--No se aceptan Devoluciones. Cambio de mercaderia max. 48 horas previa presentacion de su comprobante.<br>
 						GRACIAS POR SU COMPRA-->
-						<?= $nota_pie ?>
+						<p><?= $nota_pie ?></p>
+						<p>Esta es una representaci&oacute;n impresa <?=$cDesComprobante?>, generada en el Sistema de SUNAT. Puede verificarla utilizando su clave SOL.</p>
 			        </div>
 			    </div>
 			</div><!-- EXPETO -->
@@ -261,15 +304,30 @@
 			} 
 		};
 
-		function imprSelec(nombre) {
-		  var ficha = document.getElementById(nombre);
-		  var ventimp = window.open(' ', 'popimpr');
-		  ventimp.document.write( ficha.innerHTML );
-		  ventimp.document.close();
-		  ventimp.print( );
-		  ventimp.close();
-		}
-	</script>
+	function imprSelec(nombre) {
+		var ficha = document.getElementById(nombre);
+		var ventimp = window.open('', 'popimpr', 'width=800,height=600');
+
+		ventimp.document.write(`
+		    <html>
+		      <head>
+		        <title>Imprimir</title>
+		      </head>
+		      <body>
+		        ${ficha.innerHTML}
+		      </body>
+		    </html>`);
+
+	  	ventimp.document.close();
+
+	  	// Esperar a que carguen las imágenes antes de imprimir
+	  	ventimp.onload = function() {
+	    	ventimp.focus();
+	    	ventimp.print();
+	    	ventimp.close();
+	  	};
+	}	
+</script>
 
 </body>
 </html>

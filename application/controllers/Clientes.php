@@ -91,6 +91,11 @@ class Clientes extends CI_Controller {
 
     }
 
+    function holak($documento){
+    	$obj = $this->fm->consulta_dato_api($documento);
+    	print_r($obj);
+    }
+
     function busqueda_nombre(){
     	$dato1 = $_REQUEST["dato1"];
 
@@ -111,14 +116,16 @@ class Clientes extends CI_Controller {
 
 	    $respuesta["name_cliente"] 	= "No existe";
        	$respuesta["rpta"] 			= false;
-
+		
 	    foreach($result as $r){
 	        $respuesta["name_cliente"] 	= $r->name;
 	        $respuesta["cf2"] 			= $r->cf2; 
 	        $respuesta["id"] 			= $r->id;
 	        $respuesta["rpta"] 			= true;
 	    }
+	    
 
+    	
     	if ($bandera && $respuesta["rpta"]==false){
 		    
 	   		$busqueda_json 			= true;
@@ -129,20 +136,33 @@ class Clientes extends CI_Controller {
 
 	   		if(isset($obj->error)){
 	   			$busqueda_json 		= false;
+	   			$respuesta["name_cliente"]		= $obj->error;
 	   		}else{
 	   			$id = $this->ingreso_clientes_api($obj, $tipo_datos);
 
 	   			$respuesta["rpta"]				= true;
-	   			$respuesta["name_cliente"]		= $obj->nombre;
-	   			$respuesta["cf2"] 				= $obj->numeroDocumento;
-	   			$respuesta["id"] 				= $id;
-	   			$respuesta["direccion"] 		= $obj->direccion;
+
+	   			if(strlen(trim($dato1))<11){
+	   			
+	   				$respuesta["name_cliente"]		= $obj->datos->nombres . " " . $obj->datos->ape_paterno . " " . $obj->datos->ape_materno;
+	   				$respuesta["cf2"] 				= $obj->datos->dni;
+	   				$respuesta["id"] 				= $id;
+	   				$respuesta["direccion"] 		= $obj->datos->domiciliado->direccion;
+	   			}
+
+	   			if(strlen(trim($dato1))==11){
+	   			
+	   				$respuesta["name_cliente"]		= $obj->datos->razon_social;
+	   				$respuesta["cf2"] 				= $obj->datos->ruc;
+	   				$respuesta["id"] 				= $id;
+	   				$respuesta["direccion"] 		= $obj->datos->domiciliado->direccion;
+	   			}
 	   		}
 
 		}
     	echo json_encode($respuesta);
     }
-
+/*
 	function ingreso_clientes_api($objeto, $tipo_datos){
 		if($tipo_datos == "RUC"){
 			//var_dump($objeto);
@@ -160,4 +180,25 @@ class Clientes extends CI_Controller {
 		$this->db->set($ar)->insert("tec_customers");
 		return $this->db->insert_id();
 	}    
+*/
+	function ingreso_clientes_api($obj, $tipo_datos){
+		if($tipo_datos == "RUC"){
+			//var_dump($objeto);
+			$ruc 		= $obj->datos->ruc;
+			$nombre 	= $obj->datos->razon_social; //$obj->datos->nombres . " " . $obj->datos->ape_paterno . " " . $obj->datos->ape_materno;
+			$direccion 	= $obj->datos->domiciliado->direccion;
+			$ar = array("cf2"=>$ruc, "name"=>$nombre, "direccion"=>$direccion);
+		}else{
+			$ruc 		= $obj->datos->dni;
+			$nombre 	= $obj->datos->nombres . " " . $obj->datos->ape_paterno . " " . $obj->datos->ape_materno;
+			$direccion 	= $obj->datos->domiciliado->direccion;
+			$ar = array("cf1"=>$ruc, "name"=>$nombre, "direccion"=>$direccion);
+		}
+
+		$this->db->set($ar)->insert("tec_customers");
+		return $this->db->insert_id();
+		
+		//return 1;
+	}    
+
 }

@@ -41,8 +41,12 @@ class Products extends CI_controller
             $this->data["row"]  = $this->db->select('*')->from('tec_products')->where('id',$id)->get()->row();
             $this->data["modo"] = 'update';
             $this->data["id"]   = $id;
+            // Verificar si tiene variantes
+            $this->load->model('atributos_model');
+            $this->data["tiene_variantes"] = $this->atributos_model->producto_tiene_variantes($id);
         }else{
-            $this->data["modo"] = 'insert'; 
+            $this->data["modo"] = 'insert';
+            $this->data["tiene_variantes"] = false;
         }
 
         $this->data['page_title']    = "Agregar Producto:";
@@ -86,6 +90,7 @@ class Products extends CI_controller
         $nu_codigo = 10000001;
 
         $modo = strtolower($_POST["modo"]);
+        $modo_api = "";
 
         if(strlen($code)==0){
             /*
@@ -208,22 +213,139 @@ class Products extends CI_controller
 
             }
 
+            // === GUARDAR VARIANTES ===
+            if (isset($_POST['tiene_variantes']) && $_POST['tiene_variantes'] == '1') {
+                $product_id = ($modo == 'insert') ? $ar["id"] : $_POST['id'];
+                $this->guardar_variantes_producto($product_id);
+            }
+
         }else{
 
             $this->data['msg']      = "Hay informacion que debe cambiarse, codigo de barra ya existe";
             $this->data["rpta_msg"] = "danger";
 
         }
-        
-        $this->data["modo"]         = 'insert'; 
+
+        $this->data["modo"]         = 'insert';
         $this->data['page_title']   = "Agregar Producto:";
-        
+
         if($modo_api == '1'){
             echo json_encode(array("msg"=>$this->data["msg"]));
         }else{
             $this->template->load("production/index", 'products/add', $this->data);
         }
 
+    }
+
+    /**
+     * Guarda las variantes enviadas desde el formulario de producto
+     */
+    private function guardar_variantes_producto($product_id) {
+        $this->load->model('atributos_model');
+
+        $var_skus    = isset($_POST['var_sku']) ? $_POST['var_sku'] : array();
+        $var_barcodes = isset($_POST['var_barcode']) ? $_POST['var_barcode'] : array();
+        $var_prices  = isset($_POST['var_price']) ? $_POST['var_price'] : array();
+        $var_pmayors = isset($_POST['var_pmayor']) ? $_POST['var_pmayor'] : array();
+        $var_activos = isset($_POST['var_activo']) ? $_POST['var_activo'] : array();
+        $var_attrs   = isset($_POST['var_attrs']) ? $_POST['var_attrs'] : array();
+        $var_ids     = isset($_POST['var_id']) ? $_POST['var_id'] : array();
+
+        // Obtener IDs existentes para saber cuales eliminar
+        $existentes = $this->atributos_model->get_variantes_producto($product_id);
+        $ids_existentes = array();
+        foreach ($existentes as $e) { $ids_existentes[] = intval($e->id); }
+
+        $ids_procesados = array();
+        $store_id = intval($_SESSION['store_id']);
+
+        for ($i = 0; $i < count($var_skus); $i++) {
+            $sku     = trim($var_skus[$i]);
+            $barcode = isset($var_barcodes[$i]) ? trim($var_barcodes[$i]) : '';
+            $price   = isset($var_prices[$i]) && strlen(trim($var_prices[$i])) > 0 ? floatval($var_prices[$i]) : null;
+            $pmayor  = isset($var_pmayors[$i]) && strlen(trim($var_pmayors[$i])) > 0 ? floatval($var_pmayors[$i]) : null;
+            $activo  = in_array(strval($i), $var_activos) ? '1' : '';
+            $attrs_json = isset($var_attrs[$i]) ? $var_attrs[$i] : '[]';
+
+            $data_var = array(
+                'product_id'     => $product_id,
+                'sku'            => $sku,
+                'barcode'        => strlen($barcode) > 0 ? $barcode : null,
+                'price'          => $price,
+                'precio_x_mayor' => $pmayor,
+                'activo'         => $activo
+            );
+
+            // Si tiene ID existente, actualizar; si no, insertar
+            if (isset($var_ids[$i]) && intval($var_ids[$i]) > 0) {
+                $var_id = intval($var_ids[$i]);
+                $this->atributos_model->actualizar_variante($var_id, $data_var);
+                $ids_procesados[] = $var_id;
+            } else {
+                $var_id = $this->atributos_model->insertar_variante($data_var);
+                $ids_procesados[] = $var_id;
+
+                // Crear stock inicial en tec_prod_store
+                $this->db->insert('tec_prod_store', array(
+                    'product_id' => $product_id,
+                    'store_id'   => $store_id,
+                    'stock'      => 0,
+                    'variant_id' => $var_id
+                ));
+            }
+
+            // Guardar relacion variante-atributos
+            $this->atributos_model->eliminar_variante_atributos($var_id);
+            $attrs = json_decode($attrs_json, true);
+            if (is_array($attrs)) {
+                foreach ($attrs as $a) {
+                    $this->atributos_model->insertar_variante_atributo(array(
+                        'variante_id' => $var_id,
+                        'atributo_id' => intval($a['atributo_id']),
+                        'valor_id'    => intval($a['valor_id'])
+                    ));
+                }
+            }
+        }
+
+        // Eliminar variantes que ya no estan (fueron removidas del formulario)
+        foreach ($ids_existentes as $eid) {
+            if (!in_array($eid, $ids_procesados)) {
+                $this->atributos_model->eliminar_variante($eid);
+                // Eliminar stock de la variante
+                $this->db->where('variant_id', $eid)->delete('tec_prod_store');
+            }
+        }
+    }
+
+    /**
+     * AJAX: Retorna variantes de un producto para modo edicion
+     */
+    function get_variantes_producto($product_id) {
+        header('Content-Type: application/json');
+        $this->load->model('atributos_model');
+        $variantes = $this->atributos_model->get_variantes_producto($product_id);
+
+        $result = array();
+        foreach ($variantes as $v) {
+            // Obtener atributos de cada variante
+            $attrs_raw = $this->db->query(
+                "SELECT va.atributo_id, va.valor_id FROM tec_variante_atributos va WHERE va.variante_id = ?",
+                array($v->id)
+            )->result_array();
+
+            $result[] = array(
+                'id'             => $v->id,
+                'sku'            => $v->sku,
+                'barcode'        => $v->barcode,
+                'price'          => $v->price,
+                'precio_x_mayor' => $v->precio_x_mayor,
+                'activo'         => $v->activo,
+                'combinacion'    => $v->combinacion,
+                'atributos'      => $attrs_raw
+            );
+        }
+        echo json_encode($result);
     }
 
     function save1(){
@@ -629,7 +751,7 @@ class Products extends CI_controller
     function print_inicial(){
         $this->data['page_title'] = "Impresion de Codigos de Barra";
 
-        $this->data["query_codigos"] = $this->db->query("select id, code, concat(name,' ',marca,' ',modelo) descrip from tec_products where category_id != 7 order by name");
+        $this->data["query_codigos"] = $this->db->query("select id, code, name descrip from tec_products where category_id != 7 order by name");
 
         $this->template->load("production/index", 'products/print_inicial', $this->data);
     }
@@ -742,7 +864,7 @@ class Products extends CI_controller
         
         $this->data['page_title'] = "Impresion de Codigos de Barra x Compra";
 
-        //$this->data["query_codigos"] = $this->db->query("select id, code, concat(name,' ',marca,' ',modelo) descrip from tec_products where category_id != 7 order by name");
+        //$this->data["query_codigos"] = $this->db->query("select id, code, name descrip from tec_products where category_id != 7 order by name");
 
         if(isset($viene_de_guardar)){
             if($viene_de_guardar=='1'){
@@ -988,10 +1110,13 @@ class Products extends CI_controller
     }
     
     public function incluir_nro_compra(){
+        // Vaceando primero impresionx
+        //$this->db->query("delete from impresionx");
+
         // Inserta los productos de una compra a la tabla impresionx luego utiliza traer_impresionx 
         $nro_compra = $this->input->post("nro_compra");
 
-        $cSql = "select b.product_id, a.id compra_id, c.code, concat(c.name,' ',c.marca,' ',c.modelo) producto, round(b.cantidad,0) cantidad
+        $cSql = "select b.product_id, a.id compra_id, c.code, c.name producto, round(b.cantidad,0) cantidad
             from tec_compras a
             inner join tec_compra_items b on a.id = b.compra_id
             inner join tec_products c on b.product_id = c.id
@@ -1000,7 +1125,9 @@ class Products extends CI_controller
         $query = $this->db->query($cSql);
         
         // llenando tabla impresionx con los items de la compra
+        $i=0;
         foreach($query->result() as $r){
+            $i++;
             $ari = array(
                 "product_id"    =>$r->product_id,
                 "cantidad"      =>$r->cantidad,
@@ -1013,6 +1140,8 @@ class Products extends CI_controller
             $this->db->set($ari)->insert("impresionx");
         }
         echo $this->traer_impresionx();
+        //echo "Se logra incluir los productos, total: {$i}<br>";
+        //    <br><button onclick="location.href='http://localhost/procesos-surco/traer_info_remota.php?modo=2';">Continuar</button>
     }
     
 
@@ -1021,7 +1150,7 @@ class Products extends CI_controller
             // Inserta los productos de una compra a la tabla impresionx
             //$nro_compra = $_REQUEST["nro_compra"];
 
-            $cSql = "select b.product_id, a.id compra_id, c.code, concat(c.name,' ',c.marca,' ',c.modelo) producto, round(b.cantidad,0) cantidad
+            $cSql = "select b.product_id, a.id compra_id, c.code, c.name producto, round(b.cantidad,0) cantidad
                 from tec_compras a
                 inner join tec_compra_items b on a.id = b.compra_id
                 inner join tec_products c on b.product_id = c.id
@@ -1074,7 +1203,7 @@ class Products extends CI_controller
 
     public function reset_impresionx(){
         $this->db->query("delete from impresionx");
-        echo "Se reseta la tabla de impresion";
+        echo "Se resetea la tabla de impresion";
     }
 
     public function elimina_item_impresionx(){
@@ -1112,7 +1241,7 @@ class Products extends CI_controller
     }
 
     function get_compra_items($nro_compra){
-        $cSql = "select b.product_id, a.id compra_id, c.code, concat(c.name,' ',c.marca,' ',c.modelo) producto, round(b.cantidad,0) cantidad
+        $cSql = "select b.product_id, a.id compra_id, c.code, c.name producto, round(b.cantidad,0) cantidad
             from tec_compras a
             inner join tec_compra_items b on a.id = b.compra_id
             inner join tec_products c on b.product_id = c.id

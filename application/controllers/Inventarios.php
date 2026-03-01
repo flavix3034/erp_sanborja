@@ -332,7 +332,7 @@ class Inventarios extends CI_Controller {
         $maestro_id = $_GET["maestro_id"];
         $limit      = isset($_GET["limit"]) ? intval($_GET["limit"]) : 50000;
         // fecha product_id cantidad unidad store_id maestro_id
-        $cSql = "select a.id, a.fecha, a.product_id, concat(b.name,' ',b.marca,' ',b.modelo) productos, a.cantidad, a.unidad, c.descrip des_unidad
+        $cSql = "select a.id, a.fecha, a.product_id, b.name productos, a.cantidad, a.unidad, c.descrip des_unidad
             from tec_inventarios a
             inner join tec_products b on a.product_id = b.id
             left join tec_unidades c on a.unidad = c.id
@@ -474,15 +474,22 @@ class Inventarios extends CI_Controller {
 
     function finalizar_inventario(){
 
-        $inv_id = $_POST["maestro_id2"];
+        $inv_id = $_REQUEST["maestro_id2"];
+
+        // Averiguando la fecha exacta del inventario
+        $fecha_f        = ""; 
+        $query = $this->db->query("select * from tec_maestro_inv where id = $inv_id");
+        foreach($query->result() as $r){
+            $fecha_f = $r->fecha_f;
+        }
+
         $cad_fecha_f    = "";
         $cad_fecha_f2   = "";
         $cad_fecha_f3   = "";
-        $fecha_f        = ""; 
         if(strlen($fecha_f)>=0){
-            $cad_fecha_f = " and com.fecha_ingreso > '$fecha_f'";
-            $cad_fecha_f2 = " and sx.date > '$fecha_f'";
-            $cad_fecha_f3 = " and fechah > '$fecha_f'";
+            $cad_fecha_f = " and com.fecha_ingreso < '$fecha_f'"; // tec_compra
+            $cad_fecha_f2 = " and sx.date < '$fecha_f'"; // tec_sales
+            $cad_fecha_f3 = " and fechah < '$fecha_f'"; // tec_movim
         }
 
         // Averiguando la tienda actual
@@ -492,7 +499,7 @@ class Inventarios extends CI_Controller {
         }
         $store_id =  $row->store_id;
 
-        $cSql = "select a.id, concat(a.name,' ',a.marca,' ',a.modelo,' ',a.color) name, a.alert_cantidad, 0 cantidad_inicial, compras.cantidad_comprada, ventas.cantidad_vendida, movim.ingreso, movim.salida,
+        $cSql = "select a.id, a.name, a.alert_cantidad, 0 cantidad_inicial, compras.cantidad_comprada, ventas.cantidad_vendida, movim.ingreso, movim.salida,
                 if(isnull(compras.cantidad_comprada),0,compras.cantidad_comprada) 
                 - if(isnull(ventas.cantidad_vendida),0,ventas.cantidad_vendida) 
                 + if(isnull(movim.ingreso),0,movim.ingreso) 
@@ -525,9 +532,13 @@ class Inventarios extends CI_Controller {
         // Ahora recien recorriendo los productos del inventario --------------------------
         $cSql = "select * from tec_inventarios where maestro_id = $inv_id";
         $query = $this->db->query($cSql);
+        
         foreach($query->result() as $r){
-
             $product_id = $r->product_id;
+
+            // Averiguando su nombre
+            $nombre_prod = $this->buscar_raw($result, "id", $product_id, "name");   
+            //echo $product_id . " " . $nombre_prod . "<br>";
             
             //$stock    = $this->buscar($result, "id", $product_id);
             $stock      = $this->buscar_raw($result, "id", $product_id, "stock"); 
@@ -541,38 +552,48 @@ class Inventarios extends CI_Controller {
             $ar["fechah"]       = date("Y-m-d H:i");
             $ar["user_id"]      = $_SESSION["usuario"];
 
-            //echo "Stock :" . $stock . "<br>";
-            //die("Stock avanzado:" . $stock_de_inv);
+            //echo $product_id . " " . $nombre_prod . ", Stock :" . $stock . "<br>". $product_id . " " . $nombre_prod . ", Stock de inventario :" . $stock_de_inv . "<br>";
+            
 
-            if($stock != $stock_de_inv){
+            if($stock != ''){
+                if($stock != $stock_de_inv){
 
-                if($stock > $stock_de_inv){
-                    // Crear Movimiento de salida (por perdida)
-                    $cantidad = $stock - $stock_de_inv;
-                    $ar["cantidad"]     = $cantidad;
-                    $ar["tipo_mov"]     = 'S';
-                    $ar["obs"]          = 'POR PERDIDA DE PRODUCTOS';
-                }else{
-                    $cantidad = $stock_de_inv - $stock;
-                    // Crear Movimiento de Ingreso (por haber mas)
-                    $ar["cantidad"]     = $cantidad;
-                    $ar["tipo_mov"]     = 'I';
-                    $ar["obs"]          = "PARA SINCERAR INVENTARIO ($stock_de_inv - $stock)";
-                }
-                $ar["metodo"] = 4; // otros
+                    if($stock > $stock_de_inv){
+                        // Crear Movimiento de salida (por perdida)
+                        $cantidad = $stock - $stock_de_inv;
+                        //echo "Movimiento de salida $cantidad<br>";
+                        $ar["cantidad"]     = $cantidad;
+                        $ar["tipo_mov"]     = 'S';
+                        $ar["obs"]          = 'POR PERDIDA DE PRODUCTOS';
+                    }else{
+                        $cantidad = $stock_de_inv - $stock;
+                        // Crear Movimiento de Ingreso (por haber mas)
+                        $ar["cantidad"]     = $cantidad;
+                        //echo "Movimiento de Entrada $cantidad<br>";
+                        $ar["tipo_mov"]     = 'I';
+                        $ar["obs"]          = "PARA SINCERAR INVENTARIO ($stock_de_inv - $stock)";
+                    }
+                    $ar["inv_id"]   = $inv_id;
+                    $ar["metodo"]   = 4; // otros
 
-                //print_r($ar);
-                if ($this->db->set($ar)->insert("tec_movim")){
-                    $this->data["rpta_msg"] = "success";
-                    $this->data["msg"]      = "Se agrega correctamente.";
-                }else{
-                    $this->data["rpta_msg"] = "warning";
-                    $this->data["msg"]      = "No se pudo grabar en tec_movim";
+                    //die("Fin previo");
+                    
+                    if ($this->db->set($ar)->insert("tec_movim")){
+                        $this->data["rpta_msg"] = "success";
+                        $this->data["msg"]      = "Se agrega correctamente.";
+                    }else{
+                        $this->data["rpta_msg"] = "warning";
+                        $this->data["msg"]      = "No se pudo grabar en tec_movim";
+                    }
+                    
+                    //die($this->data["msg"]);
                 }
             }
+            //echo "<br>";
 
+            
             // Grabando el Stock Contador
-            $this->db->set("stock",$stock_de_inv)->where("store_id",$store_id)->where("product_id",$product_id)->update("tec_prod_store");
+            //$this->db->set("stock",$stock_de_inv)->where("store_id",$store_id)->where("product_id",$product_id)->update("tec_prod_store");
 
             // Finalizando el inventario
             $cSql = "update tec_maestro_inv set finaliza='1' where id = $inv_id";
@@ -580,7 +601,10 @@ class Inventarios extends CI_Controller {
 
             // Actualizando en stock contador
             $this->actualizar_stock_products($store_id, $product_id, $stock_de_inv);
+            
+            
         }
+        //die("Fin");
         $this->data["rpta_msg"]     = "success";
         $this->data["msg"]          = "Se procesa y finaliza el Inventario";
         $this->data['page_title']   = "Registro de Inventario F&iacute;sico";
@@ -632,7 +656,6 @@ class Inventarios extends CI_Controller {
 
     function actualizar_stock(){
         // Sabemos que el stock tambien se lleva en una tabla aparte llamada (tec_prod_store) por tanto se registrará
-        
         $store_id = $_SESSION["store_id"];
         if(isset($_REQUEST["modo"])){
             $cSql = "select * from tec_products";
@@ -644,6 +667,7 @@ class Inventarios extends CI_Controller {
                 <th>Ahora</th>
                 <th>Nuevo</th>
             </tr>";
+
             foreach($query->result() as $r){
                 
                 $product_id     = $r->id;
@@ -660,7 +684,7 @@ class Inventarios extends CI_Controller {
                 //die($nuevo_stock . ' '.$stock_actual);
                 if($nuevo_stock != $stock_actual){
                 
-                    $descrip_producto = $this->db->select("concat(name,' ',marca,' ',modelo) name")->where('id',$product_id)->get('tec_products')->row()->name;
+                    $descrip_producto = $this->db->select("name")->where('id',$product_id)->get('tec_products')->row()->name;
 
                     $datis          .= "<tr><td>" . $product_id . ") " . $descrip_producto . "</td><td>" . $stock_actual . "</td><td>" . $nuevo_stock . "</td></tr>";
                 }

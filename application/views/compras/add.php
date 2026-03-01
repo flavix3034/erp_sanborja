@@ -35,7 +35,7 @@
             $fecha_ingreso  = $r->fecha_ingreso;
         }
 
-        $cSql = "select a.*, concat(b.name,' ', b.marca,' ', b.modelo) nombre
+        $cSql = "select a.*, b.name nombre
             from tec_compra_items a 
             left join tec_products b on a.product_id = b.id
             where a.compra_id = ?";
@@ -447,7 +447,7 @@
                     let color_26    = document.getElementById("color").value
                     document.getElementById("cerrar_modal").click()
                     limpiar_productos()
-                    mostrar(obj.id_producto, name_26.trim() + " " + marca_26.trim() + " " + modelo_26.trim() + " " + color_26.trim())
+                    mostrar(obj.id_producto, name_26.trim())
 
                 }
             }

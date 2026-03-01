@@ -1,0 +1,219 @@
+<?php if (!defined('BASEPATH')) exit('No direct script access allowed');
+
+class Servicios_model extends CI_Model
+{
+    public function __construct() {
+        parent::__construct();
+    }
+
+    function listar_servicios($estado="", $tecnico=""){
+        $cad_estado = $cad_tecnico = "";
+        
+        if(strlen($estado)>0 && $estado!='0'){
+            $cad_estado = " and a.estado = '".$estado."'";
+        }
+        if(strlen($tecnico)>0 && $tecnico!='0'){
+            $cad_tecnico = " and a.tecnico_asignado = ".$tecnico;
+        }
+        
+        $cSql = "select a.id, a.codigo, a.cliente_nombre, a.cliente_telefono, 
+                    a.equipo_descripcion, a.estado, a.prioridad, a.fecha_recepcion,
+                    ifnull(b.nombre,'Sin Asignar') tecnico_nombre,
+                    concat('<a href=\"#\" onclick=\"modificar(',a.id,')\"><i class=\"glyphicon glyphicon-edit\"></i></a>&nbsp;&nbsp;
+                    <a href=\"#\" onclick=\"eliminar(',a.id,')\"><i class=\"glyphicon glyphicon-remove\"></i></a>') op
+                from tec_servicios_tecnicos a
+                left join tec_tecnicos b on a.tecnico_asignado = b.id
+                where a.activo='1' ".$cad_estado.$cad_tecnico."
+                order by a.id desc";
+        
+        $result = $this->db->query($cSql)->result_array();
+        
+        $cols = array("id","codigo","cliente_nombre","cliente_telefono","equipo_descripcion","estado","prioridad","fecha_recepcion","tecnico_nombre","op");
+        $cols_titulos = array("id","Código","Cliente","Teléfono","Equipo","Estado","Prioridad","Fecha Recepción","Técnico","Acciones");
+        $ar_align = array("0","0","0","0","0","0","0","0","0","0");
+        $ar_pie = array("","","","","","","","","","");
+        
+        return $this->fm->crea_tabla_result($result, $cols, $cols_titulos, $ar_align, $ar_pie);
+    }
+
+    function generar_codigo_servicio() {
+        $cSql = "select max(id)+1 nuevo from tec_servicios_tecnicos where id < 99999";
+        $query = $this->db->query($cSql);
+        
+        if($query->num_rows() > 0) {
+            $nuevo_id = $query->row()->nuevo;
+        } else {
+            $nuevo_id = 1;
+        }
+        
+        return "ST-" . str_pad($nuevo_id, 3, "0", STR_PAD_LEFT);
+    }
+
+    function guardar_servicio($data) {
+        // Manejar tecnico_asignado - si está vacío,设置为 NULL
+        if(isset($data['tecnico_asignado'])) {
+            if(trim($data['tecnico_asignado']) === '') {
+                $data['tecnico_asignado'] = null;
+            } else {
+                $data['tecnico_asignado'] = (int)$data['tecnico_asignado'];
+            }
+        }
+        
+        if($data['modo'] == 'insert') {
+            $data['codigo'] = $this->generar_codigo_servicio();
+            unset($data['modo']);
+            
+            $cSql = "select max(id)+1 nuevo from tec_servicios_tecnicos where id < 99999";
+            $query = $this->db->query($cSql);
+            
+            if($query->num_rows() > 0) {
+                $data['id'] = $query->row()->nuevo;
+            } else {
+                $data['id'] = 1;
+            }
+            
+            return $this->db->insert("tec_servicios_tecnicos", $data);
+        } else {
+            $id = $data['id'];
+            unset($data['modo']);
+            unset($data['id']);
+            
+            return $this->db->set($data)->where('id',$id)->update("tec_servicios_tecnicos");
+        }
+    }
+
+    function get_servicio_by_id($id) {
+        $cSql = "select a.*, b.nombre tecnico_nombre
+                from tec_servicios_tecnicos a
+                left join tec_tecnicos b on a.tecnico_asignado = b.id
+                where a.id = ".$id;
+        
+        return $this->db->query($cSql)->row();
+    }
+
+    function listar_tecnicos() {
+        $cSql = "select id, codigo, nombre, especialidad, telefono 
+                from tec_tecnicos where activo='1' order by nombre";
+        return $this->db->query($cSql)->result();
+    }
+
+    function get_estados_dropdown() {
+        return array(
+            "" => "-- Seleccione --",
+            "RECIBIDO" => "RECIBIDO",
+            "EN DIAGNOSTICO" => "EN DIAGNOSTICO", 
+            "EN REPARACION" => "EN REPARACION",
+            "ESPERA REPUESTOS" => "ESPERA REPUESTOS",
+            "REPARADO" => "REPARADO",
+            "ENTREGADO" => "ENTREGADO",
+            "CANCELADO" => "CANCELADO"
+        );
+    }
+
+    function get_prioridades_dropdown() {
+        return array(
+            "BAJA" => "BAJA",
+            "NORMAL" => "NORMAL",
+            "ALTA" => "ALTA",
+            "URGENTE" => "URGENTE"
+        );
+    }
+
+    function get_equipos_tipo_dropdown() {
+        return array(
+            "Computadora" => "Computadora",
+            "Laptop" => "Laptop", 
+            "Celular" => "Celular",
+            "Tablet" => "Tablet",
+            "Otro" => "Otro"
+        );
+    }
+
+    function anular_servicio($id) {
+        return $this->db->set(array('activo'=>''))->where(array('id' => $id))->update("tec_servicios_tecnicos");
+    }
+
+    function cambiar_estado($servicio_id, $estado_anterior, $estado_nuevo, $tecnico_id = null, $comentarios = null, $usuario_id = null) {
+        // Actualizar estado del servicio
+        $this->db->set('estado', $estado_nuevo)
+                 ->set('updated_at', date('Y-m-d H:i:s'));
+        
+        if($tecnico_id) {
+            $this->db->set('tecnico_asignado', $tecnico_id);
+        }
+        
+        $this->db->where('id', $servicio_id)->update("tec_servicios_tecnicos");
+        
+        // Registrar en historial de estados
+        $data_estado = array(
+            'servicio_id' => $servicio_id,
+            'estado_anterior' => $estado_anterior,
+            'estado_nuevo' => $estado_nuevo,
+            'tecnico_id' => $tecnico_id,
+            'comentarios' => $comentarios,
+            'usuario_id' => $usuario_id
+        );
+        
+        return $this->db->insert("tec_servicios_estados", $data_estado);
+    }
+
+    function agregar_nota($servicio_id, $nota, $tipo_nota = 'GENERAL', $tecnico_id = null, $usuario_id = null) {
+        $data = array(
+            'servicio_id' => $servicio_id,
+            'tipo_nota' => $tipo_nota,
+            'nota' => $nota,
+            'tecnico_id' => $tecnico_id,
+            'usuario_id' => $usuario_id
+        );
+        
+        return $this->db->insert("tec_servicios_notas", $data);
+    }
+
+    function get_historial_estados($servicio_id) {
+        $cSql = "select a.*, b.nombre tecnico_nombre
+                from tec_servicios_estados a
+                left join tec_tecnicos b on a.tecnico_id = b.id
+                where a.servicio_id = ".$servicio_id."
+                order by a.fecha_registro desc";
+        
+        return $this->db->query($cSql)->result();
+    }
+
+    function get_notas_servicio($servicio_id) {
+        $cSql = "select a.*, b.nombre tecnico_nombre
+                from tec_servicios_notas a
+                left join tec_tecnicos b on a.tecnico_id = b.id
+                where a.servicio_id = ".$servicio_id."
+                order by a.fecha_registro desc";
+        
+        return $this->db->query($cSql)->result();
+    }
+
+    // Métodos para DataTable
+    function getServicios($estado="0",$tecnico="0"){
+        $ar = array();
+        $cad_estado = $cad_tecnico = "";
+        
+        if($estado != '0' && $estado != ''){
+            $cad_estado = " and a.estado = '".$estado."'";
+        }
+        if($tecnico != '0' && $tecnico != ''){
+            $ar[] = $tecnico;
+            $cad_tecnico = " and a.tecnico_asignado = ?";
+        }
+
+        $cSql = "select a.id, a.codigo, a.cliente_nombre, a.cliente_telefono, 
+                    a.equipo_descripcion, a.estado, a.prioridad, 
+                    a.fecha_recepcion, ifnull(b.nombre,'Sin Asignar') tecnico_nombre,
+                    concat('<button onclick=editar(', a.id, ')><i class=\'glyphicon glyphicon-edit\'></i></button>',
+                    '<button onclick=anular(', a.id, ') style=\'color:rgb(255,100,100)\' title=\'Anular\'><i class=\'glyphicon glyphicon-remove\'></i></button>') as acciones
+                from tec_servicios_tecnicos a
+                left join tec_tecnicos b on a.tecnico_asignado = b.id
+                where a.activo='1'".$cad_estado.$cad_tecnico."
+                order by a.id desc";
+
+        $result = $this->db->query($cSql, $ar)->result_array();
+        $ar_campos = array('id', 'codigo', 'cliente_nombre', 'cliente_telefono', 'equipo_descripcion', 'estado', 'prioridad', 'fecha_recepcion', 'tecnico_nombre','acciones');
+        echo $this->fm->json_datatable($ar_campos, $result);
+    }
+}

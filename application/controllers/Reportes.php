@@ -62,7 +62,7 @@ class Reportes extends CI_Controller {
 
 
         $cSql = "select c.name tienda, date(a.`date`) fecha, p.code,
-          if(b.product_id=99999, b.product_name, concat(p.name,' ',p.marca,' ',p.modelo)) producto,  
+          if(b.product_id=99999, b.product_name, p.name) producto,  
           round(avg(b.real_unit_price),2) precio, round(sum(b.quantity),2) cant,
           round(avg(b.real_unit_price) * sum(b.quantity),2) subtotal
           from tec_sales a
@@ -71,7 +71,7 @@ class Reportes extends CI_Controller {
           inner join tec_stores c on a.store_id = c.id
           left join tec_users d on a.created_by = d.id
           where a.anulado!='1' $cad_desde $cad_hasta $cad_store_id
-          group by c.name, date(`date`), p.code, if(b.product_id=99999, b.product_name, concat(p.name,' ',p.marca,' ',p.modelo))";
+          group by c.name, date(`date`), p.code, if(b.product_id=99999, b.product_name, p.name)";
         
         //echo($cSql);
         //die();
@@ -389,7 +389,7 @@ class Reportes extends CI_Controller {
             }
         }
 
-        $cSql = "select a.store_id tienda, date(a.`date`) dia, b.product_id, concat(d.name,' ',d.marca,' ',d.modelo) name,
+        $cSql = "select a.store_id tienda, date(a.`date`) dia, b.product_id, d.name,
             round(b.net_unit_price,2) net_unit_price, round(b.quantity,0) quantity,
             round(b.net_unit_price*b.quantity,2) ventas, 
             round(if(c.precio_sin_igv is null, 0, c.precio_sin_igv*b.quantity),2) costos, 
@@ -424,13 +424,13 @@ class Reportes extends CI_Controller {
     }
 
     function get_productos_sin_compra(){
-        $cSql = "select a.id, a.code, concat(a.name,' ',a.marca,' ',a.modelo) name from tec_products a
+        $cSql = "select a.id, a.code, a.name from tec_products a
         left join (
           select product_id from tec_compra_items
           group by product_id
         ) b on a.id = b.product_id
         where b.product_id is null
-        order by a.name, a.marca, a.modelo";
+        order by a.name";
 
         $result = $this->db->query($cSql)->result_array();
             
@@ -477,7 +477,7 @@ class Reportes extends CI_Controller {
                 $ar_pie     = array('0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0');
                 */
 
-                $cSql = "select a.id, a.date, a.customer_id, a.customer_name, a.total, a.product_tax, a.total_tax, a.grand_total, c.descrip documento, a.serie, a.correlativo nro, a.fecha_registro, a.anulado, b.product_id, concat(d.name,' ',d.marca,' ',d.modelo) nombre_producto, round(b.quantity,0) quantity, b.net_unit_price, b.unit_price
+                $cSql = "select a.id, a.date, a.customer_id, a.customer_name, a.total, a.product_tax, a.total_tax, a.grand_total, c.descrip documento, a.serie, a.correlativo nro, a.fecha_registro, a.anulado, b.product_id, d.name nombre_producto, round(b.quantity,0) quantity, b.net_unit_price, b.unit_price
                     from tec_sales a
                     left join tec_sale_items b on a.id=b.sale_id
                     left join tec_tipos_doc c on a.tipodoc=c.id
@@ -510,6 +510,306 @@ class Reportes extends CI_Controller {
             $this->template->load('production/index', 'reportes/analisis', $this->data);
         }
 
+    }
+
+    function contabilidad($desde="null", $hasta="null", $store_id=""){
+        $this->data['page_title'] = "Reportes Contables";
+        $this->data['desde'] = $desde;
+        $this->data['hasta'] = $hasta;
+        if($store_id == ''){
+            $store_id = $_SESSION["store_id"];    
+        }else{
+            $this->data['store_id'] = $store_id;
+        }
+        $this->data['Admin'] = $this->Admin;
+        $this->template->load('production/index', 'reportes/contabilidad', $this->data);
+    }
+
+    function get_contabilidad_sales($cDesde,$cHasta,$cStore){
+
+        $opcion = 0;
+        $cad_desde = $cad_hasta = $cad_store_id = "";
+        if(!is_null($cDesde)){
+            if(strlen($cDesde)>0 && $cDesde !='null'){
+                //$this->db->where('tec_sales.date>=', $cDesde);
+                $cad_desde = " and date(tec_sales.date)>='{$cDesde}'";
+                $opcion += 1;
+            }
+        }
+
+        if(!is_null($cHasta)){
+            if(strlen($cHasta)>0 && $cHasta !='null'){
+                //$this->db->where("tec_sales.date<=date_add('$cHasta',interval 1 day)");
+                $cad_hasta = " and date(tec_sales.date)<='{$cHasta}'"; // date_add(?,interval 1 day)
+                $opcion += 4;
+            }
+        }
+
+        if(!is_null($cStore)){
+            if(strlen($cStore)>0 && $cStore !='null' && $cStore != '0'){
+                //$this->db->where("tec_sales.date<=date_add('$cHasta',interval 1 day)");
+                $cad_store_id = " and tec_sales.store_id='{$cStore}'"; // date_add(?,interval 1 day)
+                $opcion += 4;
+            }
+        }
+
+        //<!-- fecha, tipodoc, serie, numero, tipo_cli, ruc, nombres, base_imponible, igv, importe, moneda, estado
+        //filtros: no anulados, no tickets -->
+
+        $cSql = "select tec_sales.id, date(tec_sales.date) fecha, ttd.descrip tipodoc, tec_sales.serie, tec_sales.correlativo numero, if(tec_sales.tipodoc=1,tec_customers.cf2,tec_customers.cf1) ruc, 
+            tec_customers.name nombres, round(tec_sales.total,2) base_imponible, round({$this->Igv}/100*tec_sales.total,2) igv, round(tec_sales.grand_total,2) importe, 'PEN' moneda, 
+            if(tec_sales.envio_electronico=1,'Aceptado','No aceptado') estado
+            from tec_sales
+            inner join tec_stores on tec_sales.store_id = tec_stores.id
+            left join tec_users on tec_sales.created_by = tec_users.id
+            left join tec_customers on tec_sales.customer_id = tec_customers.id
+            left join tec_tipos_doc ttd on tec_sales.tipodoc = ttd.id
+            where 1=1 {$cad_desde} {$cad_hasta} {$cad_store_id} and tec_sales.tipodoc!=5 and tec_sales.anulado!='1' limit 6000";
+        
+            $result = $this->db->query($cSql)->result_array();
+            
+        $ar_campos = array("id", "fecha", "tipodoc", "serie", "numero", "ruc", "nombres", "base_imponible", "igv", "importe", "moneda", "estado");
+
+        echo $this->fm->json_datatable($ar_campos,$result);
+    }
+
+    // ========================
+    // CIERRE DIARIO
+    // ========================
+
+    function cierre_diario($fecha='null', $store_id='null') {
+        $this->data['page_title'] = "Cierre Diario";
+        $this->data['fecha'] = ($fecha == 'null') ? date('Y-m-d') : $fecha;
+        $this->data['store_id'] = ($store_id == 'null') ? $_SESSION['store_id'] : $store_id;
+        $this->template->load('production/index', 'reportes/cierre_diario', $this->data);
+    }
+
+    function get_cierre_diario($fecha, $store_id) {
+        header('Content-Type: application/json');
+
+        if ($fecha == 'null') $fecha = date('Y-m-d');
+        if ($store_id == 'null') $store_id = $_SESSION['store_id'];
+        $store_id = intval($store_id);
+
+        $resultado = array();
+        $ventas_netas = 0;
+        $costos = 0;
+        $ganancia_bruta = 0;
+        $total_gastos = 0;
+        $total_cajachica = 0;
+
+        // --- 1. RESUMEN DE CAJA ---
+        try {
+            $caja = $this->db->query("SELECT * FROM tec_registro_cajas WHERE fecha = ? AND store_id = ? LIMIT 1", array($fecha, $store_id))->row();
+
+            if ($caja) {
+                $mov = $this->db->query("SELECT
+                    COALESCE(SUM(IF(tipo='INGRESO', monto, 0)), 0) AS ingresos,
+                    COALESCE(SUM(IF(tipo='EGRESO', monto, 0)), 0) AS egresos
+                    FROM tec_caja_movimientos WHERE registro_caja_id = ?", array($caja->id))->row();
+
+                $vef = $this->db->query("SELECT COALESCE(SUM(c.amount), 0) AS total
+                    FROM tec_sales a
+                    INNER JOIN tec_payments c ON a.id = c.sale_id
+                    WHERE c.paid_by = 'cash' AND a.anulado != '1'
+                    AND DATE(a.`date`) = ? AND a.store_id = ?", array($fecha, $store_id))->row();
+
+                $fondo = floatval($caja->monto_ini);
+                $ventas_ef = floatval($vef->total);
+                $ingresos = floatval($mov->ingresos);
+                $egresos = floatval($mov->egresos);
+                $saldo_teorico = $fondo + $ventas_ef + $ingresos - $egresos;
+
+                $resultado['caja'] = array(
+                    'tiene_caja' => true,
+                    'fondo_ini' => round($fondo, 2),
+                    'ventas_efectivo' => round($ventas_ef, 2),
+                    'ingresos' => round($ingresos, 2),
+                    'egresos' => round($egresos, 2),
+                    'saldo_teorico' => round($saldo_teorico, 2),
+                    'monto_real' => round(floatval($caja->monto_fin), 2),
+                    'diferencia' => round(floatval($caja->diferencia), 2),
+                    'estado' => ($caja->estado_cierre == '1') ? 'CERRADA' : 'ABIERTA',
+                    'hora_apertura' => isset($caja->hora_apertura) ? $caja->hora_apertura : '',
+                    'hora_cierre' => isset($caja->hora_cierre) ? $caja->hora_cierre : ''
+                );
+            } else {
+                $resultado['caja'] = array('tiene_caja' => false);
+            }
+        } catch (Exception $e) {
+            $resultado['caja'] = array('tiene_caja' => false);
+        }
+
+        // --- 2. VENTAS POR FORMA DE PAGO ---
+        $resultado['ventas_forma_pago'] = $this->db->query("SELECT c.paid_by AS forma_pago,
+            COUNT(DISTINCT a.id) AS cantidad, ROUND(SUM(c.amount), 2) AS total
+            FROM tec_sales a
+            INNER JOIN tec_payments c ON a.id = c.sale_id
+            WHERE a.anulado != '1' AND DATE(a.`date`) = ? AND a.store_id = ?
+            GROUP BY c.paid_by ORDER BY total DESC", array($fecha, $store_id))->result_array();
+
+        // --- 3. VENTAS POR TIPO DOCUMENTO ---
+        $resultado['ventas_documento'] = $this->db->query("SELECT
+            CASE a.tipoDoc WHEN 1 THEN 'Factura' WHEN 2 THEN 'Boleta' WHEN 5 THEN 'Ticket'
+            ELSE CONCAT('Tipo ', a.tipoDoc) END AS tipo,
+            COUNT(*) AS cantidad, ROUND(SUM(a.grand_total), 2) AS total
+            FROM tec_sales a
+            WHERE a.anulado != '1' AND DATE(a.`date`) = ? AND a.store_id = ?
+            GROUP BY a.tipoDoc ORDER BY total DESC", array($fecha, $store_id))->result_array();
+
+        // --- 4. RENTABILIDAD ---
+        $rent = $this->db->query("SELECT
+            COALESCE(ROUND(SUM(b.net_unit_price * b.quantity), 2), 0) AS ventas_netas,
+            COALESCE(ROUND(SUM(IF(c.precio_sin_igv IS NULL, 0, c.precio_sin_igv * b.quantity)), 2), 0) AS costos
+            FROM tec_sales a
+            INNER JOIN tec_sale_items b ON a.id = b.sale_id
+            LEFT JOIN tec_compra_items c ON b.compra_id = c.compra_id AND b.product_id = c.product_id
+            WHERE a.anulado != '1' AND DATE(a.`date`) = ? AND a.store_id = ?", array($fecha, $store_id))->row();
+
+        $ventas_netas = floatval($rent->ventas_netas);
+        $costos = floatval($rent->costos);
+        $ganancia_bruta = $ventas_netas - $costos;
+
+        // Total ventas con IGV
+        $tv = $this->db->query("SELECT COALESCE(ROUND(SUM(grand_total), 2), 0) AS total, COUNT(*) AS cantidad
+            FROM tec_sales WHERE anulado != '1' AND DATE(`date`) = ? AND store_id = ?", array($fecha, $store_id))->row();
+
+        // --- 5. GASTOS OPERACIONALES ---
+        try {
+            $resultado['gastos'] = $this->db->query("SELECT gc.nombre AS categoria, gi.descripcion,
+                ROUND(gi.subtotal, 2) AS monto
+                FROM tec_gastos g
+                INNER JOIN tec_gastos_items gi ON g.id = gi.gasto_id
+                LEFT JOIN tec_gastos_categorias gc ON gi.categoria_id = gc.id
+                WHERE DATE(g.fecha) = ? AND g.store_id = ?
+                ORDER BY gi.subtotal DESC", array($fecha, $store_id))->result_array();
+        } catch (Exception $e) {
+            $resultado['gastos'] = array();
+        }
+
+        foreach ($resultado['gastos'] as $g) {
+            $total_gastos += floatval($g['monto']);
+        }
+
+        // --- 6. GASTOS CAJA CHICA ---
+        try {
+            $resultado['gastos_cajachica'] = $this->db->query("SELECT cc.nombre AS categoria, g.descripcion,
+                ROUND(g.monto, 2) AS monto
+                FROM tec_cajachica_gastos g
+                INNER JOIN tec_cajachica_categorias cc ON g.categoria_id = cc.id
+                INNER JOIN tec_cajachica_periodos p ON g.periodo_id = p.id
+                WHERE DATE(g.fecha_gasto) = ? AND p.store_id = ?
+                ORDER BY g.monto DESC", array($fecha, $store_id))->result_array();
+        } catch (Exception $e) {
+            $resultado['gastos_cajachica'] = array();
+        }
+
+        foreach ($resultado['gastos_cajachica'] as $gc) {
+            $total_cajachica += floatval($gc['monto']);
+        }
+
+        // Rentabilidad final
+        $total_gastos_dia = $total_gastos + $total_cajachica;
+        $ganancia_neta = $ganancia_bruta - $total_gastos_dia;
+        $margen = ($ventas_netas > 0) ? round(($ganancia_neta / $ventas_netas) * 100, 1) : 0;
+
+        $resultado['rentabilidad'] = array(
+            'ventas_netas' => round($ventas_netas, 2),
+            'costos' => round($costos, 2),
+            'ganancia_bruta' => round($ganancia_bruta, 2),
+            'gastos_dia' => round($total_gastos_dia, 2),
+            'ganancia_neta' => round($ganancia_neta, 2),
+            'margen' => $margen
+        );
+
+        // --- 7. VALIDACIONES ---
+        $sunat = $this->db->query("SELECT
+            COUNT(IF(tipoDoc IN (1,2) AND envio_electronico = '1', 1, NULL)) AS enviados,
+            COUNT(IF(tipoDoc IN (1,2), 1, NULL)) AS total_docs
+            FROM tec_sales
+            WHERE anulado != '1' AND DATE(`date`) = ? AND store_id = ?", array($fecha, $store_id))->row();
+
+        $anuladas = $this->db->query("SELECT COUNT(*) AS total FROM tec_sales
+            WHERE anulado = '1' AND DATE(`date`) = ? AND store_id = ?", array($fecha, $store_id))->row();
+
+        $stock_neg = $this->db->query("SELECT COUNT(*) AS total FROM tec_prod_store
+            WHERE stock < 0 AND store_id = ?", array($store_id))->row();
+
+        $resultado['validaciones'] = array(
+            'sunat_enviados' => intval($sunat->enviados),
+            'sunat_total' => intval($sunat->total_docs),
+            'anuladas' => intval($anuladas->total),
+            'stock_negativo' => intval($stock_neg->total),
+            'diferencia_caja' => isset($resultado['caja']['diferencia']) ? $resultado['caja']['diferencia'] : 0
+        );
+
+        // --- 8. TOTALES ---
+        $resultado['totales'] = array(
+            'total_ventas' => floatval($tv->total),
+            'cantidad_ventas' => intval($tv->cantidad),
+            'total_gastos' => round($total_gastos, 2),
+            'total_cajachica' => round($total_cajachica, 2),
+            'total_gastos_dia' => round($total_gastos_dia, 2)
+        );
+
+        // Datos de la tienda (para PDF)
+        $store = $this->db->query("SELECT name, nombre_empresa, ruc, address1 FROM tec_stores WHERE id = ?", array($store_id))->row();
+        $resultado['tienda'] = $store ? $store->name : '';
+        $resultado['empresa'] = $store ? (isset($store->nombre_empresa) ? $store->nombre_empresa : '') : '';
+        $resultado['ruc'] = $store ? (isset($store->ruc) ? $store->ruc : '') : '';
+        $resultado['direccion'] = $store ? (isset($store->address1) ? $store->address1 : '') : '';
+        $resultado['fecha'] = $fecha;
+
+        echo json_encode($resultado);
+    }
+
+    function gastos_cajachica($cDesde='null', $cHasta='null') {
+        $this->data['page_title'] = "Gastos de Caja Chica";
+        $this->data['desde'] = $cDesde;
+        $this->data['hasta'] = $cHasta;
+        $this->template->load('production/index', 'reportes/gastos_cajachica', $this->data);
+    }
+
+    function get_gastos_cajachica($cDesde, $cHasta) {
+        $cad_desde = $cad_hasta = "";
+
+        if (!is_null($cDesde) && strlen($cDesde) > 0 && $cDesde != 'null') {
+            $cad_desde = " AND date(g.fecha_gasto) >= '{$cDesde}'";
+        }
+        if (!is_null($cHasta) && strlen($cHasta) > 0 && $cHasta != 'null') {
+            $cad_hasta = " AND date(g.fecha_gasto) <= '{$cHasta}'";
+        }
+
+        $store_id = isset($_SESSION['store_id']) ? intval($_SESSION['store_id']) : 1;
+
+        $cSql = "SELECT g.id, date(g.fecha_gasto) AS fecha,
+                    p.fecha_apertura, p.fecha_cierre,
+                    c.nombre AS categoria,
+                    g.descripcion,
+                    g.beneficiario,
+                    CASE g.tipo_documento
+                        WHEN 'FACTURA' THEN 'Factura'
+                        WHEN 'BOLETA' THEN 'Boleta'
+                        WHEN 'RECIBO_HONORARIOS' THEN 'Rec. Honorarios'
+                        WHEN 'SIN_COMPROBANTE' THEN 'Sin Comprobante'
+                        ELSE ''
+                    END AS tipo_doc,
+                    CASE
+                        WHEN g.doc_serie IS NOT NULL AND g.doc_serie != '' THEN CONCAT(g.doc_serie, '-', g.doc_numero)
+                        ELSE ''
+                    END AS serie_numero,
+                    round(g.monto, 2) AS monto
+                 FROM tec_cajachica_gastos g
+                 INNER JOIN tec_cajachica_categorias c ON g.categoria_id = c.id
+                 INNER JOIN tec_cajachica_periodos p ON g.periodo_id = p.id
+                 WHERE p.store_id = {$store_id} {$cad_desde} {$cad_hasta}
+                 ORDER BY g.fecha_gasto DESC, g.id DESC";
+
+        $result = $this->db->query($cSql)->result_array();
+
+        $ar_campos = array("id", "fecha", "categoria", "descripcion", "beneficiario", "tipo_doc", "serie_numero", "monto");
+
+        echo $this->json_datatable($ar_campos, $result);
     }
 
 }

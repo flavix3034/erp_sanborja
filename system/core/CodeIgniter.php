@@ -56,7 +56,6 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  *
  */
 	const CI_VERSION = '3.1.11';
-
 /*
  * ------------------------------------------------------
  *  Load the framework constants
@@ -402,6 +401,7 @@ if ( ! is_php('5.4'))
 	$class = ucfirst($RTR->class);
 	$method = $RTR->method;
 
+
 	if (empty($class) OR ! file_exists(APPPATH.'controllers/'.$RTR->directory.$class.'.php'))
 	{
 		$e404 = TRUE;
@@ -442,8 +442,10 @@ if ( ! is_php('5.4'))
 				$e404 = TRUE;
 			}
 		}
+
 	}
 
+	
 	if ($e404)
 	{
 		if ( ! empty($RTR->routes['404_override']))
@@ -494,6 +496,7 @@ if ( ! is_php('5.4'))
 			show_404($RTR->directory.$class.'/'.$method);
 		}
 	}
+
 
 	if ($method !== '_remap')
 	{

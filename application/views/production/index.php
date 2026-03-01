@@ -21,25 +21,25 @@ $ar_permitidos = $this->db->query("select trim(lower(b.modulo)) modulo from tec_
 		<!-- Font Awesome -->
 		<link href="<?= base_url() ?>vendors/font-awesome/css/font-awesome.min.css" rel="stylesheet">
 
-	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+		<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-	<script src="https://code.jquery.com/jquery-3.5.1.js"></script>
-	<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-	<script src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
-	<script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.html5.min.js"></script>
-	<script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.print.min.js"></script>
-	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
-	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.dataTables.min.css">
-	<link rel="stylesheet" type="text/css" href="<?= base_url('assets/css/w3.css') ?>">
+		<script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+		<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+		<script src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+		<script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.html5.min.js"></script>
+		<script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.print.min.js"></script>
+		<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+		<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.dataTables.min.css">
+		<link rel="stylesheet" type="text/css" href="<?= base_url('assets/css/w3.css') ?>">
 
-	<script src="https://cdn.datatables.net/fixedcolumns/4.1.0/js/dataTables.fixedColumns.min.js"></script>
-	<script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.colVis.min.js"></script>
+		<script src="https://cdn.datatables.net/fixedcolumns/4.1.0/js/dataTables.fixedColumns.min.js"></script>
+		<script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.colVis.min.js"></script>
 
-	<link href="<?= base_url('assets/plugins/font-awesome/css/font-awesome.css') ?>" rel="stylesheet" type="text/css" />
-	<script type="text/javascript" src="<?= base_url('assets/js/funciones.js') ?>"></script>
+		<link href="<?= base_url('assets/plugins/font-awesome/css/font-awesome.css') ?>" rel="stylesheet" type="text/css" />
+		<script type="text/javascript" src="<?= base_url('assets/js/funciones.js') ?>"></script>
 
 
 		<!-- iCheck -->
@@ -52,14 +52,21 @@ $ar_permitidos = $this->db->query("select trim(lower(b.modulo)) modulo from tec_
 		<!-- bootstrap-daterangepicker -->
 		<link href="<?= base_url() ?>vendors/bootstrap-daterangepicker/daterangepicker.css" rel="stylesheet">
 
+		<!-- Boxicons (Minible-style icons) -->
+		<link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+		<!-- Google Fonts: Inter -->
+		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
 		<!-- Custom Theme Style -->
 		<link href="<?= base_url() ?>build/css/custom.css" rel="stylesheet">
+		<!-- Modern Sidebar -->
+		<link href="<?= base_url() ?>assets/css/sidebar-modern.css" rel="stylesheet">
 
 		
 		<style type="text/css">
 			body{
 					/*background-color: rgb(250,250,200);  amarillo perla */
-					color: rgb(0,50,150);
+					color: rgb(0,35,80);
 			}
 			.mariposa{
 					float: left; margin: 0px 0px 0px 1px; padding: 3px 2px; width: 100px; height: 40px;
@@ -74,13 +81,14 @@ $ar_permitidos = $this->db->query("select trim(lower(b.modulo)) modulo from tec_
 			<div class="main_container">
 				<div class="col-md-3 left_col">
 					<div class="left_col scroll-view">
-						<div class="navbar nav_title text-center" style="border: 0;">
-							<a href="index.html" class="site_title"><span>JFK System</span></a>
+						<div class="navbar nav_title" style="border: 0;">
+							<a href="<?= base_url('welcome/home') ?>" class="site_title">
+								<i class='bx bx-cube-alt' style="font-size:26px;color:var(--sb-accent)"></i>
+								<span>JFK System</span>
+							</a>
 						</div>
 
 						<div class="clearfix"></div>
-
-						<br />
 
 <?php
 if (!isset($_SESSION["usuario"])){
@@ -90,79 +98,82 @@ if (!isset($_SESSION["usuario"])){
 
 						<!-- sidebar menu -->
 						<div id="sidebar-menu" class="main_menu_side hidden-print main_menu">
+
+							<!-- ===== SECCION: MENU ===== -->
 							<div class="menu_section">
-								<h3>General</h3>
+								<h3>Menu</h3>
 								<ul class="nav side-menu">
-									<li><a><i class="fa fa-home"></i> Home <span class="fa fa-chevron-down"></span></a>
+									<li><a><i class='bx bx-home-circle'></i> Dashboard <span class="fa fa-chevron-down"></span></a>
 										<ul class="nav child_menu">
-											<!--<li><a href="<?= base_url('welcome/home'); ?>">Inicio</a></li>-->
 											<?= opcion("welcome/home",$ar_permitidos,"Inicio") ?>
-											<?= opcion("caja/ver_cajas",$ar_permitidos,"Apertura/Cierre Cajas") ?>
-											<!--<li><a href="<?= base_url('caja/analisis_mensual'); ?>">An&aacute;lisis Mensual</a></li>-->
+											<?= opcion("caja/index",$ar_permitidos,"Caja de Ventas") ?>
 										</ul>
 									</li>
-									<li><a><i class="fa fa-clone" style="font-size:20px;color:red"></i>&nbsp;&nbsp;Ventas <span class="fa fa-chevron-down"></span></a>
+									<li><a><i class='bx bx-receipt'></i> Ventas <span class="fa fa-chevron-down"></span></a>
 										<ul class="nav child_menu">
 											<?= opcion("sales/index",$ar_permitidos,"Listar") ?>
 											<?= opcion("sales/add",$ar_permitidos,"Agregar") ?>
 										</ul>
 									</li>
-
-									<li><a><i class="fa fa-desktop" style="color:orange"></i> Compras <span class="fa fa-chevron-down"></span></a>
+									<li><a><i class='bx bx-cart'></i> Compras <span class="fa fa-chevron-down"></span></a>
 										<ul class="nav child_menu">
 											<li><a href="<?= base_url('compras/index') ?>">Listar</a></li>
 											<li><a href="<?= base_url('compras/add') ?>">Agregar</a></li>
 										</ul>
 									</li>
-									
-									<li><a><i class="fa fa-bicycle" style="color:orange"></i> Gastos <span class="fa fa-chevron-down"></span></a>
+									<li><a><i class='bx bx-wallet'></i> Gastos <span class="fa fa-chevron-down"></span></a>
 										<ul class="nav child_menu">
 											<li><a href="<?= base_url('gastos/index') ?>">Listar</a></li>
 											<li><a href="<?= base_url('gastos/add') ?>">Agregar</a></li>
+											<li><a href="<?= base_url('gastos/categorias') ?>">Categorias de Gasto</a></li>
 										</ul>
 									</li>
-
-									<li><a><i class="fa fa-table" style="color:skyblue"></i> Clientes <span class="fa fa-chevron-down"></span></a>
+									<li><a><i class='bx bx-money'></i> Caja Chica <span class="fa fa-chevron-down"></span></a>
 										<ul class="nav child_menu">
-											<li><a href="<?= base_url('clientes/index') ?>">Listar</a></li>
-											<li><a href="<?= base_url('clientes/add') ?>">Agregar</a></li>
+											<li><a href="<?= base_url('cajachica/index') ?>">Administrar</a></li>
 										</ul>
 									</li>
-									<li><a><i class="fa fa-bar-chart-o" style="color:rgb(50,230,50)"></i> Productos <span class="fa fa-chevron-down"></span></a>
+								</ul>
+							</div>
+
+							<!-- ===== SECCION: OPERACIONES ===== -->
+							<div class="menu_section">
+								<h3>Operaciones</h3>
+								<ul class="nav side-menu">
+									<li><a><i class='bx bx-wrench'></i> Servicio T&eacute;cnico <span class="fa fa-chevron-down"></span></a>
+										<ul class="nav child_menu">
+											<li><a href="<?= base_url('servicios/index') ?>">Listar Servicios</a></li>
+											<li><a href="<?= base_url('servicios/add') ?>">Nuevo Servicio</a></li>
+										</ul>
+									</li>
+									<li><a><i class='bx bx-package'></i> Productos <span class="fa fa-chevron-down"></span></a>
 										<ul class="nav child_menu">
 											<li><a href="<?= base_url('products/index'); ?>">Listar</a></li>
-											<?php 
-											if(in_array($grupo_id,array(1,2))){ ?>
+											<?php if(in_array($grupo_id,array(1,2))){ ?>
 												<li><a href="<?= base_url('products/add'); ?>">Agregar Productos</a></li>
 												<li><a href="<?= base_url('products/add_servicio'); ?>">Agregar Servicios</a></li>
 												<li><a href="<?= base_url('inventarios/stock_productos'); ?>">STOCKS</a></li>
 											<?php } ?>
-											<!--<li><a href="<?= base_url('products/print_inicial'); ?>"><span>C&oacute;digo de Barras</span></a></li>-->
-											<li><a href="<?= base_url('products/print_compra'); ?>"><span>C&oacute;digo de Barras x Compra</span></a></li>
-										</ul>
-									</li>
-									<li><a><i class="glyphicon glyphicon-tags" style="font-size:16px;color:lime"></i>&nbsp;&nbsp; Categorias <span class="fa fa-chevron-down"></span></a>
-										<ul class="nav child_menu">
-											<li><a href="<?= base_url('categorias/index'); ?>">Listar</a></li>
+											<li><a href="<?= base_url('products/print_compra'); ?>">C&oacute;digo de Barras</a></li>
+											<li><a><i class='bx bx-purchase-tag'></i> Categorias <span class="fa fa-chevron-down"></span></a>
+												<ul class="nav child_menu">
+													<li><a href="<?= base_url('categorias/index'); ?>">Listar</a></li>
+													<?php if(in_array($grupo_id,array(1,2))){ ?>
+														<li><a href="<?= base_url('categorias/add'); ?>">Agregar</a></li>
+													<?php } ?>
+												</ul>
+											</li>
 											<?php if(in_array($grupo_id,array(1,2))){ ?>
-												<li><a href="<?= base_url('categorias/add'); ?>">Agregar</a></li>
+											<li><a href="<?= base_url('atributos'); ?>"><i class='bx bx-purchase-tag'></i> Atributos</a></li>
 											<?php } ?>
 										</ul>
 									</li>
-
-									<li><a><i class="glyphicon glyphicon-user" style="font-size:18px;color:rgb(100,200,200)"></i> &nbsp;Proveedores <span class="fa fa-chevron-down"></span></a>
-										<ul class="nav child_menu">
-											<li><a href="<?= base_url('proveedores/index'); ?>">Listar</a></li>
-											<li><a href="<?= base_url('proveedores/add'); ?>">Agregar</a></li>
-										</ul>
-									</li>
-
-									<li><a><i class="fa fa-table" style="font-size:20px;color:rgb(200,255,150)"></i> &nbsp;Inventarios <span class="fa fa-chevron-down"></span></a>
+									<li><a><i class='bx bx-box'></i> Inventarios <span class="fa fa-chevron-down"></span></a>
 										<ul class="nav child_menu">
 											<li><a href="<?= base_url('inventarios/index'); ?>">Ver</a></li>
 											<li><a href="<?= base_url('inventarios/add'); ?>">Agregar</a></li>
 											<li><a href="<?= base_url('inventarios/registrar_productos'); ?>">Registrar</a></li>
-											<li><a href="<?= base_url('inventarios/kardex'); ?>">kardex de Producto</a></li>
+											<li><a href="<?= base_url('inventarios/kardex'); ?>">Kardex de Producto</a></li>
 											<li><a href="<?= base_url('inventarios/listar_stock'); ?>">Ver Stocks</a></li>
 											<li><a href="<?= base_url('inventarios/actualizar_stock'); ?>">Actualizar Stock</a></li>
 											<li><a href="<?= base_url('inventarios/ver_movimientos'); ?>">Ver movimientos</a></li>
@@ -170,68 +181,81 @@ if (!isset($_SESSION["usuario"])){
 											<li><a href="<?= base_url('inventarios/add_movimientos'); ?>">Movim. otros</a></li>
 										</ul>
 									</li>
-
-									<!--<li><a><i class="fa fa-table" style="color:skyblue"></i> Ctas por Cobrar<span class="fa fa-chevron-down"></span></a>
-										<ul class="nav child_menu">
-												<li><a href="<?= base_url('cuentas_cobrar/listar'); ?>">Listar Ctas x Cobrar</a></li>
-												<li><a href="<?= base_url('cuentas_cobrar/saldar'); ?>">Saldar Cuentas</a></li>
-										</ul>
-									</li>-->
-
-									<li><a><i class="glyphicon glyphicon-tag" style="font-size:18px;color:rgb(240,100,100)"></i> &nbsp;Medios de Pago <span class="fa fa-chevron-down"></span></a>
+									<li><a><i class='bx bx-credit-card'></i> Medios de Pago <span class="fa fa-chevron-down"></span></a>
 										<ul class="nav child_menu">
 											<li><a href="<?= base_url('mediospagos/index'); ?>">Ver medios</a></li>
 											<li><a href="<?= base_url('mediospagos/add'); ?>">Agregar medios</a></li>
 										</ul>
 									</li>
+								</ul>
+							</div>
 
-									<!--<li><a><i class="glyphicon glyphicon-user" style="font-size:18px;color:skyblue"></i> &nbsp;RR.HH <span class="fa fa-chevron-down"></span></a>
+							<!-- ===== SECCION: RRHH ===== -->
+							<div class="menu_section">
+								<h3>RRHH</h3>
+								<ul class="nav side-menu">
+									<li><a><i class='bx bx-id-card'></i> Empleados <span class="fa fa-chevron-down"></span></a>
 										<ul class="nav child_menu">
-											<li><a href="<?= base_url('recursos/ver_personal'); ?>">Ver Personal</a></li>
-											<li><a href="<?= base_url('recursos/agregar_personal'); ?>">Agregar Personal</a></li>
-											<li><a href="<?= base_url('recursos/ver_contratos'); ?>">Ver Contratos</a></li>
-											<li><a href="<?= base_url('recursos/agregar_contratos'); ?>">Agregar Contratos</a></li>
+											<li><a href="<?= base_url('empleados/index') ?>">Listar</a></li>
+											<li><a href="<?= base_url('empleados/add') ?>">Agregar</a></li>
 										</ul>
-									</li>-->
-
-									<li><a><i class="glyphicon glyphicon-signal" style="font-size:18px;color:rgb(200,150,0)"></i> &nbsp;Reportes <span class="fa fa-chevron-down"></span></a>
-										<ul class="nav child_menu">
-											<li><a href="<?= base_url('reportes/ventas_detalles_prod'); ?>">Ventas x Producto</a></li>
-											<li><a href="<?= base_url('reportes/ventas_por_forma_pago'); ?>">Ventas x Forma de Pago</a></li>
-											<!--<li><a href="<?= base_url('reportes/grafico_mensual_ventas'); ?>">Grafico mensual Ventas</a></li>-->
-											<li><a href="<?= base_url('reportes/ganancias'); ?>">Ganancias Diarias</a></li>
-											<li><a href="<?= base_url('reportes/ganancias_detallado'); ?>">Ganancia Detalles</a></li>
-											<li><a href="<?= base_url('reportes/productos_sin_compra'); ?>">Productos sin compra</a></li>
-											<li><a href="<?= base_url('reportes/analisis'); ?>">Reportes para Analisis</a></li>
-										</ul>
-									</li>
-
-									<li><a><i class="glyphicon glyphicon-user" style="font-size:20px;color:rgb(0,140,255)"></i> &nbsp;Usuarios <span class="fa fa-chevron-down"></span></a>
-										<ul class="nav child_menu">
-											<!--<li><a href="<?= base_url('usuarios/ver_usuarios'); ?>">Ver Usuarios</a></li>
-											<li><a href="<?= base_url('usuarios/add'); ?>">Agregar Usuarios</a></li>-->
-											<?= opcion("usuarios/ver_usuarios",$ar_permitidos,"Ver Usuarios") ?>
-											<?= opcion("usuarios/add",$ar_permitidos,"Agregar Usuarios") ?>
-										</ul>
-									</li>
-
-									<li><a>
-											<i class="glyphicon glyphicon-cog" style="font-size:20px;color:rgb(40,140,255)"></i>
-										 	&nbsp;Ajustes <span class="fa fa-chevron-down"></span>
-										</a>
-										<ul class="nav child_menu">
-											<li><a href="<?= base_url('ajustes/index'); ?>">Ajustes</a></li>
-										</ul>
-									</li>
-
-									<li>
-										<a href="<?= site_url('welcome/cierra_sesion'); ?>">
-											<i class="glyphicon glyphicon-off" style="font-size:20px;color:red"></i> &nbsp;Cerrar <span class="fa fa-chevron-down"></span>
-										</a>
 									</li>
 								</ul>
 							</div>
 
+							<!-- ===== SECCION: REPORTES & CONFIG ===== -->
+							<div class="menu_section">
+								<h3>Reportes</h3>
+								<ul class="nav side-menu">
+									<li><a><i class='bx bx-bar-chart-alt-2'></i> Reportes <span class="fa fa-chevron-down"></span></a>
+										<ul class="nav child_menu">
+											<li><a href="<?= base_url('reportes/contabilidad'); ?>">Contabilidad</a></li>
+											<li><a href="<?= base_url('reportes/ventas_detalles_prod'); ?>">Ventas x Producto</a></li>
+											<li><a href="<?= base_url('reportes/ventas_por_forma_pago'); ?>">Ventas x Forma de Pago</a></li>
+											<li><a href="<?= base_url('reportes/ganancias'); ?>">Ganancias Diarias</a></li>
+											<li><a href="<?= base_url('reportes/ganancias_detallado'); ?>">Ganancia Detalles</a></li>
+											<li><a href="<?= base_url('reportes/productos_sin_compra'); ?>">Productos sin compra</a></li>
+											<li><a href="<?= base_url('reportes/analisis'); ?>">Reportes para An&aacute;lisis</a></li>
+											<li><a href="<?= base_url('reportes/gastos_cajachica'); ?>">Gastos Caja Chica</a></li>
+										</ul>
+									</li>
+								</ul>
+							</div>
+
+							<!-- ===== SECCION: CONFIGURACION ===== -->
+							<div class="menu_section">
+								<h3>Configuraci&oacute;n</h3>
+								<ul class="nav side-menu">
+									<li><a><i class='bx bx-user'></i> Usuarios <span class="fa fa-chevron-down"></span></a>
+										<ul class="nav child_menu">
+											<?= opcion("usuarios/ver_usuarios",$ar_permitidos,"Ver Usuarios") ?>
+											<?= opcion("usuarios/add",$ar_permitidos,"Agregar Usuarios") ?>
+										</ul>
+									</li>
+									<li><a><i class='bx bx-cog'></i> Ajustes <span class="fa fa-chevron-down"></span></a>
+										<ul class="nav child_menu">
+											<li><a href="<?= base_url('ajustes/index'); ?>">Ajustes</a></li>
+											<li><a><i class='bx bx-group'></i> Clientes <span class="fa fa-chevron-down"></span></a>
+												<ul class="nav child_menu">
+													<li><a href="<?= base_url('clientes/index') ?>">Listar</a></li>
+													<li><a href="<?= base_url('clientes/add') ?>">Agregar</a></li>
+												</ul>
+											</li>
+											<li><a><i class='bx bx-store'></i> Proveedores <span class="fa fa-chevron-down"></span></a>
+												<ul class="nav child_menu">
+													<li><a href="<?= base_url('proveedores/index'); ?>">Listar</a></li>
+													<li><a href="<?= base_url('proveedores/add'); ?>">Agregar</a></li>
+												</ul>
+											</li>
+										</ul>
+									</li>
+									<li>
+										<a href="<?= site_url('welcome/cierra_sesion'); ?>">
+											<i class='bx bx-power-off'></i> Cerrar Sesi&oacute;n
+										</a>
+									</li>
+								</ul>
+							</div>
 
 						</div>
 						<!-- /sidebar menu -->
@@ -258,60 +282,52 @@ if (!isset($_SESSION["usuario"])){
 				<!-- top navigation -->
 				<div class="top_nav">
 					<div class="nav_menu">
-							<div class="nav toggle">
-								<a id="menu_toggle"><i class="fa fa-bars" style="font-size:18px"></i></a>
+						<div class="topnav-left">
+							<a id="menu_toggle" class="topnav-toggle"><i class='bx bx-menu'></i></a>
+							<div class="topnav-search">
+								<i class='bx bx-search'></i>
+								<input type="text" id="topnav-search-input" placeholder="Buscar..." autocomplete="off">
 							</div>
-							<nav class="nav navbar-nav">
-								<ul class=" navbar-right">
-							</ul>
-						</nav>
+						</div>
+						<div class="topnav-right">
+							<a href="#" class="topnav-icon" title="Pantalla completa" onclick="toggleFullScreen()">
+								<i class='bx bx-fullscreen'></i>
+							</a>
+							<a href="#" class="topnav-icon topnav-notify" title="Notificaciones">
+								<i class='bx bx-bell'></i>
+							</a>
+							<div class="topnav-user">
+								<div class="topnav-avatar">
+									<i class='bx bx-user-circle'></i>
+								</div>
+								<span class="topnav-username"><?php echo isset($_SESSION["usuario"]) ? $_SESSION["usuario"] : ''; ?></span>
+							</div>
+							<a href="<?= base_url('ajustes/index'); ?>" class="topnav-icon" title="Ajustes">
+								<i class='bx bx-cog'></i>
+							</a>
+						</div>
 					</div>
 				</div>
 				<!-- /top navigation -->
+				<script>
+				function toggleFullScreen(){
+					if(!document.fullscreenElement){document.documentElement.requestFullscreen();}
+					else{if(document.exitFullscreen){document.exitFullscreen();}}
+				}
+				</script>
 
 				<div class="right_col" role="main">
-				<!--<div class="col-xs-12 col-sm-11 col-md-11 col-lg-11" style="border-style:none; border-color: gray; margin-left:0px">-->
-					<section class="content">
-						<div class="row" style="">
-							<div class="col-12 col-sm-12 col-md-8 left_col" style="padding: 5px 0px 5px 15px; height:70px; 
-							background-color: rgb(46, 134, 193);
-							color:white;border-radius:8px 0px 0px 0px;">
-								<h3>
-								<?php 
-										if(isset($page_title)){
-												echo $page_title;
-										}else{
-												echo "";
-										}
-								?>
-								</h3>
-							</div>
 
-							<div class="col-12 col-sm-12 col-md-4 left_col" style="padding: 0px 0px 5px 15px; background-size: cover; background-position: center; background-image:url(<?= base_url('/assets/images/rueda.jpg') ?>); height:70px; border-radius:0px 8px 0px 0px; border-style: solid; border-color:rgb(46,134,193)"><!-- rgb(86, 174, 233) -->
-									<table border="0" style="">
-										<tr>
-											<td style="margin:0px; padding:0px; font-weight: bold;">Fecha:</td>
-											<td style="padding-left:8px; height: 4px;"><?php echo date("d-m-Y"); ?> <?php echo date("H:i:s"); ?></td>
-										</tr>
-										<tr>
-											<td style="font-weight: bold;">Usuario:</td>
-											<td style="padding-left:8px;"><?php echo $_SESSION["usuario"]; ?></td>
-										</tr>
-										<tr>
-											<td style="font-weight: bold;">Tienda:</td>
-											<td style="padding-left:8px;"><?php echo $_SESSION["nombre_tienda"]; ?></td>
-										</tr>
-									</table>
-							</div>
-
-						</div>
-
-					</section>
+					<?php if(isset($page_title) && $page_title != ''){ ?>
+					<div class="page-title-box">
+						<h4 class="page-title-text"><?= $page_title ?></h4>
+					</div>
+					<?php } ?>
 
 					<?php if(isset($msg)){ ?>
 					<div class="row">
-						<div class="col-xs-12 col-sm-7 left_col" style="margin-top:7px;background-color: white;">
-							<div class="alert alert-<?= isset($rpta_msg) ? $rpta_msg : 'success' ?>"> <?= $msg ?></div>
+						<div class="col-12 col-sm-7" style="margin-top:0;">
+							<div class="alert alert-<?= isset($rpta_msg) ? $rpta_msg : 'success' ?>" style="margin-bottom:12px;"> <?= $msg ?></div>
 						</div>
 					</div>
 					<?php } ?>

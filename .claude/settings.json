@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(c:/xampp/php/php.exe -l c:/xampp/htdocs/erp-surcoc/application/controllers/Reportes.php)",
+      "Bash(c:/xampp/php/php.exe c:/xampp/htdocs/erp-surcoc/check_tables.php)",
+      "Bash(/c/xampp/php/php.exe -l /c/xampp/htdocs/erp-surcoc/application/controllers/Atributos.php)",
+      "Bash(/c/xampp/php/php.exe -l /c/xampp/htdocs/erp-surcoc/application/models/Atributos_model.php)",
+      "Bash(/c/xampp/php/php.exe -l /c/xampp/htdocs/erp-surcoc/application/views/products/atributos.php)",
+      "Bash(/c/xampp/php/php.exe -l /c/xampp/htdocs/erp-surcoc/application/views/production/index.php)",
+      "Bash(/c/xampp/php/php.exe -l /c/xampp/htdocs/erp-surcoc/application/controllers/Products.php)",
+      "Bash(/c/xampp/php/php.exe -l /c/xampp/htdocs/erp-surcoc/application/views/products/add.php)",
+      "Bash(/c/xampp/mysql/bin/mysql.exe -u root erp_surcoc -e \"SHOW INDEX FROM tec_prod_store;\")",
+      "Bash(/c/xampp/mysql/bin/mysql.exe -u root erp_surcoc -e \"ALTER TABLE tec_prod_store DROP INDEX product_id, ADD UNIQUE INDEX product_id \\(product_id, store_id, variant_id\\);\")",
+      "Bash(/c/xampp/mysql/bin/mysql.exe -u root erp_surcoc -e \"SELECT * FROM tec_product_variantes; SELECT * FROM tec_prod_store WHERE variant_id IS NOT NULL;\")",
+      "Bash(/c/xampp/mysql/bin/mysql.exe -u root erp_surcoc -e \"INSERT INTO tec_prod_store \\(product_id, store_id, stock, variant_id\\) VALUES \\(3, 1, 0, 2\\), \\(4, 1, 0, 4\\);\")"
+    ]
+  }
+}

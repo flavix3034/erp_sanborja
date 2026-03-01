@@ -1,20 +1,11 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
-
+//ini_set('display_errors', '1');
+//error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT & ~E_USER_NOTICE & ~E_USER_DEPRECATED);
 class Sales extends CI_Controller {
 
     function __construct() {
         parent::__construct();
 
-        /*if (!$this->loggedIn) {
-            redirect('login');
-        }*/ 
-        
-        /*
-        $parametros_actuales = session_get_cookie_params();
-
-        // Mostrar los valores actuales
-        echo "Tiempo de vida: " . $parametros_actuales['lifetime'] . "<br>";
-        die("   ");*/
         session_start();
 
         if (!isset($_SESSION["store_id"])) {
@@ -22,7 +13,7 @@ class Sales extends CI_Controller {
         }
         
         $this->load->model('sales_model');
-		$this->Igv = 18;  // ojo sistema erp
+		$this->Igv                = 18;  // ojo sistema erp
         $this->digital_file_types = 'zip|pdf|doc|docx|xls|xlsx|jpg|png|gif';
         $this->load->model("compras_model");
 
@@ -44,15 +35,27 @@ class Sales extends CI_Controller {
     }
 
     function add(){
-        $query = $this->db->select("estado_cierre")->where("fecha",date("Y-m-d"))->get("tec_registro_cajas");
-        $existe_apertura = false;
-        foreach($query->result() as $r){
-            $existe_apertura = true;
-        }
+        $this->load->model('caja_model');
+        $caja_abierta = $this->caja_model->get_caja_abierta(intval($_SESSION['store_id']));
+        $existe_apertura = ($caja_abierta !== null);
 
         $this->data['page_title']   = "Agregar Ventas";
-        $this->data['productos']    = $this->db->query("select name,marca,code,modelo,id from tec_products order by name,marca");
+        $this->data['productos']    = $this->db->query("select name,code,id from tec_products order by name");
         $this->data["existe_apertura"] = $existe_apertura;
+
+        // Si viene de un servicio tecnico, cargar los items
+        $this->data['servicio_id'] = '';
+        $this->data['servicio_items'] = array();
+        if(isset($_GET['servicio_id']) && $_GET['servicio_id'] > 0) {
+            $this->load->model('Servicios_model');
+            $servicio_id = intval($_GET['servicio_id']);
+            $servicio = $this->Servicios_model->get_servicio_by_id($servicio_id);
+            if($servicio && empty($servicio->sale_id)) {
+                $this->data['servicio_id'] = $servicio_id;
+                $this->data['servicio_items'] = $this->Servicios_model->get_items_by_servicio($servicio_id);
+            }
+        }
+
         $this->template->load('production/index', 'sales/add', $this->data);
     }
 
@@ -91,7 +94,7 @@ class Sales extends CI_Controller {
         $serie                  = $this->serie($tipoDoc);
         $ar["serie"]            = $serie;
         $ar["product_tax"]      = $this->Igv;
-        $ar["correlativo"]      = $correlativo;
+        $ar["correlativo"]      = "1223"; //$correlativo;
         $ar["created_by"]       = $created_by;
         $ar["customer_name"]    = $name_cliente;
 
@@ -111,165 +114,187 @@ class Sales extends CI_Controller {
             }
         }
         
+        $operacion_exitosa = false;
+
         if($this->data["error"] == false){
         
-            if ($this->db->insert("tec_sales", $ar)){
-    			$id = $this->db->insert_id();
-    			
-                $ar_monto[0] = $forma_pago_monto;
-                $ar_forma[0] = $forma_pago;
-                
-                if(isset($_POST["forma_pago2"])){
+            $result = $this->db->select("id")->where("correlativo",$correlativo)->where("tipoDoc",$tipoDoc)->get("tec_sales")->result();
+            $existe_correl = false;
+            foreach($result as $r){
+                $existe_correl = true;
+            }
+
+            if(!$existe_correl){
+                if ($this->db->insert("tec_sales", $ar)){
+        			traza("\n\nIniciando...");
+                    $id = $this->db->insert_id();
+        			
+                    $ar_monto[0] = $forma_pago_monto;
+                    $ar_forma[0] = $forma_pago;
                     
-                    $ar_monto[1] = $_POST["forma_pago_monto2"];
-                    $ar_forma[1] = $_POST["forma_pago2"];
-                }
-
-                if($this->sales_model->forma_pago($id, $ar_forma, $ar_monto, $_SESSION["store_id"])){
-    				
-                    $this->data["msg"] = "grabacion Correcta de ".$this->serie($tipoDoc). "-" .$correlativo." ".
-                        '<button type="button" onclick="ver_documento('.$id.')" class="btn btn-info">Imprimir</button>';
-    				
-                    $this->data["error"] = false;
-    			
-                    $Lim = count($_REQUEST['item']);
-
-                    $items = array();
-                    for ($i = 0; $i < $Lim; $i++){
-                        $item_id = $_REQUEST['item'][$i];
-
-                        $ard = array();
+                    if(isset($_POST["forma_pago2"])){
                         
-                        $ard["sale_id"]     = $id;
-                        $ard["product_id"]  = $item_id;
-                        $ard["quantity"]    = $_REQUEST['quantity'][$i];
-                        $ard["tax"]         = $_REQUEST['impuestos'][$i];
-                        
-                        $precio_unitario = $_REQUEST['cost'][$i];
-                        
-                        // en caso sea Ticket no se quita el IGV
-                        if($tipoDoc == '5'){ // ticket
-                            $costo_unitario = $precio_unitario;
-                        }else{ 
-                            $costo_unitario =  $precio_unitario / (1+($_REQUEST['impuestos'][$i]/100));
-                        }
-                        
-                        $subtotal_      = $costo_unitario * ($_REQUEST['quantity'][$i] * 1);
-
-                        $ard["unit_price"]      = $precio_unitario;
-                        $ard["net_unit_price"]  = $costo_unitario;
-                        $ard["subtotal"]        = $subtotal_;
-                        $ard["real_unit_price"] = $precio_unitario;
-                        
-                        // En el caso de que sea un servicio se coloca la observacion a su costado
-                        if ($this->isServicio($item_id)){
-                            $observaciones = " " . $_REQUEST["obs"][$i];
-                        }else{ 
-                            $observaciones = "";
-                            $ard["compra_id"]       = $this->enlazar_compra($_SESSION["store_id"], $item_id, $_REQUEST['quantity'][$i]);
-                        }
-
-                        $ard["product_name"]    = trim($_REQUEST['descripo'][$i]);
-                        $ard["comment"]         = trim($observaciones);
-
-                        // Ingresan las series de cada producto
-                        $ard["series"]          = $_REQUEST['series'][$i];
-
-                        $this->db->insert("tec_sale_items", $ard);
-
-                        $itm["sale_id"]     = $id;
-                        $itm["product_id"]  = $item_id;
-                        $itm["quantity"]    = $_REQUEST['quantity'][$i];
-                        $itm["unit_price"]  = $precio_unitario;
-                        $itm["net_unit_price"] = $_REQUEST['cost'][$i];
-                        $itm["subtotal"]    = $subtotal_;
-                        $itm["real_unit_price"] = $precio_unitario;
-                        $itm["product_name"] = $_REQUEST['descripo'][$i];
-                        
-                        $items[] = $itm;
-
-                        $this->compras_model->disminuir_al_stock($item_id, $_SESSION["store_id"], $_REQUEST['quantity'][$i]);
+                        $ar_monto[1] = $_POST["forma_pago_monto2"];
+                        $ar_forma[1] = $_POST["forma_pago2"];
                     }
 
-                    $data = array();
-                    $data["id"]             = $id;
-                    $data["date"]           = $fecha;          
-                    $data["tipoDoc"]        = $tipoDoc;
-                    $data["customer_id"]    = $customer_id;
-                    $data["total"]          = $subtotal;
-                    $data["total_tax"]      = $igv;
-                    $data["grand_total"]    = $grand_total;
-                    $data["serie"]          = $serie;
-                    $data["correlativo"]    = $correlativo;
-                    $data["customer_id"]    = $customer_id;
-                    $data["customer_name"]  = $name_cliente;
-                    $data["store_id"]       = $_SESSION["store_id"];
-                    $data["product_tax"]    = $this->Igv;
-                    $data["forma_pago"]     = $forma_pago;
+                    if($this->sales_model->forma_pago($id, $ar_forma, $ar_monto, $_SESSION["store_id"])){
+        				
+                        $this->data["msg"] = "grabacion Correcta de ".$this->serie($tipoDoc). "-" .$correlativo." ".
+                            '<button type="button" onclick="ver_documento('.$id.')" class="btn btn-info">Imprimir</button>';
+                        traza("grabacion Correcta de ".$this->serie($tipoDoc). "-" .$correlativo." ".
+                            '<button type="button" onclick="ver_documento('.$id.')" class="btn btn-info">Imprimir</button>');
+        				
+                        $this->data["error"] = false;
+        			
+                        $Lim = count($_REQUEST['item']);
 
-                    
-                    if($tipoDoc != '5'){
+                        $items = array();
+                        for ($i = 0; $i < $Lim; $i++){
+                            $item_id = $_REQUEST['item'][$i];
 
-                        // ******************************************************************************
-                        $rpta_sunat = $this->sales_model->enviar_doc_sunat($id, $data, $items, "ENVIO");
-                        // ******************************************************************************
+                            $ard = array();
+                            
+                            $ard["sale_id"]     = $id;
+                            $ard["product_id"]  = $item_id;
+                            $ard["quantity"]    = $_REQUEST['quantity'][$i];
+                            $ard["tax"]         = $_REQUEST['impuestos'][$i];
+                            
+                            $precio_unitario = $_REQUEST['cost'][$i];
+                            
+                            // en caso sea Ticket no se quita el IGV
+                            if($tipoDoc == '5'){ // ticket
+                                $costo_unitario = $precio_unitario;
+                            }else{ 
+                                $costo_unitario =  $precio_unitario / (1+($_REQUEST['impuestos'][$i]/100));
+                            }
+                            
+                            $subtotal_      = $costo_unitario * ($_REQUEST['quantity'][$i] * 1);
 
-                        //$gn = fopen("rpta_{$id}.txt","a+");
-                        $gn = fopen("comprobantes/doc_{$id}_rpta.txt","w");
-                        fputs($gn, $rpta_sunat);
-                        fclose($gn);
-                        $gn = null;
+                            $ard["unit_price"]      = $precio_unitario;
+                            $ard["net_unit_price"]  = $costo_unitario;
+                            $ard["subtotal"]        = $subtotal_;
+                            $ard["real_unit_price"] = $precio_unitario;
+                            
+                            // En el caso de que sea un servicio se coloca la observacion a su costado
+                            $observaciones = " " . $_REQUEST["obs"][$i];
+                            if (!$this->isServicio($item_id)){
+                                $ard["compra_id"]       = $this->enlazar_compra($_SESSION["store_id"], $item_id, $_REQUEST['quantity'][$i]);
+                            }
 
-                        if ($this->sales_model->analizar_rpta_sunat($rpta_sunat)){
+                            $ard["product_name"]    = trim($_REQUEST['descripo'][$i]);
+                            $ard["comment"]         = trim($observaciones);
 
-                            // *****************************************************************************
-                            $rpta_sunat_xml = $this->sales_model->enviar_doc_sunat($id, $data, $items, "XML");
-                            // *****************************************************************************
+                            // Ingresan las series de cada producto
+                            $ard["series"]          = $_REQUEST['series'][$i];
 
-                            $gn = fopen("comprobantes/doc_{$id}_xml.txt","w");
-                            fputs($gn, $rpta_sunat_xml);
+                            // Agrupamiento de items
+                            $ard["group_id"]        = !empty($_REQUEST['group_id'][$i]) ? $_REQUEST['group_id'][$i] : null;
+                            $ard["group_name"]      = !empty($_REQUEST['group_name'][$i]) ? $_REQUEST['group_name'][$i] : null;
+
+                            $this->db->insert("tec_sale_items", $ard);
+                            traza( "ard: " . implode(", ",$ard) );
+
+                            $itm["sale_id"]         = $id;
+                            $itm["product_id"]      = $item_id;
+                            $itm["quantity"]        = $_REQUEST['quantity'][$i];
+                            $itm["unit_price"]      = $precio_unitario;
+                            $itm["net_unit_price"]  = $_REQUEST['cost'][$i];
+                            $itm["subtotal"]        = $subtotal_;
+                            $itm["real_unit_price"] = $precio_unitario;
+                            $itm["product_name"]    = $_REQUEST['descripo'][$i];
+                            
+                            $items[] = $itm;
+                            traza( "items: " . implode(", ",$itm) );
+
+                            $this->compras_model->disminuir_al_stock($item_id, $_SESSION["store_id"], $_REQUEST['quantity'][$i]);
+                        }
+
+                        $data = array();
+                        $data["id"]             = $id;
+                        $data["date"]           = $fecha;          
+                        $data["tipoDoc"]        = $tipoDoc;
+                        $data["customer_id"]    = $customer_id;
+                        $data["total"]          = $subtotal;
+                        $data["total_tax"]      = $igv;
+                        $data["grand_total"]    = $grand_total;
+                        $data["serie"]          = $serie;
+                        $data["correlativo"]    = $correlativo;
+                        $data["customer_id"]    = $customer_id;
+                        $data["customer_name"]  = $name_cliente;
+                        $data["store_id"]       = $_SESSION["store_id"];
+                        $data["product_tax"]    = $this->Igv;
+                        $data["forma_pago"]     = $forma_pago;
+
+                        
+                        if($tipoDoc != '5'){
+
+                            // ******************************************************************************
+                            $rpta_sunat = $this->sales_model->enviar_doc_sunat($id, $data, $items, "ENVIO");
+                            // ******************************************************************************
+
+                            $gn = fopen("comprobantes/doc_{$id}_rpta.txt","w");
+                            fputs($gn, $rpta_sunat);
                             fclose($gn);
                             $gn = null;
 
-                            $this->db->set(array('envio_electronico'=>'1'))->where("id",$id)->update("tec_sales");
+                            // Una segunda copia
+                            $dia_hora = date("Y-m-d") . "T" . date("His");
+                            $gn = fopen("comprobantes/doc_{$id}-{$dia_hora}_rpta.txt","w");
+                            fputs($gn, $rpta_sunat);
+                            fclose($gn);
+                            $gn = null;
+                        
+
+                            if ($this->sales_model->analizar_rpta_sunat($rpta_sunat)){
+
+                                // *****************************************************************************
+                                $rpta_sunat_xml = $this->sales_model->enviar_doc_sunat($id, $data, $items, "XML");
+                                // *****************************************************************************
+
+                                $gn = fopen("comprobantes/doc_{$id}_xml.txt","w");
+                                fputs($gn, $rpta_sunat_xml);
+                                fclose($gn);
+                                $gn = null;
+
+                                $this->db->set(array('envio_electronico'=>'1'))->where("id",$id)->update("tec_sales");
+                            }
+
+                            $this->data['rpta_sunat'] = $rpta_sunat;
+                        
+                        }
+                        // Vincular con servicio tecnico si corresponde
+                        if(isset($_POST['servicio_id']) && $_POST['servicio_id'] > 0) {
+                            $this->load->model('Servicios_model');
+                            $this->Servicios_model->update_sale_id(intval($_POST['servicio_id']), $id);
                         }
 
-                        $this->data['rpta_sunat'] = $rpta_sunat;
-                    
-                    }
-                    $this->data["page_title"] = "Agregar Ventas";
+                        $this->data["page_title"] = "Agregar Ventas";
 
-                    //$this->template->load('production/index', 'sales/add', $this->data); //$this->load->view("sales/view", $this->data);
-                    //$this->db->trans_commit();
+                        $this->view($id); //
+                        $operacion_exitosa = true;
 
-                    $this->view($id); //
-                    //$this->data['page_title'] = "Agregar Ventas";
-                    //$this->template->load('production/index', 'sales/add', $this->data);
+                    }else{
+        				$this->data["msg"] = "No se pudo grabar forma de pago";
+        				$this->data["error"] = true;
+                        //die("Vacan X");
+                        //$this->db->trans_rollback();
+        			}
 
-                }else{
-    				$this->data["msg"] = "No se pudo grabar forma de pago";
-    				$this->data["error"] = true;
-                    //die("Vacan X");
+        		}else{
+                    $this->data["msg"] = "No se pudo grabar la Venta";
+                    $this->data["error"] = true;
                     //$this->db->trans_rollback();
-
-                    $this->data["page_title"] = "Agregar Ventas";
-                    $this->template->load('production/index', 'sales/add', $this->data);
-    			}
-
-    		}else{
+                }
+            }else{
                 $this->data["msg"] = "No se pudo grabar la Venta";
                 $this->data["error"] = true;
-
-                //$this->db->trans_rollback();
-
-                $this->data["page_title"] = "Agregar Ventas";
-                $this->template->load('production/index', 'sales/add', $this->data);
             }
-        }else{
-            $this->data["page_title"] = "Agregar Ventas";
-            $this->template->load('production/index', 'sales/add', $this->data);            
         }
-
+        if(!$operacion_exitosa){
+            $this->data["page_title"] = "Agregar Ventas";
+            $this->template->load('production/index', 'sales/add', $this->data);
+        }
 	}
 
     public function isServicio($item_id){
@@ -322,7 +347,8 @@ class Sales extends CI_Controller {
         }
 
 
-        $cSql = "select tec_sales.id, tec_stores.name tienda, tec_sales.date, customer_name, round(total,2) total, round(grand_total,2) grand_total,  tec_users.username created_by, tec_sales.anulado,
+        $cSql = "select tec_sales.id, tec_stores.name tienda, concat(substr(tec_sales.date,1,10),'_',substr(tec_sales.date,12,5)) date, customer_name, 
+        round(total,2) total, round(grand_total,2) grand_total,  tec_users.username created_by, tec_sales.anulado,
             concat(tec_sales.serie,'-',tec_sales.correlativo) recibo, group_concat(substr(lcase(tec_products.name),1,12)) productos,
             if(tec_sales.envio_electronico = 1, '<i class=\'glyphicon glyphicon-ok\'></i>', '') as dir_comprobante,
             concat('<button onclick=\'ver_documento(', tec_sales.id, ')\'><i style = \'color:blue\' class=\'glyphicon glyphicon-eye-open\'></i></button>',
@@ -375,10 +401,7 @@ class Sales extends CI_Controller {
 
 	function view($id){
 		if(!is_null($id)){
-			
             $ar["query"] = $this->sales_model->view($id);
-            //print_r($ar);
-            //die("llego a casax");
             $this->load->view('sales/view',$ar);
 		}
 	}
@@ -546,11 +569,53 @@ class Sales extends CI_Controller {
     function buscar(){ // LO USA LA BUSQUEDA INCREMENTAL
         $code = $_REQUEST["b"];
         $store_id = $_SESSION['store_id'];
-        $cSql = "select a.*, if(b.stock is null,0,b.stock) stock, c.name categoria, a.impuesto, a.prod_serv from tec_products a 
+
+        $code1=$code2="";
+        $ar = explode(" ",$code);
+        
+        for($i=0; $i<count($ar); $i++){
+            if($i==0){
+                $code1 = $ar[$i];
+            }
+            if($i==1){
+                $code2 = $ar[$i];
+                break;
+            }
+        }
+        //echo "code1: $code1  code2: $code2 <br>\n";
+
+        // Nota.- La categoria 9000 significa que es un producto para GASTO por tanto colocar el filtro
+        /*  $cSql = "select a.id, a.name, a.marca, a.modelo, a.color, if(b.stock is null,0,b.stock) stock, c.name categoria, a.impuesto, a.prod_serv from tec_products a 
             left join tec_prod_store b on a.id=b.product_id and b.store_id = {$store_id}
             left join tec_categories c on a.category_id=c.id 
-            where a.activo='1' and (a.name like '%{$code}%' or a.marca like '%{$code}%' or a.modelo like '%{$code}%' or a.code like '%{$code}%')
+            where a.activo='1' and (a.name like '%{$code}%' or a.marca like '%{$code}%' or a.modelo like '%{$code}%' or a.modelo like '%{$code}%')
+            and a.category_id != 9000
             order by a.name, a.marca, a.modelo";
+        */
+
+        if($i==0){
+            $cSql = "select a.id, a.name, a.marca, a.modelo, a.color, if(b.stock is null,0,b.stock) stock, c.name categoria, a.impuesto, a.prod_serv from tec_products a 
+            left join tec_prod_store b on a.id=b.product_id and b.store_id = {$store_id}
+            left join tec_categories c on a.category_id=c.id 
+            where a.activo='1' and (a.name like '%{$code1}%' or a.marca like '%{$code1}%' or a.modelo like '%{$code1}%')
+            and a.category_id != 9000
+            order by a.name, a.marca, a.modelo";
+
+            $cSql = "select a.id, a.name as nombres, a.color, if(b.stock is null,0,b.stock) stock, c.name categoria, a.impuesto, a.prod_serv from tec_products a
+            left join tec_prod_store b on a.id=b.product_id and b.store_id = {$store_id}
+            left join tec_categories c on a.category_id=c.id
+            where a.activo='1' and a.name like '%{$code1}%'
+            and a.category_id != 9000
+            order by a.name";
+        }
+        if($i>=1){
+            $cSql = "select a.id, a.name as nombres, a.color, if(b.stock is null,0,b.stock) stock, c.name categoria, a.impuesto, a.prod_serv from tec_products a
+            left join tec_prod_store b on a.id=b.product_id and b.store_id = {$store_id}
+            left join tec_categories c on a.category_id=c.id
+            where a.activo='1' and (a.name like '%{$code1}%' and a.name like '%{$code2}%')
+            and a.category_id != 9000
+            order by a.name";
+        }
         
         $ar = array();
         if(strlen($code)>1){
@@ -561,7 +626,8 @@ class Sales extends CI_Controller {
                 $n++;
                 $cad .= "{";
                 $cad .= '"id":"' . $r->id . '",'; 
-                $cad .= '"name":"' . str_replace('"','',$r->name . ' ' . $r->marca . ' ' . $r->modelo . ' ' . $r->color) . '",';
+                //$cad .= '"name":"' . str_replace('"','',$r->name . ' ' . $r->marca . ' ' . $r->modelo . ' ' . $r->color) . '",';
+                $cad .= '"name":"' . str_replace('"','',$r->nombres) . '",';
                 $cad .= '"stock":"' . $r->stock . '",';
                 $cad .= '"categoria":"' . $r->categoria . '",'; 
                 $cad .= '"impuesto":"' . $r->impuesto . '",';
@@ -576,6 +642,7 @@ class Sales extends CI_Controller {
         }else{
             echo "";
         }
+        
     }
 
     function buscar2(){ // Para Compras
@@ -588,7 +655,7 @@ class Sales extends CI_Controller {
         $cSql = "select a.*, if(b.stock is null,0,b.stock) stock, c.name categoria, a.impuesto from tec_products a 
             left join tec_prod_store b on a.id=b.product_id and b.store_id = {$store_id}
             left join tec_categories c on a.category_id=c.id 
-            where a.activo='1' and a.prod_serv='P' and concat(a.name,' ',a.marca,' ',a.modelo) like '%{$code}%'";
+            where a.activo='1' and a.prod_serv='P' and a.name like '%{$code}%'";
         
         //echo $cSql;
         
@@ -600,17 +667,17 @@ class Sales extends CI_Controller {
             $n = 0;
             foreach($query->result() as $r){
                 $n++;
-                /*
-                $cad .= "{";
-                $cad .= '"id":"' . $r->id . '",'; 
-                $cad .= '"name":"' . str_replace('"','',$r->name . ' ' . $r->marca . ' ' . $r->modelo) . '",';
-                $cad .= '"stock":"' . $r->stock . '",';
-                $cad .= '"categoria":"' . $r->categoria . '",'; 
-                $cad .= '"impuesto":"' . $r->impuesto . '"';
-                $cad .= "},";
-                */
+                
+                //$cad .= "{";
+                //$cad .= '"id":"' . $r->id . '",'; 
+                //$cad .= '"name":"' . str_replace('"','',$r->name . ' ' . $r->marca . ' ' . $r->modelo) . '",';
+                //$cad .= '"stock":"' . $r->stock . '",';
+                //$cad .= '"categoria":"' . $r->categoria . '",'; 
+                //$cad .= '"impuesto":"' . $r->impuesto . '"';
+                //$cad .= "},";
+                
 
-                $completo = $r->name . " " . $r->marca . " " . $r->modelo . " " . $r->color;
+                $completo = $r->name;
                 $cad .= "<li onclick=\"mostrar(" . $r->id . ",'" . $completo . "')\">" . $completo . "</li>";
             }
             if($n>0){
@@ -643,7 +710,7 @@ class Sales extends CI_Controller {
                 $n++;
                 $cad .= "{";
                 $cad .= '"id":"' . $r->id . '",'; 
-                $cad .= '"name":"' . str_replace('"','',$r->name . ' ' . $r->marca . ' ' . $r->modelo) . '",';
+                $cad .= '"name":"' . str_replace('"','',$r->name) . '",';
                 $cad .= '"stock":"' . $r->stock . '",';
                 $cad .= '"categoria":"' . $r->categoria . '",'; 
                 $cad .= '"impuesto":"' . $r->impuesto . '"';
@@ -724,4 +791,60 @@ class Sales extends CI_Controller {
         return false;
     }
 
+/*
+    function ballena(){
+        $cSql = "select * from tec_sales a where a.serie in ('B001','F001') and a.date > '2026-01-01' and a.envio_electronico != '1'";
+        $query = $this->db->query($cSql);
+        $i=0;
+        $ruta_base = "/var/www/html/erp-surco/";
+        foreach($query->result() as $r){
+            $existe = false;
+            $i++;
+            
+            // archivo :
+            $archivo = "https://cubifact.com/erp-surco/comprobantes/doc_" . $r->id . "_rpta.txt";
+            
+            $archivo_local = "comprobantes/doc_" . $r->id . "_rpta.txt";
+
+            $gn = @fopen($archivo,"r");
+
+            if($gn === false){
+                $rp = "No se pudo abrir....";
+            }else{
+                $rp = "Si se pudo.";
+
+                fclose($gn);
+
+                $con_ruta = $ruta_base . $archivo_local;
+
+                //die($con_ruta);
+
+                //$contenido = fread($gn,4096);
+                $contenido = file_get_contents($archivo);
+
+                //echo "<br>". $contenido . "<br>\n";
+                $nPos = strpos($contenido, ", ha sido aceptado");
+                $nPos2 = strpos($contenido, ", ha sido aceptada");
+
+                if($nPos!=false){
+                    $existe = true;
+                }
+                if($nPos2!=false){
+                    $existe = true;
+                }
+
+                if($existe){
+                    $cSql = "update tec_sales set envio_electronico = '1' where id = ?";
+                    $this->db->query($cSql, $r->id);
+                }
+
+            }
+            
+            echo $i . ") " . $r->id . ", " . $r->date . ", " . $r->envio_electronico . ", " . $archivo . " " . $rp . " " . $existe . "<br>\n";
+            if($i>10){
+                break;
+            }
+        }
+    }
+*/
 }

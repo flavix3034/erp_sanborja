@@ -6,329 +6,296 @@ class Caja extends CI_Controller {
     function __construct(){
         parent::__construct();
         session_start();
+        if (!isset($_SESSION["user_id"])) {
+            redirect(base_url("welcome/index"));
+            return;
+        }
         $this->load->helper('url');
-        $this->load->model('welcome_model');
-        $this->load->model("caja_model");
+        $this->load->model('caja_model');
     }
 
-	public function index()
-	{
+    /**
+     * Tablero principal de Caja de Ventas
+     */
+    public function index(){
+        $this->data['page_title'] = "Caja de Ventas";
+        $this->template->load('production/index', 'caja/dashboard', $this->data);
+    }
 
-	}
+    /**
+     * AJAX: Retorna datos en tiempo real del estado de la caja
+     */
+    function get_dashboard_data(){
+        header('Content-Type: application/json');
+        $store_id = intval($_SESSION['store_id']);
+        $caja = $this->caja_model->get_caja_abierta($store_id);
 
-	public function ingreso_caja(){
-		$data['title'] 		= 'Ingresos a Caja:';
-		$data['mensaje'] 	= $data['alerta'] = "";
-		$this->template->load('view_layout', 'caja/ingreso_caja', $data);
+        if (!$caja) {
+            echo json_encode(array("abierta" => false));
+            return;
+        }
 
-		if ($store_id == ''){ 
-			$store_id = $_SESSION["store_id"]; 
-		}
-	    $this->data['page_title'] = "Apertura de Caja";
-	    $this->template->load('production/index', 'caja/index', $this->data);
-	    
-	}
+        $ventas   = $this->caja_model->ventas_efectivo($store_id, $caja->fecha);
+        $mov_ing  = $this->caja_model->total_movimientos($caja->id, 'INGRESO');
+        $mov_egr  = $this->caja_model->total_movimientos($caja->id, 'EGRESO');
+        $otros    = $this->caja_model->ventas_otros_medios($store_id, $caja->fecha);
+        $saldo    = floatval($caja->monto_ini) + $ventas + $mov_ing - $mov_egr;
 
-	public function enviar_correo(){
-		$cabeceras = 'From: flaviojuliom@gmail.com' . "\r\n" .
-    	'X-Mailer: PHP/' . phpversion();
-		mail("flaviomorenoz@gmail.com", "Mi situacion es poco comoda", "La ramificacion del Arbol es muy importante.", $cabeceras);
-		echo "Se envía";
-	}
+        echo json_encode(array(
+            "abierta"       => true,
+            "caja_id"       => intval($caja->id),
+            "fecha"         => $caja->fecha,
+            "hora_apertura" => $caja->hora_apertura,
+            "responsable"   => $caja->responsable,
+            "monto_ini"     => floatval($caja->monto_ini),
+            "ventas_cash"   => $ventas,
+            "mov_ingreso"   => $mov_ing,
+            "mov_egreso"    => $mov_egr,
+            "saldo_teorico" => round($saldo, 2),
+            "otros_yape_plin"     => $otros['yape_plin'],
+            "otros_tarjeta"       => $otros['tarjeta'],
+            "otros_transferencia" => $otros['transferencia']
+        ));
+    }
 
-	function comillar($cad=""){
-		return '"' . $cad . '",';
-	}
+    /**
+     * AJAX POST: Apertura de caja
+     */
+    function aperturar(){
+        header('Content-Type: application/json');
+        $store_id = intval($_SESSION['store_id']);
 
-	function ver_cajas(){
-		$this->data['page_title'] = "Cajas";
-		$this->template->load('production/index', 'caja/ver_cajas', $this->data);
-	}
+        // Verificar que no haya caja abierta
+        $existente = $this->caja_model->get_caja_abierta($store_id);
+        if ($existente) {
+            echo json_encode(array("rpta" => "error", "msg" => "Ya existe una caja abierta."));
+            return;
+        }
 
-	function get_ver_cajas($caja_id=1){
-		$cSql = "select id, fecha, caja_id, responsable, monto_ini, monto_fin, if(estado_cierre = 1,'Cerrado','Abierto') estado_cierre,".
-			" monto_calculado, diferencia, ventas, compras".
-			" from tec_registro_cajas".
-			" where caja_id = ? order by id desc limit 45";
-		$result 	= $this->db->query($cSql, array($caja_id))->result_array();
-		foreach($result as &$r){
-			if($r["estado_cierre"] == 'Abierto'){
+        $monto = floatval($_POST['monto_inicial']);
+        if ($monto < 0) {
+            echo json_encode(array("rpta" => "error", "msg" => "El monto inicial no puede ser negativo."));
+            return;
+        }
 
-				// Ventas en efectivo
-				$r["vtas_efectivo"] = $this->ventas_efectivo($caja_id, $r["fecha"]);
+        $data = array(
+            'store_id'      => $store_id,
+            'fecha'         => date('Y-m-d'),
+            'hora_apertura' => date('H:i:s'),
+            'caja_id'       => $store_id,
+            'responsable'   => $_SESSION['usuario'],
+            'user_id'       => intval($_SESSION['user_id']),
+            'monto_ini'     => $monto,
+            'estado_cierre' => 0
+        );
 
-				// Compras en efectivo
-				$r["compras_efectivo"] = $this->compras_efectivo($caja_id, $r["fecha"]);
+        $id = $this->caja_model->insertar_caja($data);
+        echo json_encode(array("rpta" => "success", "msg" => "Caja aperturada correctamente.", "id" => $id));
+    }
 
-				$r["monto_calculado"] = floatval($r["monto_ini"]) + $r["vtas_efectivo"] - $r["compras_efectivo"];
-				//$r["monto_fin"] = $this->calcular_cierre_caja($r["id"],2);
+    /**
+     * AJAX POST: Registrar movimiento manual (INGRESO o EGRESO)
+     */
+    function registrar_movimiento(){
+        header('Content-Type: application/json');
+        $store_id = intval($_SESSION['store_id']);
+        $caja = $this->caja_model->get_caja_abierta($store_id);
 
-				$r["accion"] = "&nbsp;&nbsp;<a href='#' onclick='proceso_cerrar(" . $r["id"] . "," . $r["vtas_efectivo"] . "," . $r["compras_efectivo"] . "," . $r["monto_calculado"] . ")' title='cerrar'><span class='glyphicon glyphicon-log-out' style='font-size:16px'></span></a>";
-				$r["accion"] .= "&nbsp;<span id='casilla_cierre_" . $r["id"] . "'></span>";
-			
-			}else{
-				$r["accion"] 			= '';
-				$r["vtas_efectivo"] 	= $r["ventas"];
-				$r["compras_efectivo"] 	= $r["compras"];
+        if (!$caja) {
+            echo json_encode(array("rpta" => "error", "msg" => "No hay caja abierta."));
+            return;
+        }
 
-				//$r["accion"] = "&nbsp;&nbsp;<a href='#' onclick='proceso_cerrar(" . $r["id"] . ")' title='cerrar'><span class='glyphicon glyphicon-edit' style='font-size:16px'></span></a>";
-				//"&nbsp;<span id='casilla_cierre_" . $r["id"] . "'></span>";
-			}
+        $tipo        = isset($_POST['tipo']) ? trim($_POST['tipo']) : '';
+        $monto       = floatval(isset($_POST['monto']) ? $_POST['monto'] : 0);
+        $descripcion = isset($_POST['descripcion']) ? trim($_POST['descripcion']) : '';
+        $referencia  = isset($_POST['referencia']) ? trim($_POST['referencia']) : '';
 
-		}
-		$ar_campos 	= array("id", "fecha", "caja_id", "responsable","monto_ini", "vtas_efectivo", "compras_efectivo", "monto_calculado", "monto_fin", "diferencia", "estado_cierre", "accion");
-		//$ar_campos 	= array("id", "id", "id", "id","id", "", "compras_efectivo", "monto_fin", "estado_cierre", "accion");
-		echo $this->fm->json_datatable($ar_campos, $result);
-	}
+        if (!in_array($tipo, array('INGRESO', 'EGRESO'))) {
+            echo json_encode(array("rpta" => "error", "msg" => "Tipo de movimiento inv\u00e1lido."));
+            return;
+        }
+        if ($monto <= 0) {
+            echo json_encode(array("rpta" => "error", "msg" => "El monto debe ser mayor a cero."));
+            return;
+        }
+        if (empty($descripcion)) {
+            echo json_encode(array("rpta" => "error", "msg" => "La descripci\u00f3n es obligatoria."));
+            return;
+        }
 
-	private function ventas_efectivo($store_id, $fecha){
-		$cSql = "select date(a.`date`) fecha, sum(c.amount) amount 
-		from tec_sales a
-		inner join tec_payments c on a.id = c.sale_id
-		where c.paid_by = 'cash' and a.anulado != '1' and date(a.`date`) = '$fecha'
-		group by date(a.date)
-		order by date(a.date)";
+        $data = array(
+            'registro_caja_id' => intval($caja->id),
+            'store_id'         => $store_id,
+            'tipo'             => $tipo,
+            'monto'            => $monto,
+            'descripcion'      => $descripcion,
+            'referencia'       => $referencia,
+            'fecha_hora'       => date('Y-m-d H:i:s'),
+            'user_id'          => intval($_SESSION['user_id'])
+        );
 
-		$query = $this->db->query($cSql);
+        $this->caja_model->insertar_movimiento($data);
+        echo json_encode(array("rpta" => "success", "msg" => "Movimiento registrado."));
+    }
 
-		$rpta = 0;
-		foreach($query->result() as $r){
-			$rpta = $r->amount * 1;
-		}
-		return $rpta;
-	}
+    /**
+     * AJAX POST: Eliminar un movimiento manual
+     */
+    function eliminar_movimiento(){
+        header('Content-Type: application/json');
+        $store_id = intval($_SESSION['store_id']);
+        $caja = $this->caja_model->get_caja_abierta($store_id);
 
-	private function compras_efectivo($store_id, $fecha){
-		// Compras
-		$cSql = "select a.total from tec_compras a where date(a.fecha) = '$fecha' and a.store_id = $store_id and a.tipo_pago = 1";  // 1:caja, 2:banco
-		
-		//die($cSql);
-		$query3 = $this->db->query($cSql); // ,array($fecha, $store_id)
+        if (!$caja) {
+            echo json_encode(array("rpta" => "error", "msg" => "No hay caja abierta."));
+            return;
+        }
 
-		$result 		= $query3->result_array();
-		$nTotal_c 		= 0;
-		foreach($result as $r){
-			$nTotal_c 	+= floatval($r["total"]); 
-		}
-		//die($nTotal_c);
-		return $nTotal_c;
-	}
+        $id = intval($_POST['id']);
+        $this->caja_model->eliminar_movimiento($id, $caja->id);
+        echo json_encode(array("rpta" => "success", "msg" => "Movimiento eliminado."));
+    }
 
-	function aperturar_caja(){
-		$this->data['page_title'] = "Apertura de Caja";
-		if (!$this->caja_model->existe_cajas_abiertas()){
-			$this->template->load('production/index', 'caja/aperturar_caja', $this->data);
-		}else{
-			$this->data['page_title'] 	= "Cajas";
-			$this->data['msg'] 			= "Existen cajas abiertas, primero de cerrar cajas de dias anteriores";
-			$this->data['rpta_msg'] 	= "danger";
-			$this->template->load('production/index', 'caja/ver_cajas', $this->data);
-		}
-	}
+    /**
+     * AJAX: Retorna movimientos de la caja abierta para DataTable
+     */
+    function get_movimientos(){
+        $store_id = intval($_SESSION['store_id']);
+        $caja = $this->caja_model->get_caja_abierta($store_id);
 
-	function cerrar_caja($id, $cMontoFin, $cMontoCalculado, $cVenta, $cCompra){ // respuesta en texto
-		
-		$cSql = "select id, store_id, fecha, caja_id, responsable, monto_ini, monto_fin, if(estado_cierre = 1,'Cerrado','Abierto') estado_cierre".
-			" from tec_registro_cajas".
-			" where id = ? order by id desc limit 45";
-		$result 	= $this->db->query($cSql, array($id))->result_array();
-		foreach($result as $r){
-			$fecha = $r["fecha"];
-			$store_id = $r["store_id"];
-			$monto_ini = floatval($r["monto_ini"]);
-		}
-		
-		// Ventas en efectivo
-		//$vtas_efectivo = $this->ventas_efectivo($store_id, $fecha);
-		$vtas_efectivo = floatval($cVenta);
+        if (!$caja) {
+            echo '{"data":[]}';
+            return;
+        }
 
-		// Compras en efectivo
-		//$compras_efectivo = $this->compras_efectivo($store_id, $fecha);
-		$compras_efectivo = floatval($cCompra);
+        $result = $this->caja_model->get_movimientos($caja->id);
 
-		$monto_fin = floatval($cMontoFin);
-		//$monto_fin = floatval($monto_ini) + $vtas_efectivo - $compras_efectivo;
-		//$r["monto_fin"] = $this->calcular_cierre_caja($r["id"],2);
+        // Formatear para DataTable (usar comillas simples en HTML para no romper json_datatable)
+        foreach ($result as &$r) {
+            $r['hora'] = substr($r['fecha_hora'], 11, 5);
+            $badge_color = ($r['tipo'] == 'INGRESO') ? '#28a745' : '#dc3545';
+            $r['tipo_fmt'] = "<span style='background:{$badge_color};color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;'>{$r['tipo']}</span>";
+            $r['monto_fmt'] = number_format(floatval($r['monto']), 2);
+            $r['accion'] = "<button class='btn btn-xs btn-danger' onclick='eliminarMovimiento({$r['id']})' title='Eliminar'><i class='fas fa-trash'></i></button>";
+        }
 
-		$total = $monto_fin;
-		//$total = $this->calcular_cierre_caja($id,2);
+        $campos = array("id", "hora", "tipo_fmt", "descripcion", "referencia", "monto_fmt", "accion");
+        if (empty($result)) {
+            echo '{"data":[]}';
+        } else {
+            echo $this->fm->json_datatable($campos, $result);
+        }
+    }
 
-		if($total != 'KO'){
+    /**
+     * AJAX POST: Cerrar caja (arqueo)
+     */
+    function cerrar(){
+        header('Content-Type: application/json');
+        $store_id = intval($_SESSION['store_id']);
+        $caja = $this->caja_model->get_caja_abierta($store_id);
 
-			// Calculando la diferencia
-			$diferencia = floatval($cMontoCalculado) - floatval($cMontoFin);
+        if (!$caja) {
+            echo json_encode(array("rpta" => "error", "msg" => "No hay caja abierta."));
+            return;
+        }
 
-			$cSql = "update tec_registro_cajas set estado_cierre = 1, monto_fin = $total, monto_calculado = $cMontoCalculado, diferencia = $diferencia, ventas=$vtas_efectivo, compras=$compras_efectivo where id = $id";
-			//die($cSql);
-			$query = $this->db->query($cSql,array($total,$id));
-			if($this->db->affected_rows() > 0){
-				echo "OK";
-			}else{
-				echo "KO";
-			}
+        $monto_real     = floatval($_POST['monto_real']);
+        $arqueo_json    = isset($_POST['arqueo_json']) ? $_POST['arqueo_json'] : '{}';
+        $observaciones  = isset($_POST['observaciones']) ? trim($_POST['observaciones']) : '';
 
-		}else{
-			echo "KO";
-		}
-	}
+        // Calcular saldo teórico
+        $ventas   = $this->caja_model->ventas_efectivo($store_id, $caja->fecha);
+        $mov_ing  = $this->caja_model->total_movimientos($caja->id, 'INGRESO');
+        $mov_egr  = $this->caja_model->total_movimientos($caja->id, 'EGRESO');
+        $saldo_teorico = floatval($caja->monto_ini) + $ventas + $mov_ing - $mov_egr;
+        $diferencia = round($monto_real - $saldo_teorico, 2);
 
-	function calcular_cierre_caja($id,$tipo_rpta_json = 1){ // Calcula y devuelve el monto de cierre
+        $update = array(
+            'estado_cierre'       => 1,
+            'hora_cierre'         => date('H:i:s'),
+            'monto_fin'           => $monto_real,
+            'monto_calculado'     => round($saldo_teorico, 2),
+            'diferencia'          => $diferencia,
+            'ventas'              => $ventas,
+            'movimientos_ingreso' => $mov_ing,
+            'movimientos_egreso'  => $mov_egr,
+            'arqueo_json'         => $arqueo_json,
+            'observaciones_cierre'=> $observaciones
+        );
 
-		$existe = false;
-		$store_id = 1;
-		$cSql = "select id, fecha, caja_id from tec_registro_cajas where id = ?";
-		$query = $this->db->query($cSql,array($id));
-		foreach($query->result() as $r){
-			$fecha 		= $r->fecha;
-			$caja_id 	= $r->caja_id; 
-			$existe = true;
-		}
+        $this->caja_model->cerrar_caja($caja->id, $update);
 
-		if($existe){
-			// Apertura de Caja
-			$cSql = "select a.id, a.caja_id, a.fecha, a.monto_ini, a.monto_fin, a.estado_cierre from tec_registro_cajas a
-				where a.fecha = ? and a.caja_id = ?";
-			$query1 = $this->db->query($cSql,array($fecha, $caja_id));
+        echo json_encode(array(
+            "rpta"           => "success",
+            "msg"            => "Caja cerrada correctamente.",
+            "saldo_teorico"  => round($saldo_teorico, 2),
+            "monto_real"     => $monto_real,
+            "diferencia"     => $diferencia
+        ));
+    }
 
-			// Ventas
-			/*$cSql = "select a.id, a.tipoDoc, concat(a.serie,'-',a.correlativo) comprobante, a.grand_total  
-				from tec_sales a
-				where a.anulado != '1' and date(a.date) =  ? and a.store_id = ?";
-			$query2 = $this->db->query($cSql,array($fecha, $store_id));
+    /**
+     * AJAX: Historial de cajas para DataTable
+     */
+    function get_historial(){
+        $store_id = intval($_SESSION['store_id']);
+        $result = $this->caja_model->get_historial($store_id);
 
-			// Compras
-			$cSql = "select a.total
-				from tec_compras a
-				where date(a.fecha) =  ? and a.store_id = ?";
-			$query3 = $this->db->query($cSql,array($fecha, $store_id));*/
-			
-			$result 		= $query1->result_array();
-			$monto_ini = 0;
-			foreach($result as $r){ 
-				$monto_ini = floatval($r["monto_ini"]); 
-			}
+        // Usar comillas simples en atributos HTML para no romper json_datatable
+        foreach ($result as &$r) {
+            $r['monto_ini']  = number_format(floatval($r['monto_ini']), 2);
+            $r['ventas']     = number_format(floatval($r['ventas']), 2);
+            $r['mov_ing']    = number_format(floatval($r['movimientos_ingreso']), 2);
+            $r['mov_egr']    = number_format(floatval($r['movimientos_egreso']), 2);
+            $r['calculado']  = number_format(floatval($r['monto_calculado']), 2);
+            $r['real']       = number_format(floatval($r['monto_fin']), 2);
 
-			/*$result 		= $query2->result_array();
-			$nTotal 		= 0;
-			foreach($result as $r){
-				$nTotal += floatval($r["grand_total"]);
-			}
+            $dif = floatval($r['diferencia']);
+            $color = $dif == 0 ? '#6c757d' : ($dif > 0 ? '#28a745' : '#dc3545');
+            $r['dif_fmt'] = "<span style='color:{$color};font-weight:600;'>".number_format($dif, 2)."</span>";
 
-			$result 		= $query3->result_array();
-			$nTotal_c 		= 0;
-			foreach($result as $r){
-				$nTotal_c 	+= floatval($r["total"]); 
-			}*/
+            $est_color = $r['estado_texto'] == 'Abierto' ? '#28a745' : '#6c757d';
+            $r['estado_fmt'] = "<span style='background:{$est_color};color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;'>{$r['estado_texto']}</span>";
 
-			// Ventas en efectivo
-			$vtas_efectivo = $this->ventas_efectivo($store_id, $fecha);
+            $r['accion'] = '';
+            if ($r['estado_texto'] == 'Cerrado') {
+                $r['accion'] = "<button class='btn btn-xs btn-default' onclick='verDetalle({$r['id']})' title='Ver detalle'><i class='fas fa-eye'></i></button>";
+            }
+        }
 
-			// Compras en efectivo
-			$compras_efectivo = $this->compras_efectivo($store_id, $fecha);
+        $campos = array("id", "fecha", "responsable", "monto_ini", "ventas", "mov_ing", "mov_egr", "calculado", "real", "dif_fmt", "estado_fmt", "accion");
+        if (empty($result)) {
+            echo '{"data":[]}';
+        } else {
+            echo $this->fm->json_datatable($campos, $result);
+        }
+    }
 
-			if ($tipo_rpta_json == 1){
-				echo ($monto_ini + $vtas_efectivo - $compras_efectivo);
-			}else{
-				return ($monto_ini + $vtas_efectivo - $compras_efectivo);
-			}
-		}else{
-			if ($tipo_rpta_json == 1){ echo "KO"; }else{ return "KO"; }
-		}
-	}
+    /**
+     * AJAX: Detalle de una caja cerrada
+     */
+    function ver_detalle($id){
+        header('Content-Type: application/json');
+        $store_id = intval($_SESSION['store_id']);
+        $caja = $this->caja_model->get_caja_by_id($id, $store_id);
+        $movimientos = array();
+        if ($caja) {
+            $movimientos = $this->caja_model->get_movimientos($id);
+        }
+        echo json_encode(array("caja" => $caja, "movimientos" => $movimientos));
+    }
 
-	function save_apertura_caja($cFecha,$cMonto,$cResponsable){
-		if ( is_numeric($cMonto) ){
-			$ar = array();
-			$ar["caja_id"] = 1;
-			$ar["fecha"] = $cFecha;
-			$ar["monto_ini"] = $cMonto;
-			$ar["responsable"] = $cResponsable;
-			
-			// Verifico que no exista aun
-			$query = $this->db->select("*")->where("fecha",$cFecha)->get("tec_registro_cajas");
-			$existe = false;
-			foreach($query->result() as $r){
-				$existe = true;
-			}
+    // ========================
+    // BACKWARD COMPAT REDIRECTS
+    // ========================
 
-			if (!$existe){
-				if($this->db->set($ar)->insert("tec_registro_cajas")){
-					$id = $this->db->insert_id();
-					$query = $this->db->select("*")->where("id",$id)->get("tec_registro_cajas");
-					foreach($query->result() as $r){
-						echo "Fecha : {$r->fecha}, Monto Inicial: {$r->monto_ini}";
-					}
-				}
-			}else{
-				echo "KO";
-			}
-		}else{
-			echo "KO";
-		}
-	}
+    function ver_cajas(){
+        redirect(base_url('caja/index'));
+    }
 
-	function save_cierre_caja($id){
-		// Verifico que aun no haya sido cerrado
-		$query = $this->db->select("*")->where("id",$id)->get("tec_registro_cajas");
-		$existe = false;
-		foreach($query->result() as $r){
-			//
-			if($r->estado_cierre == 1){
-				$existe = true;	
-			}
-		}
-
-		if (!$existe){
-			$ar = array("estado_cierre"=>1);
-			$this->db->where("id",$id)->update("tec_registro_cajas",$ar);
-			echo "OK";
-		}else{
-			echo "KO";
-		}
-	}
-
-	function cuadre($caja_id=1, $store_id=1, $fecha=''){
-		if ($fecha == ''){
-			$fecha_actual = date('Y-m-d');
-
-			// Retrocede un día
-			$fecha = date('Y-m-d', strtotime('-1 day', strtotime($fecha_actual)));
-		}
-			
-		$this->data['page_title'] 	= "Cuadre de Caja ($fecha)";
-
-		// Apertura de Caja
-		$cSql = "select a.id, a.caja_id, a.fecha, a.monto_ini, a.monto_fin, a.estado_cierre from tec_registro_cajas a
-			where a.fecha = ? and a.caja_id = ?";
-		$query = $this->db->query($cSql,array($fecha, $caja_id));
-		$this->data["query1"] 		= $query;
-
-		// Ventas
-		$cSql = "select a.id, a.tipoDoc, concat(a.serie,'-',a.correlativo) comprobante, a.grand_total  
-			from tec_sales a
-			where a.anulado != '1' and date(a.date) =  ? and a.store_id = ?";
-		$query = $this->db->query($cSql,array($fecha, $store_id));
-		$this->data["query2"] 		= $query;
-
-		// Compras
-		$cSql = "select a.total  
-			from tec_compras a
-			where date(a.fecha) =  ? and a.store_id = ?";
-		$query = $this->db->query($cSql,array($fecha, $store_id));
-		$this->data["query3"] 		= $query;
-
-		$this->template->load('production/index', 'caja/cuadre', $this->data);
-	}
-
-	function analisis_mensual(){
-		if(isset($_POST["anno"])){
-			$this->data['page_title'] = "ANALISIS MENSUAL";
-			$this->data["anno"] 	= $_POST["anno"];
-			$this->data["mes"] 		= $_POST["mes"];
-			$this->template->load('production/index', 'caja/rpta_analisis_mensual', $this->data);
-		}else{
-			$this->data['page_title'] = "ANALISIS MENSUAL";
-			$this->template->load('production/index', 'caja/analisis_mensual', $this->data);
-		}
-	}
+    function aperturar_caja(){
+        redirect(base_url('caja/index'));
+    }
 }

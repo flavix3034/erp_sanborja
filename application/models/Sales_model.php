@@ -72,7 +72,7 @@ class Sales_model extends CI_Model
 	}
 
 	function view($idx){
-		$this->db->select('a.tipoDoc, e.descrip tipo_documento,concat(a.serie,\'-\',a.correlativo) recibo, a.customer_name razon, concat(d.cf1,\' \',d.cf2) doc_personal, date(a.date) as fecha, a.id, a.total, a.total_discount, a.total_tax, a.grand_total, b.product_id, b.product_name, if(b.discount is null,0,b.discount) discount, c.name, c.marca, c.modelo, c.color, b.quantity, b.unit_price, b.net_unit_price, (b.net_unit_price - if(b.discount is null,0,b.discount))*b.quantity as subtotal');
+		$this->db->select('a.tipoDoc, e.descrip tipo_documento,concat(a.serie,\'-\',a.correlativo) recibo, a.customer_name razon, concat(d.cf1,\' \',d.cf2) doc_personal, date(a.date) as fecha, a.id, a.total, a.total_discount, a.total_tax, a.grand_total, b.product_id, b.product_name, if(b.discount is null,0,b.discount) discount, c.name, c.marca, c.modelo, c.color, b.quantity, b.unit_price, b.net_unit_price, (b.net_unit_price - if(b.discount is null,0,b.discount))*b.quantity as subtotal, b.comment, b.group_id, b.group_name');
 		$this->db->from('tec_sales as a');
 		$this->db->join('tec_sale_items as b','a.id=b.sale_id','left');
 		$this->db->join('tec_products as c','b.product_id=c.id', 'left');
@@ -86,7 +86,7 @@ class Sales_model extends CI_Model
 	}
 
     function view_interno($idx){
-        $this->db->select('a.tipoDoc, e.descrip tipo_documento,concat(a.serie,\'-\',a.correlativo) recibo, a.customer_name razon, concat(d.cf1,\' \',d.cf2) doc_personal, date(a.date) as fecha, a.id, a.total, a.total_discount, a.total_tax, a.grand_total, b.product_id, b.product_name, if(b.discount is null,0,b.discount) discount, c.name, c.marca, c.modelo, c.color, b.quantity, b.unit_price, b.net_unit_price, (b.net_unit_price - if(b.discount is null,0,b.discount))*b.quantity as subtotal, b.series');
+        $this->db->select('a.tipoDoc, e.descrip tipo_documento,concat(a.serie,\'-\',a.correlativo) recibo, a.customer_name razon, concat(d.cf1,\' \',d.cf2) doc_personal, date(a.date) as fecha, a.id, a.total, a.total_discount, a.total_tax, a.grand_total, b.product_id, b.product_name, if(b.discount is null,0,b.discount) discount, c.name, c.marca, c.modelo, c.color, b.quantity, b.unit_price, b.net_unit_price, (b.net_unit_price - if(b.discount is null,0,b.discount))*b.quantity as subtotal, b.series, b.group_id, b.group_name');
         $this->db->from('tec_sales as a');
         $this->db->join('tec_sale_items as b','a.id=b.sale_id','left');
         $this->db->join('tec_products as c','b.product_id=c.id', 'left');
@@ -203,15 +203,17 @@ class Sales_model extends CI_Model
         //$correlativo        = $this->correlativo($tipo_documento);
 
         $cSql = "select a.id, a.date, a.customer_id, a.customer_name, a.total, a.tipoDoc, a.grand_total,
-            c.cf1, c.cf2, 
-            b.id id_items, 
-            b.product_id, 
+            c.cf1, c.cf2,
+            b.id id_items,
+            b.product_id,
             b.product_name,
             b.quantity,
             b.net_unit_price,
             b.tax,
             b.real_unit_price,
-            b.subtotal
+            b.subtotal,
+            b.group_id,
+            b.group_name
             from tec_sales a
             inner join tec_sale_items b on a.id = b.sale_id
             inner join tec_customers c on a.customer_id = c.id
@@ -298,33 +300,60 @@ class Sales_model extends CI_Model
           },";
 
         
+        // Construir items de visualizacion (agrupando items con group_id)
+        $display_items = array();
+        $group_aggregates = array();
+
+        foreach ($query->result() as $r){
+            if(!empty($r->group_id)){
+                if(!isset($group_aggregates[$r->group_id])){
+                    $group_aggregates[$r->group_id] = array(
+                        'group_name'     => $r->group_name,
+                        'product_id'     => 'GRP' . $r->group_id,
+                        'net_value_total'=> 0,
+                        'tax'            => $r->tax
+                    );
+                }
+                // Sumar el valor neto de este item al grupo
+                $group_aggregates[$r->group_id]['net_value_total'] += round($r->net_unit_price * $r->quantity, 2);
+            }else{
+                $display_items[] = $r;
+            }
+        }
+
+        // Convertir grupos agregados en items de visualizacion
+        foreach($group_aggregates as $gid => $g){
+            $obj = new stdClass();
+            $obj->product_id      = $g['product_id'];
+            $obj->product_name    = $g['group_name'];
+            $obj->quantity        = 1;
+            $obj->net_unit_price  = $g['net_value_total'];
+            $obj->tax             = $g['tax'];
+            $display_items[] = $obj;
+        }
+
         $campus4                = "";
         $acu_mtoBaseIgv = $mtoOperGravadas  = $mtoIGV = $valorVenta = $acu_subTotal = $acu_totalImpuestos = 0;
-        foreach ($query->result() as $r){
-            
-            $codProducto        = "P" . $r->product_id; //$r->codProdSunat;
+        foreach ($display_items as $r){
+
+            $codProducto        = "P" . $r->product_id;
             $descripcion        = $r->product_name;
             $cantidad           = round($r->quantity,0);
             $mtoValorUnitario   = round($r->net_unit_price,2)*1;
             $mtoValorVenta      = round($r->net_unit_price * $cantidad * 1,2);
-            $mtoBaseIgv         = round($r->net_unit_price * $cantidad * 1,2); //round($cantidad * $mtoValorUnitario,2);
-            
-            // Se realiza en forma provisional ya que no siempre colocan el valor correcto en los productos
-            //$porcentajeIgv_     = !is_null($r->tax) ? $r->tax*1 : 0;
+            $mtoBaseIgv         = round($r->net_unit_price * $cantidad * 1,2);
+
             $porcentajeIgv_       = $porcentajeIgv;
 
-            $igv                = round($mtoBaseIgv * ($porcentajeIgv_/100),2); // round($r->subtotal - round($r->net_unit_price,2),2);
+            $igv                = round($mtoBaseIgv * ($porcentajeIgv_/100),2);
             traza("igv : $igv");
-            
+
             $tipAfeIgv          = 10;
             $totalImpuestos     = $igv;
-            
-            $igvX               = 1 + ($porcentajeIgv_/100);
-            
-            //$mtoPrecioUnitario    = $this->fm->floor_dec($r->net_unit_price * $igvX, 2);           
-            $mtoPrecioUnitario      = round($mtoValorUnitario * $igvX,2);
 
-            //$acu_mtoBaseIgv += $mtoBaseIgv; 
+            $igvX               = 1 + ($porcentajeIgv_/100);
+
+            $mtoPrecioUnitario      = round($mtoValorUnitario * $igvX,2);
 
             $campus4 .= "{
               \"codProducto\": \"$codProducto\",
@@ -345,10 +374,9 @@ class Sales_model extends CI_Model
             $mtoIGV             += $igv;
             $valorVenta         += $mtoValorVenta;
             $acu_totalImpuestos += $totalImpuestos;
-            //traza("acu_totalImpuestos : $acu_totalImpuestos");
             $acu_subTotal       += $mtoPrecioUnitario * $cantidad * 1;
-        }    
-        
+        }
+
         // Se asume que si o si hay items, por tanto se quita la ultima coma:
         $campus4 = substr($campus4,0,strlen($campus4)-1);
 
@@ -430,8 +458,9 @@ class Sales_model extends CI_Model
     }
 
     function analizar_rpta_sunat($bloque){
-        $rpta = strpos($bloque, "ha sido aceptada");
-        if($rpta != false && $rpta > 0){
+        $rpta = strpos($bloque, ", ha sido aceptada");
+        $rpta2 = strpos($bloque, ", ha sido aceptado");
+        if(($rpta != false && $rpta > 0) || ($rpta2 != false && $rpta2 > 0)){
             return true;
         }else{ return false;}
     }

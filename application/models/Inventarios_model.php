@@ -80,7 +80,7 @@ class Inventarios_model extends CI_Model
             return $this->db->query($cSql);
         }else{
     */
-            $cSql = "select a.id, concat(a.name,' ',a.marca,' ',a.modelo,' ',a.color) name, a.alert_cantidad, 0 cantidad_inicial, compras.cantidad_comprada, ventas.cantidad_vendida, movim.ingreso, movim.salida,
+            $cSql = "select a.id, a.name, a.alert_cantidad, 0 cantidad_inicial, compras.cantidad_comprada, ventas.cantidad_vendida, movim.ingreso, movim.salida,
                 if(isnull(compras.cantidad_comprada),0,compras.cantidad_comprada) 
                 - if(isnull(ventas.cantidad_vendida),0,ventas.cantidad_vendida) 
                 + if(isnull(movim.ingreso),0,movim.ingreso) 
@@ -131,7 +131,7 @@ class Inventarios_model extends CI_Model
                 (
                 select date(i.fecha) fecha, if(isnull(i.cantidad),0,i.cantidad) cantidad, 'INICIAL' tipo 
                     from tec_inventarios i
-                    where i.maestro_id = 2 and i.product_id = {$product_id}
+                    where i.product_id = {$product_id}
                 union 
                 select date(com.fecha_ingreso) fecha, if(isnull(com_i.cantidad),0,com_i.cantidad) cantidad, 'COMPRA' tipo 
                     from tec_compras com
@@ -153,7 +153,7 @@ class Inventarios_model extends CI_Model
                 (
                 select date(i.fecha) fecha, if(isnull(i.cantidad),0,i.cantidad) cantidad, 'INICIAL' tipo 
                     from tec_inventarios i
-                    where i.maestro_id = 2 and i.product_id = {$product_id}
+                    where i.product_id = {$product_id}
                 union 
                 select date(com.fecha_ingreso) fecha, sum(if(isnull(com_i.cantidad),0,com_i.cantidad)) cantidad, 'COMPRA' tipo 
                     from tec_compras com
@@ -191,18 +191,21 @@ class Inventarios_model extends CI_Model
         echo "</tr>";    
         
         $cont = 0;
+        
         foreach($query_kardex->result() as $r){
-            echo "<tr>";
-            echo $this->fm->celda($r->fecha,0,$estilo);
-            echo $this->fm->celda($r->tipo,0,$estilo);
-            echo $this->fm->celda(number_format($r->cantidad,0),2,$estilo);
-            echo "</tr>";
-            
-            $signo = 1;
-            if($r->tipo == "SALIDA" || $r->tipo == "VENTA"){
-                $signo = -1;
+            if($r->tipo != 'INICIAL'){
+                echo "<tr>";
+                echo $this->fm->celda($r->fecha,0,$estilo);
+                echo $this->fm->celda($r->tipo,0,$estilo);
+                echo $this->fm->celda(number_format($r->cantidad,0),2,$estilo);
+                echo "</tr>";
+                
+                $signo = 1;
+                if($r->tipo == "SALIDA" || $r->tipo == "VENTA"){
+                    $signo = -1;
+                }
+                $cont += ($r->cantidad * 1) * ($signo);
             }
-            $cont += ($r->cantidad * 1) * ($signo);
         }
         echo "<tr>";
         echo $this->fm->celda("",0,$estilo."background-color:rgb(130,130,130);");
@@ -233,7 +236,7 @@ class Inventarios_model extends CI_Model
             (
             select date(i.fecha) fecha, if(isnull(i.cantidad),0,i.cantidad) cantidad, 'INICIAL' tipo 
                 from tec_inventarios i
-                where i.maestro_id = 2 and i.product_id = {$product_id}
+                where i.product_id = {$product_id}
             union 
             select date(com.fecha_ingreso) fecha, sum(if(isnull(com_i.cantidad),0,com_i.cantidad)) cantidad, 'COMPRA' tipo 
                 from tec_compras com
@@ -259,15 +262,22 @@ class Inventarios_model extends CI_Model
         $cont = 0;
         foreach($query_kardex->result() as $r){
             $signo = 1;
-            if($r->tipo == "SALIDA" || $r->tipo == "VENTA"){
-                $signo = -1;
+            if($r->tipo != 'INICIAL'){
+                if($r->tipo == "SALIDA" || $r->tipo == "VENTA"){
+                    $signo = -1;
+                }
+                
+                $cont += ($r->cantidad * 1) * ($signo);
+
+                //echo $product_id . "|" . $r->fecha . "|" . $r->tipo . "|" . $r->cantidad . "|" . $cont . "<br>";
             }
-            $cont += ($r->cantidad * 1) * ($signo);
         }
+        //echo "<br>";
 
         // POR ULTIMO GUARDAMOS ESTE VALOR EN LA TABLA TEC_PROD_STORE
         $ar = array();
         $ar['stock'] = ($cont >= 0 ? $cont : 0);
+        
         $this->db->set($ar)->where('product_id',$product_id)->where('store_id',$store_id)->update("tec_prod_store");
         //echo $this->db->set($ar)->where('product_id',$product_id)->where('store_id',$store_id)->get_compiled_update("tec_prod_store") . "<br>"; 
         
@@ -278,7 +288,7 @@ class Inventarios_model extends CI_Model
     function ver_inventario($id_inv){
         $parte1 = "<a href=\"#\" onclick=\"eliminar(";
         $parte2 = ")\">Eliminar</a>";
-        $cSql = "select a.id, a.fecha, a.product_id, concat(b.name,' ',b.marca,' ',b.modelo) productos, a.cantidad, a.unidad, c.descrip des_unidad, mi.store_id,
+        $cSql = "select a.id, a.fecha, a.product_id, b.name productos, a.cantidad, a.unidad, c.descrip des_unidad, mi.store_id,
             concat('{$parte1}',a.id,'{$parte2}') op
             from tec_inventarios a
             inner join tec_maestro_inv mi on a.maestro_id = mi.id
@@ -287,10 +297,10 @@ class Inventarios_model extends CI_Model
             where a.maestro_id = ? order by a.id desc limit ?";
 
         $result     = $this->db->query($cSql, array($id_inv,50000))->result_array();
-        $cols       = array("id", "fecha", "productos", "cantidad", "des_unidad", "op");
-        $cols_titulos = array("id", "fecha", "productos", "cantidad", "des_unidad", "op");
-        $ar_align   = array("0","0","0","1","0","0");
-        $ar_pie     = array("","","","","","");
+        $cols       = array("id", "fecha", "product_id", "productos", "cantidad", "des_unidad", "op");
+        $cols_titulos = array("id", "fecha", "ID Producto", "productos", "cantidad", "des_unidad", "op");
+        $ar_align   = array("0","0","0","0","1","0","0");
+        $ar_pie     = array("","","","","","","");
         return $this->fm->crea_tabla_result($result, $cols, $cols_titulos, $ar_align, $ar_pie);
     }
 
@@ -317,7 +327,7 @@ class Inventarios_model extends CI_Model
         $cSql = "select b.name, b.marca, b.modelo, a.* from tec_prod_store a".
             " left join tec_products b on a.product_id=b.id".
             " where a.store_id = ".$_SESSION["store_id"]." and b.activo='1'".
-            " order by b.name, b.marca, b.modelo";
+            " order by b.name";
         //echo($cSql);
         return $this->db->query($cSql);
     }

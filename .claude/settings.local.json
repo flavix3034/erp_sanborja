@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(\"c:/xampp/mysql/bin/mysql.exe\" -u root -e \"DESCRIBE tec_sale_items;\" erp_surcoc)",
+      "Bash(\"c:/xampp/mysql/bin/mysql.exe\":*)",
+      "Bash(\"c:/xampp/mysql/bin/mysql.exe\" -u root -e \"SHOW CREATE TABLE tec_servicios_tecnicos\\\\G\" erp_surcoc)",
+      "Bash(\"c:/xampp/mysql/bin/mysql.exe\" -u root erp_surcoc -e:*)",
+      "Bash(/c/xampp/mysql/bin/mysql:*)",
+      "Bash(dir:*)",
+      "Bash(c:\\\\xampp\\\\mysql\\\\bin\\\\mysql.exe:*)",
+      "Bash(\"c:/xampp/mysql/bin/mysql.exe\" -u root erp_surcoc -e \"SHOW TABLES LIKE ''tec_gastos%'';\")",
+      "Bash(find:*)"
+    ]
+  }
+}

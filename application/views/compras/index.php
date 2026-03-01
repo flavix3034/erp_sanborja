@@ -122,6 +122,7 @@
     
     $(document).ready(function() {
         $('#example').DataTable({
+            "order": [[0, "desc"]], 
             dom: 'Bfrtip',
             buttons: ['copy', 'csv', 'excel', 'pdf', 'print'],
             "ajax": "<?= base_url("compras/get_compras/{$store_id}/{$desde}/{$hasta}") ?>",

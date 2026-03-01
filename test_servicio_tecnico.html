@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Prueba Módulo Servicio Técnico</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .test-section {
+            border: 1px solid #ddd;
+            margin: 20px;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Prueba de Instalación - Módulo Servicio Técnico</h1>
+        
+        <div class="test-section">
+            <h3>1. Verificar Archivos Creados</h3>
+            <p><strong>Archivos creados:</strong></p>
+            <ul>
+                <li class="success">✅ Model: application/models/Servicios_model.php</li>
+                <li class="success">✅ Controller: application/controllers/Servicios.php</li>
+                <li class="success">✅ View Index: application/views/servicios/index.php</li>
+                <li class="success">✅ View Add: application/views/servicios/add.php</li>
+                <li class="success">✅ View View: application/views/servicios/view.php</li>
+                <li class="success">✅ Script SQL: create_servicio_tecnico_tables.php</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h3>2. URLs de Prueba</h3>
+            <p><strong>Para probar el módulo:</strong></p>
+            <ol>
+                <li>Primero ejecutar: <a href="create_servicio_tecnico_tables.php" target="_blank" class="btn btn-primary">Crear Tablas</a></li>
+                <li>Luego iniciar sesión en el ERP</li>
+                <li>Acceder al menú "Servicio Técnico"</li>
+            </ol>
+            
+            <p><strong>URLs directas:</strong></p>
+            <ul>
+                <li><a href="index.php/servicios" target="_blank">Listado de Servicios</a></li>
+                <li><a href="index.php/servicios/add" target="_blank">Nuevo Servicio</a></li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h3>3. Funcionalidades Implementadas</h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <h4 class="info">✅ Listo para usar</h4>
+                    <ul>
+                        <li>Recepción de equipos</li>
+                        <li>Asignación de técnicos</li>
+                        <li>Seguimiento de estados</li>
+                        <li>Listado con filtros</li>
+                        <li>Exportación (Excel, PDF)</li>
+                        <li>Menú integrado</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h4 class="info">🔄 Para futuro desarrollo</h4>
+                    <ul>
+                        <li>Integración con clientes existentes</li>
+                        <li>Control de repuestos/inventario</li>
+                        <li>Sistema de pagos</li>
+                        <li>Generación automática de ventas</li>
+                        <li>Reportes avanzados</li>
+                        <li>Notificaciones a clientes</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>4. Técnicos de Ejemplo</h3>
+            <p><strong>Si las tablas se crearon correctamente, tendrás estos técnicos:</strong></p>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Nombre</th>
+                        <th>Especialidad</th>
+                        <th>Teléfono</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>TEC-001</td>
+                        <td>CARLOS MENDOZA</td>
+                        <td>Computadoras y Laptops</td>
+                        <td>987654321</td>
+                    </tr>
+                    <tr>
+                        <td>TEC-002</td>
+                        <td>MARÍA LÓPEZ</td>
+                        <td>Celulares y Tablets</td>
+                        <td>987654322</td>
+                    </tr>
+                    <tr>
+                        <td>TEC-003</td>
+                        <td>JUAN PEREZ</td>
+                        <td>Hardware y Redes</td>
+                        <td>987654323</td>
+                    </tr>
+                    <tr>
+                        <td>TEC-004</td>
+                        <td>ANA GARCÍA</td>
+                        <td>Software y Sistemas</td>
+                        <td>987654324</td>
+                    </tr>
+                    <tr>
+                        <td>TEC-005</td>
+                        <td>LUIS ROJAS</td>
+                        <td>Todo tipo de equipos</td>
+                        <td>987654325</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="test-section">
+            <h3>5. Pasos Finales</h3>
+            <div class="alert alert-info">
+                <h4>⚠️ Importante</h4>
+                <ol>
+                    <li><strong>Ejecutar script SQL:</strong> Haz clic en el botón "Crear Tablas" arriba</li>
+                    <li><strong>Verificar creación:</strong> Revisa que las tablas se creen sin errores</li>
+                    <li><strong>Configurar permisos:</strong> Agrega el módulo 'servicios' a los grupos de usuarios necesarios</li>
+                    <li><strong>Probar flujo:</strong> Crea un servicio de prueba y verifica el funcionamiento completo</li>
+                    <li><strong>Eliminar archivos temporales:</strong> Borra este archivo y el script SQL después de probar</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>6. Soporte</h3>
+            <p class="text-muted">
+                Si encuentras algún problema, revisa:<br>
+                - Que las tablas se crearon correctamente<br>
+                - Que los archivos tengan los permisos correctos<br>
+                - Que el servidor Apache tenga configurado CodeIgniter correctamente<br>
+                <br>
+                <strong>Flujo básico de prueba:</strong><br>
+                1. Ingresa un nuevo servicio<br>
+                2. Asigna un técnico<br>
+                3. Cambia el estado<br>
+                4. Ver el servicio detallado<br>
+                5. Prueba el listado con filtros
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Simple verification script
+        console.log('Módulo Servicio Técnico - Instalación completada');
+    </script>
+</body>
+</html>

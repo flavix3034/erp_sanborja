@@ -3,26 +3,15 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Welcome extends CI_Controller {
 
-	/**
-	 * Index Page for this controller.
-	 *
-	 * Maps to the following URL
-	 * 		http://example.com/index.php/welcome
-	 *	- or -
-	 * 		http://example.com/index.php/welcome/index
-	 *	- or -
-	 * Since this controller is set as the default controller in
-	 * config/routes.php, it's displayed at http://example.com/
-	 *
-	 * So any other public methods not prefixed with an underscore will
-	 * map to /index.php/welcome/<method_name>
-	 * @see https://codeigniter.com/user_guide/general/urls.html
-	 */
     function __construct(){
         parent::__construct();
+
         session_start();
+
         $this->load->helper('url');
+
         $this->load->model('welcome_model');
+
         $this->load->model('inventarios_model');
     }
 
@@ -32,7 +21,7 @@ class Welcome extends CI_Controller {
 	}
 
 	public function inicia_sesion(){
-		$empresa_id	= '1'; //$_POST["empresa"];
+		$empresa_id	= '1';
 		$usuario 	= $_POST["usuario"];
 		$pass 		= $_POST["pass"];
 
@@ -42,9 +31,6 @@ class Welcome extends CI_Controller {
 		$this->db->where("a.username",$usuario);
 		$this->db->where("a.password",$pass);
 		$query = $this->db->get();
-
-		//$cSql = "select username, store_id, group_id from tec_users where username='$usuario' and password='$pass'";
-		//$query = $this->db->query($cSql);
 
 		$bandera = false;
 		foreach($query->result() as $r){
@@ -57,11 +43,9 @@ class Welcome extends CI_Controller {
 			$_SESSION["group_id"] 	= $r->group_id;
 			$_SESSION["user_id"] 	= $r->id;
 			$_SESSION["inventario_vigente"] = $this->inventarios_model->inventario_vigente($_SESSION["store_id"]);
-			//die("Mi inventario vigente:" . $_SESSION["inventario_vigente"]);
 			$data['title'] 			= 'Ingresos a Caja:';
 			$data['mensaje'] 		= $data['alerta'] = "";
-			
-			//$this->template->load('view_layout', 'inicial', $data);
+
 			$this->template->load('production/index', 'inicial', $data);
 		}
 
@@ -71,121 +55,163 @@ class Welcome extends CI_Controller {
 		}
 	}
 
-	/*public function inicial(){
-		$data['title'] = 'Ingresos a Caja:';
-		$data['mensaje'] = $data['alerta'] = "";
-		$this->template->load('view_layout', 'inicial', $data);
-	}*/
-
-	public function inicial(){
-		$data['title'] = 'Sistema Inicial:';
-		$data['mensaje'] = $data['alerta'] = "";
-		$this->template->load('production/index', 'inicial', $data);
-	}
-
 	public function cierra_sesion(){
 		session_destroy();
 		$this->load->view('login');
 	}
 
 	function home(){
-		if(isset($_SESSION['store_id'])){
-
-			$store_id = $_SESSION['store_id'];
-			$factor = 0.08;
-			$cSql = "select z.fecha, z.dia_semana, z.totales, concat('<div',' style=','\'width:',round(z.totales*" . $factor . ",0),'px;','background-color:',if(z.totales>=500,'green','gray'),'\'','>.</div>') barras
-			from (
-				select date(`date`) fecha, 
-				CONCAT(ELT(WEEKDAY(date) + 1, 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', '<b>Sabado</b>', '<b>Domingo</b>')) as dia_semana,
-				round(sum(grand_total),2) totales 
-				from tec_sales a where a.store_id = {$store_id}
-				group by date(`date`) order by date(`date`) desc limit 28
-			) z order by z.fecha desc";
-			$query = $this->db->query($cSql);
-			$cad = "<table border='1' style=\"margin:15px;border-color:rgb(180,180,180)\">";
-			$estilo1 = "padding:8px";
-			foreach($query->result() as $r){
-				$cad .= "<tr>";
-				$cad .= $this->fm->celda($r->fecha,'0',$estilo1);
-				$cad .= $this->fm->celda($r->dia_semana,'0',$estilo1);
-				$cad .= $this->fm->celda($r->totales,'2',$estilo1);
-				$cad .= $this->fm->celda($r->barras,'0',$estilo1);
-				$cad .= "</tr>";
-			}
-			$cad .= "</table>";
-			$this->data["mitabla"] = $cad;
-
-			$this->data['title'] = 'Sistema :';
-			$this->data['mensaje'] = $this->data['alerta'] = "";
-			
-
-			// Creando tabla de categoria por Semana
-
-			$cSql = "select week(a.date) as semana, date_format(convert(a.date,date) , '%d-%m-%Y') fecha, round(sum(grand_total),2) totales 
-				from tec_sales a 
-				where a.date > date_add(curdate(),interval - 38 day)
-				group by semana limit 4";
-
-			$cad = "";
-
-			$query = $this->db->query($cSql);
-
-			$cad = "<table class=\"table\" border='1' style=\"margin:15px;border-color:rgb(180,180,180)\">";
-			$cad .= "<tr><th>Semana</th><th>Fecha</th><th>Total</th></tr>";
-			$estilo1 = "padding:8px";
-			foreach($query->result() as $r){
-				$cad .= "<tr>";
-				$cad .= $this->fm->celda($r->semana,'1',$estilo1);
-				$cad .= $this->fm->celda($r->fecha,'1',$estilo1);
-				$cad .= $this->fm->celda(number_format($r->totales,2),'2',$estilo1);
-				$cad .= "</tr>";
-			}
-			$cad .= "</table>";
-
-			$this->data["tabla_semanal"] = $cad;
-
-			// Verificandolo por Categrias ----------------------------------------
-
-				// Hallando el total de la consulta
-			$cSql = "select round(sum(b.net_unit_price*b.quantity),2) subtotal
-			from tec_sales a
-			inner join tec_sale_items b on a.id=b.sale_id
-			inner join tec_products c on b.product_id = c.id
-			left join tec_categories d on c.category_id = d.id
-			where date(a.date) > curdate() - 31";
-			$query = $this->db->query($cSql);
-			foreach($query->result() as $r){
-				$totaye = floatval($r->subtotal);
-			}
-
-			$cSql = "select c.category_id, d.name categoria, round(sum(b.net_unit_price*b.quantity),2) subtotal, round(sum(b.net_unit_price*b.quantity)*100/$totaye,2) porcentaje
-			from tec_sales a
-			inner join tec_sale_items b on a.id=b.sale_id
-			inner join tec_products c on b.product_id = c.id
-			left join tec_categories d on c.category_id = d.id
-			where date(a.date) > curdate() - 31
-			group by c.category_id, d.name
-			order by round(sum(b.net_unit_price*b.quantity),2) desc";
-
-			$query = $this->db->query($cSql);
-			$cad = "<table class=\"table\" border='1' style=\"margin:15px;border-color:rgb(180,180,180)\">";
-			$cad .= "<tr><th>Categoria</th><th>Venta Total</th><th>%</th></tr>";
-			$estilo1 = "padding:8px";
-			foreach($query->result() as $r){
-				$cad .= "<tr>";
-				$cad .= $this->fm->celda($r->categoria,'1',$estilo1);
-				$cad .= $this->fm->celda(number_format($r->subtotal,2),'2',$estilo1);
-				$cad .= $this->fm->celda($r->porcentaje,'1',$estilo1);
-				$cad .= "</tr>";
-			}
-			$cad .= "</table>";
-
-			$this->data["categorias"] = $cad;
-
-			$this->template->load('production/index', 'welcome/whome', $this->data);
-		}else{
+		if(!isset($_SESSION['store_id'])){
 			$this->index();
+			return;
 		}
+		$this->data['page_title'] = 'Dashboard';
+		$this->template->load('production/index', 'welcome/dashboard', $this->data);
+	}
+
+	function get_dashboard_data(){
+		if(!isset($_SESSION['store_id'])){
+			header('Content-Type: application/json');
+			echo json_encode(array("rpta" => "error"));
+			return;
+		}
+
+		$store_id = intval($_SESSION['store_id']);
+		$hoy = date('Y-m-d');
+
+		// ===== 1. ESTADO GENERAL =====
+
+		// Ventas del dia
+		$r = $this->db->query("SELECT COALESCE(SUM(grand_total),0) AS total
+			FROM tec_sales WHERE date(date) = CURDATE() AND anulado != '1' AND store_id = ?", array($store_id))->row();
+		$ventas_dia = floatval($r->total);
+
+		// Ganancias del dia (ventas sin IGV - costos)
+		$r = $this->db->query("SELECT
+			COALESCE(SUM(b.net_unit_price * b.quantity), 0) AS ventas,
+			COALESCE(SUM(IF(c.precio_sin_igv IS NULL, 0, c.precio_sin_igv * b.quantity)), 0) AS costos
+			FROM tec_sales a
+			INNER JOIN tec_sale_items b ON a.id = b.sale_id
+			LEFT JOIN tec_compra_items c ON b.compra_id = c.compra_id AND b.product_id = c.product_id
+			WHERE date(a.date) = CURDATE() AND a.anulado != '1' AND a.store_id = ?", array($store_id))->row();
+		$ganancias_dia = round(floatval($r->ventas) - floatval($r->costos), 2);
+
+		// Caja Chica
+		$r_caja = $this->db->query("SELECT saldo_actual, estado FROM tec_cajachica_periodos
+			WHERE store_id = ? AND estado = 'ABIERTO' LIMIT 1", array($store_id))->row();
+		$caja_saldo = $r_caja ? floatval($r_caja->saldo_actual) : null;
+		$caja_estado = $r_caja ? 'ABIERTA' : 'CERRADA';
+
+		// Servicios activos
+		$r = $this->db->query("SELECT COUNT(*) AS total FROM tec_servicios_tecnicos
+			WHERE activo = '1' AND estado NOT IN ('ENTREGADO','CANCELADO')")->row();
+		$servicios_activos = intval($r->total);
+
+		// ===== 2. SERVICIO TECNICO POR ESTADO =====
+		$estados_result = $this->db->query("SELECT estado, COUNT(*) AS cantidad
+			FROM tec_servicios_tecnicos
+			WHERE activo = '1' AND estado NOT IN ('ENTREGADO','CANCELADO')
+			GROUP BY estado")->result_array();
+
+		$servicios = array(
+			'RECIBIDO' => 0,
+			'EN DIAGNOSTICO' => 0,
+			'EN REPARACION' => 0,
+			'ESPERA REPUESTOS' => 0,
+			'REPARADO' => 0
+		);
+		foreach($estados_result as $e){
+			if(isset($servicios[$e['estado']])){
+				$servicios[$e['estado']] = intval($e['cantidad']);
+			}
+		}
+
+		// ===== 3. RENDIMIENTO DEL MES =====
+		$r = $this->db->query("SELECT COALESCE(SUM(grand_total),0) AS ingresos, COUNT(*) AS num_ventas
+			FROM tec_sales
+			WHERE MONTH(date) = MONTH(CURDATE()) AND YEAR(date) = YEAR(CURDATE())
+			AND anulado != '1' AND store_id = ?", array($store_id))->row();
+		$ingresos_mes = floatval($r->ingresos);
+		$num_ventas_mes = intval($r->num_ventas);
+		$ticket_promedio = $num_ventas_mes > 0 ? round($ingresos_mes / $num_ventas_mes, 2) : 0;
+
+		// Margen promedio del mes
+		$r_margen = $this->db->query("SELECT
+			COALESCE(SUM(b.net_unit_price * b.quantity), 0) AS ventas_netas,
+			COALESCE(SUM(IF(c.precio_sin_igv IS NULL, 0, c.precio_sin_igv * b.quantity)), 0) AS costos
+			FROM tec_sales a
+			INNER JOIN tec_sale_items b ON a.id = b.sale_id
+			LEFT JOIN tec_compra_items c ON b.compra_id = c.compra_id AND b.product_id = c.product_id
+			WHERE MONTH(a.date) = MONTH(CURDATE()) AND YEAR(a.date) = YEAR(CURDATE())
+			AND a.anulado != '1' AND a.store_id = ?", array($store_id))->row();
+		$ventas_netas = floatval($r_margen->ventas_netas);
+		$costos_mes = floatval($r_margen->costos);
+		$margen_promedio = $ventas_netas > 0 ? round(($ventas_netas - $costos_mes) / $ventas_netas * 100, 1) : 0;
+
+		// ===== 4. CONTROL DEL SISTEMA =====
+
+		// Ordenes incompletas
+		$r = $this->db->query("SELECT COUNT(*) AS n FROM tec_servicios_tecnicos
+			WHERE activo = '1' AND estado NOT IN ('ENTREGADO','CANCELADO')")->row();
+		$ctrl_incompletas = intval($r->n);
+
+		// Sin tecnico
+		$r = $this->db->query("SELECT COUNT(*) AS n FROM tec_servicios_tecnicos
+			WHERE activo = '1' AND tecnico_asignado IS NULL
+			AND estado NOT IN ('ENTREGADO','CANCELADO')")->row();
+		$ctrl_sin_tecnico = intval($r->n);
+
+		// Sin diagnostico (excluye RECIBIDO que es normal no tener diagnostico aun)
+		$r = $this->db->query("SELECT COUNT(*) AS n FROM tec_servicios_tecnicos
+			WHERE activo = '1' AND (diagnostico IS NULL OR diagnostico = '')
+			AND estado NOT IN ('ENTREGADO','CANCELADO','RECIBIDO')")->row();
+		$ctrl_sin_diagnostico = intval($r->n);
+
+		// Sin cierre financiero (reparado/entregado sin costo_final)
+		$r = $this->db->query("SELECT COUNT(*) AS n FROM tec_servicios_tecnicos
+			WHERE activo = '1' AND estado IN ('REPARADO','ENTREGADO')
+			AND (costo_final IS NULL OR costo_final = 0)")->row();
+		$ctrl_sin_cierre = intval($r->n);
+
+		// Ordenes estancadas (>7 dias sin cambiar de estado)
+		$r = $this->db->query("SELECT COUNT(*) AS n FROM tec_servicios_tecnicos
+			WHERE activo = '1' AND estado NOT IN ('ENTREGADO','CANCELADO')
+			AND DATEDIFF(NOW(), COALESCE(updated_at, created_at)) > 7")->row();
+		$ctrl_estancadas = intval($r->n);
+
+		// ===== 5. GRAFICO VENTAS ULTIMOS 15 DIAS =====
+		$chart_ventas = $this->db->query("SELECT date(date) AS dia, ROUND(SUM(grand_total),2) AS total
+			FROM tec_sales
+			WHERE date(date) >= DATE_SUB(CURDATE(), INTERVAL 14 DAY)
+			AND anulado != '1' AND store_id = ?
+			GROUP BY date(date) ORDER BY dia ASC", array($store_id))->result_array();
+
+		// Respuesta JSON
+		header('Content-Type: application/json');
+		echo json_encode(array(
+			"general" => array(
+				"ventas_dia" => $ventas_dia,
+				"ganancias_dia" => $ganancias_dia,
+				"caja_saldo" => $caja_saldo,
+				"caja_estado" => $caja_estado,
+				"servicios_activos" => $servicios_activos
+			),
+			"servicios" => $servicios,
+			"rendimiento" => array(
+				"ingresos_mes" => $ingresos_mes,
+				"num_ventas_mes" => $num_ventas_mes,
+				"ticket_promedio" => $ticket_promedio,
+				"margen_promedio" => $margen_promedio
+			),
+			"control" => array(
+				"incompletas" => $ctrl_incompletas,
+				"sin_tecnico" => $ctrl_sin_tecnico,
+				"sin_diagnostico" => $ctrl_sin_diagnostico,
+				"sin_cierre" => $ctrl_sin_cierre,
+				"estancadas" => $ctrl_estancadas
+			),
+			"chart_ventas_15d" => $chart_ventas
+		));
 	}
 
 }

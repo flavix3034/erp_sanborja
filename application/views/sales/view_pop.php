@@ -5,14 +5,19 @@
 				$recibo 		= $r->recibo;
 				
 				if($tipo == 'Boleta'){ // Boleta : 2
-	            //$tipoDoc_       = "03";
-   	         $tipoDoc_client = "1"; // DNI
-	         }elseif($tipo == 'Factura'){ // Factura : 1
-	            //$tipoDoc_       = "01";
-	            $tipoDoc_client = "6"; // RUC
-	         }else{
-	         	$tipoDoc_client = "1";
-	         }
+   	        		$tipoDoc_client = "1"; // DNI
+   	        		$c_tipo_descrip = 'Boleta de venta eletronica';
+   	        		$cDesComprobante = 'de la Boleta electr&oacute;nica';
+	         	}elseif($tipo == 'Factura'){ // Factura : 1
+	            	$tipoDoc_client = "6"; // RUC
+	            	$c_tipo_descrip = 'Factura de venta electronica';
+	            	$cDesComprobante = 'de la Factura electr&oacute;nica';
+	        	}else{
+	         		$tipoDoc_client = "1";
+	         		$c_tipo_descrip = $tipo;
+	         		$cDesComprobante = 'del comprobante';
+	         	}
+
 				$razon 			= $r->razon;
 				$doc_personal 	= $r->doc_personal;
 				$fecha 			= $r->fecha;
@@ -23,7 +28,7 @@
 
 			}
 
-			$cSql = "select id, name, code, address1, city as provincia, state as distrito, nombre_empresa, ruc".
+			$cSql = "select id, name, code, address1, city as provincia, state as distrito, nombre_empresa, ruc, nota_pie".
 				" from tec_stores where id = ?";
 			
 				//die("store_id:" . $_SESSION["store_id"]);
@@ -34,6 +39,7 @@
 				$nombre_empresa 	= $r->nombre_empresa;
 				$direccion 			= $r->address1;
 				$ruc 				= $r->ruc;
+				$nota_pie 			= $r->nota_pie;
 			}
 
 			$ar_datos1 = explode("-",$recibo);
@@ -80,7 +86,9 @@
 
 				<div class="row" style="margin:auto">
 					<div class="col-sm-12 col-md-12" style="text-align:center">
-						<span style="font-size:18px"><?= $tipo ?>&nbsp;&nbsp;<?= $recibo ?></span>
+						<span style="font-size:16px"><?= $c_tipo_descrip ?><br>
+							<?= $recibo ?>
+						</span>
 					</div>
 				</div>
 
@@ -117,16 +125,36 @@
 							<tbody>
 								<?php
 									$n = 0;
-									foreach($query->result() as $r){
-										$n++;
-										echo "<tr>";
-										//echo $this->fm->celda($r->name . ' ' . $r->marca . ' ' . $r->modelo);
-										echo $this->fm->celda($r->product_name);
-										echo $this->fm->celda(number_format($r->quantity,2));
-										echo $this->fm->celda(number_format($r->net_unit_price,2));
-										//echo $this->fm->celda(number_format($r->discount,2));
-										echo $this->fm->celda(number_format($r->subtotal,2));
-										echo "</tr>";
+									$all_rows = $query->result();
+									$rendered_groups = array();
+
+									foreach($all_rows as $r){
+										if(!empty($r->group_id)){
+											if(!isset($rendered_groups[$r->group_id])){
+												$group_total = 0;
+												foreach($all_rows as $r2){
+													if($r2->group_id == $r->group_id){
+														$group_total += $r2->subtotal;
+													}
+												}
+												$rendered_groups[$r->group_id] = true;
+												$n++;
+												echo "<tr>";
+												echo $this->fm->celda($r->group_name);
+												echo $this->fm->celda("1");
+												echo $this->fm->celda(number_format($group_total,2));
+												echo $this->fm->celda(number_format($group_total,2));
+												echo "</tr>";
+											}
+										}else{
+											$n++;
+											echo "<tr>";
+											echo $this->fm->celda($r->product_name);
+											echo $this->fm->celda(number_format($r->quantity,2));
+											echo $this->fm->celda(number_format($r->net_unit_price,2));
+											echo $this->fm->celda(number_format($r->subtotal,2));
+											echo "</tr>";
+										}
 									}
 								?>
 							</tbody>
@@ -162,7 +190,7 @@
 					</div>
 				</div>
 
-			   <div class="row" style="margin:auto;">
+			    <div class="row" style="margin:auto;">
 			        <script type="text/javascript" src="<?= base_url("assets/plugins/qrcodejs/qrcode.js") ?>"></script>
 
 			        <div class="col-xs-4 col-sm-4 col-md-4">
@@ -185,6 +213,13 @@
 			            });
 			        </script>
 			    </div>
+
+			    <div class="row" style="margin:auto;">
+			    	<div class="col-sm-10" style="margin:auto;font-size: 11px;">
+			    		<p><?= $nota_pie ?></p>
+						<p>Esta es una representaci&oacute;n impresa <?=$cDesComprobante?>, generada en el Sistema de SUNAT. Puede verificarla utilizando su clave SOL.</p>
+					</div>
+				</div>	
 			</div><!-- EXPETO -->
 			
 		</div>

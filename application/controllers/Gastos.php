@@ -2,518 +2,390 @@
 
 class Gastos extends CI_Controller {
 
-    function __construct() {
-        parent::__construct();
-
-        session_start();
-        $this->load->model('gastos_model');
+	function __construct() {
+		parent::__construct();
+		session_start();
+		$this->load->model('gastos_model');
 		$this->Igv = 18;
-        $this->digital_file_types = 'zip|pdf|doc|docx|xls|xlsx|jpg|png|gif';
-    }
+	}
 
-    function index($store_id='', $cDesde='null', $cHasta='null') {
-        if ($store_id == ''){ $store_id = $_SESSION["store_id"]; }
-        $this->data['page_title'] = "Gastos";
-        $this->data['desde'] = $cDesde;
-        $this->data['hasta'] = $cHasta;
-        $this->data['store_id'] = $store_id;
-        //$this->data['Admin'] = $this->Admin;
-        
-        $this->template->load('production/index', 'gastos/index', $this->data);
-    }
+	function index($store_id='', $cDesde='null', $cHasta='null') {
+		if ($store_id == '') { $store_id = $_SESSION["store_id"]; }
+		$this->data['page_title'] = "Gastos";
+		$this->data['desde'] = $cDesde;
+		$this->data['hasta'] = $cHasta;
+		$this->data['store_id'] = $store_id;
+		$this->template->load('production/index', 'gastos/index', $this->data);
+	}
 
-    function add($id=null){
-        if(!is_null($id)){
-            $this->data["id"]           = $id;
-            $this->data['page_title']   = "Editar Gastos";
-            $this->data['modo']         = "U";
-        }else{
-            $this->data['page_title'] = "A&ntilde;adir Gastos";
-        }
-        $this->template->load('production/index', 'gastos/add', $this->data);
-    }
+	function add($id = null) {
+		$this->data['categorias'] = $this->gastos_model->get_categorias_activas();
+		if (!is_null($id)) {
+			$this->data["id"] = $id;
+			$this->data['page_title'] = "Editar Gasto";
+			$this->data['modo'] = "U";
+		} else {
+			$this->data['page_title'] = "Nuevo Gasto";
+		}
+		$this->template->load('production/index', 'gastos/add', $this->data);
+	}
 
-    function get_gastos($store_id='', $desde='null', $hasta='null'){
-        //$store_id = $_SESSION["store_id"];
-        $query = $this->gastos_model->get_gastos($store_id, $desde, $hasta);
-        $result = $query->result_array();
-        
-        // Colocando columna "acciones"
-        $resultado = array();
-        foreach($result as &$r){
-            $r["actions"] = "carpacho";
-            /*concat('<a href=\'#\' title=\'Editar\' onclick=\'editar(',a.id,')\'></a>',
-                ' <a href=\'#\' title=\'Ver\' onclick=\'ver(',a.id,')\'><i class=\'glyphicon glyphicon-eye-open\' style=\'font-size:16px\'></i></a>&nbsp;',
-                ' <a href=\'#\' title=\'Editar\' onclick=\'editar(',a.id,')\'><i class=\'glyphicon glyphicon-edit\' style=\'font-size:16px\'></i></a>&nbsp;',
-                ' <a href=\'#\' title=\'Eliminar\' onclick=\'eliminar(',a.id,')\'><i class=\'glyphicon glyphicon-remove\' style=\'font-size:16px\'></i></a>') actions*/
-                $resultado[] = $r;
-        }
+	function get_gastos($store_id='', $desde='null', $hasta='null') {
+		$query = $this->gastos_model->get_gastos($store_id, $desde, $hasta);
+		$result = $query->result_array();
 
-        $ar_campos = array("id", "tienda", "fecha", "tipoDoc", "nroDoc", "proveedor", "username", "total", "actions");
-        echo $this->fm->json_datatable($ar_campos, $resultado);
-    }
+		$resultado = array();
+		foreach ($result as &$r) {
+			// Badge estado de pago
+			if ($r["estado_pago"] == 'PENDIENTE') {
+				$r["estado_pago_fmt"] = '<span class="badge" style="background-color:#dc3545;color:#fff;padding:4px 8px;font-size:11px;">PENDIENTE</span>';
+			} else {
+				$r["estado_pago_fmt"] = '<span class="badge" style="background-color:#28a745;color:#fff;padding:4px 8px;font-size:11px;">PAGADO</span>';
+			}
 
-    function buscar2(){ // Para Compras, devuelve texto
-        $code       = $_GET["campo"];
-        $store_id   = $_SESSION['store_id'];
-        
-        // Parentesis :
-        $code = str_replace(" ","%",$code);
+			// Icono comprobante
+			$r["comprobante_link"] = '';
+			if (!empty($r["comprobante_archivo"])) {
+				$r["comprobante_link"] = '<a href="' . base_url("gastos/ver_comprobante/" . $r["id"]) . '" target="_blank" title="Ver comprobante"><i class="fa fa-file-image-o" style="font-size:16px;color:#337ab7"></i></a>';
+			}
 
-        $cSql = "select a.*, if(b.stock is null,0,b.stock) stock, c.name categoria, a.impuesto from tec_products a 
-            left join tec_prod_store b on a.id=b.product_id and b.store_id = {$store_id}
-            left join tec_categories c on a.category_id=c.id 
-            where a.activo='1' and a.category_id='9000' and concat(a.name,' ',a.marca,' ',a.modelo) like '%{$code}%'";
-        
-        //echo $cSql;
-        
-        $ar = array();
-        $cad = "";
-        if(strlen($code)>1){
-            $query = $this->db->query($cSql);
-            
-            $n = 0;
-            foreach($query->result() as $r){
-                $n++;
+			// Acciones
+			$r["actions"] = '<a href="#" title="Ver" onclick="ver(' . $r["id"] . ')"><i class="fa fa-eye" style="font-size:15px;color:#337ab7"></i></a>&nbsp;&nbsp;'
+				. '<a href="' . base_url("gastos/add/" . $r["id"]) . '" title="Editar"><i class="fa fa-edit" style="font-size:15px;color:#f0ad4e"></i></a>&nbsp;&nbsp;'
+				. '<a href="#" title="Eliminar" onclick="eliminar(' . $r["id"] . ')"><i class="fa fa-trash" style="font-size:15px;color:#d9534f"></i></a>';
 
-                $completo = $r->name . " " . $r->marca . " " . $r->modelo;
-                $cad .= "<li onclick=\"mostrar(" . $r->id . ",'" . $completo . "')\">" . $completo . "</li>";
-            }
-            if($n>0){
-                //$cad = substr($cad,0,strlen($cad)-1);
-            }
-            //echo $cad;
-        }else{
-            echo "";
-        }
+			$resultado[] = $r;
+		}
 
-        //echo json_encode($cad, JSON_UNESCAPED_UNICODE);
-        //echo json_encode($cad);
-        echo $cad;
-        //echo "<li>Cocacola</li>";
-        //echo $cSql;
-    }
+		$ar_campos = array("id", "fecha", "tipoDoc", "nroDoc", "proveedor", "conceptos", "total", "estado_pago_fmt", "comprobante_link", "actions");
+		$data = array();
+		foreach ($resultado as $r) {
+			$row = array();
+			foreach ($ar_campos as $campo) {
+				$row[] = isset($r[$campo]) ? $r[$campo] : '';
+			}
+			$data[] = $row;
+		}
+		header('Content-Type: application/json');
+		echo json_encode(array('data' => $data));
+	}
 
-	function save(){
+	function save() {
+		$store_id       = $_SESSION["store_id"];
+		$user_id        = $_SESSION["user_id"];
+		$fecha          = $_POST["date"];
+		$tipoDoc        = $_POST["tipoDoc"];
+		$nroDoc         = $_POST["nroDoc"];
+		$redondeo       = isset($_POST["redondeo"]) ? floatval($_POST["redondeo"]) : 0;
+		$proveedor_id   = !empty($_POST["proveedor_id"]) ? intval($_POST["proveedor_id"]) : null;
+		$por_igv        = isset($_POST["por_igv"]) ? floatval($_POST["por_igv"]) : 18;
+		$estado_pago    = isset($_POST["estado_pago"]) ? $_POST["estado_pago"] : 'PAGADO';
+		$fecha_vencimiento = ($estado_pago == 'PENDIENTE' && !empty($_POST["fecha_vencimiento"])) ? $_POST["fecha_vencimiento"] : null;
+		$observaciones  = isset($_POST["observaciones"]) ? trim($_POST["observaciones"]) : null;
+		$modo_edicion   = $_POST["modo_edicion"];
 
-		$store_id           = $_SESSION["store_id"];
-        $fecha 			    = $_POST["date"]; // . " " . date("H:i:s");
-		//$fecha_ingreso      = $_POST["date_ingreso"];
-        $tipoDoc 		    = $_POST["tipoDoc"];
-		$nroDoc             = $_POST["nroDoc"];
-        $redondeo           = isset($_POST["redondeo"]) ? $_POST["redondeo"] : "";
-        
-        $proveedor_id       = $_POST["proveedor_id"];
-        
-        $subtotal           = $_POST["txt_gSubtotal"];  
-        $igv                = $_POST["txt_gIgv"];
-        $total              = $_POST["txt_gTotal"];
-        $por_igv            = 0.18;
+		// Validar que haya al menos un item
+		if (!isset($_POST['descripcion']) || !is_array($_POST['descripcion']) || count($_POST['descripcion']) == 0) {
+			$this->data["msg"] = "Debe ingresar al menos un item";
+			$this->data["rpta_msg"] = "danger";
+			$this->data['categorias'] = $this->gastos_model->get_categorias_activas();
+			$this->data["page_title"] = "Nuevo Gasto";
+			$this->template->load('production/index', 'gastos/add', $this->data);
+			return;
+		}
 
-        $modo_edicion       = $_POST["modo_edicion"];
+		// Calcular totales server-side
+		$monto_base = 0;
+		$descripciones = $_POST['descripcion'];
+		$cantidades    = $_POST['cantidad'];
+		$precios       = $_POST['precio'];
+		$categorias    = $_POST['categoria_id'];
 
-        /*echo "subtotal:"    . $subtotal .   "<br>";
-        echo "igv:"         . $igv .        "<br>";
-        echo "total:"       . $total .      "<br>";
-        die();*/
+		for ($i = 0; $i < count($descripciones); $i++) {
+			$cant   = floatval($cantidades[$i]);
+			$precio = floatval($precios[$i]);
+			$monto_base += $cant * $precio;
+		}
 
-        // Validaciones -------------------------------------------
-        $validacion = true;
-        //$this->form_validation->set_rules('username', 'Username', 'trim|required|min_length[5]|max_length[12]');
+		if ($tipoDoc == 'G') {
+			$igv_calc  = 0;
+			$total_calc = round($monto_base + $redondeo, 2);
+		} else {
+			$igv_calc   = round($monto_base * ($por_igv / 100), 2);
+			$total_calc = round($monto_base + $igv_calc + $redondeo, 2);
+		}
 
-        // -------VERIFICO SI HAY UN ARCHIVO ADJUNTO --------------
-        //if($_FILES['fichero1']){
-        $file_tmp   = $_FILES['fichero1']['tmp_name'];
-            
-        if(strlen($file_tmp)>0){
-            $file_name  = $_FILES['fichero1']['name'];
-            $file_size  = $_FILES['fichero1']['size'];
-            $file_type  = $_FILES['fichero1']['type'];
-            $ar_f = explode('.',$file_name);
-            $miE  = end($ar_f);
-            $file_ext  = strtolower($miE);
-            $expensions = array("csv");
-            if(in_array($file_ext, $expensions) === false){
-                $errors[]="extension not allowed, please choose a JPEG or PNG file.";
-            }
-            if($file_size > 2097152) {
-                $errors[]='File size must be excately 2 MB';
-            }
-            if(empty($errors) == true) {
-                $ar["imagen"] = $file_name;
-                move_uploaded_file($file_tmp, "uploads/".$file_name);
-            }else{
-                print_r($errors);
-                die();
-            }
-        
-            // Guardando variables para el retorno
-            $this->data["date"]         = $_POST["date"]; 
-            //$this->data["date_ingreso"] = $_POST["date_ingreso"];  
-            $this->data["nroDoc"]       = $_POST["nroDoc"];  
-            $this->data["tipoDoc"]      = $_POST["tipoDoc"]; 
-            $this->data["proveedor_id"] = $_POST["proveedor_id"];
-            $this->data["redondeo"]     = $_POST["redondeo"];
-            $this->data["modo"]         = $_POST["modo"];
-            
+		// Upload comprobante
+		$comprobante_archivo = null;
+		if (isset($_FILES['comprobante_file']) && strlen($_FILES['comprobante_file']['tmp_name']) > 0) {
+			$cf_name = $_FILES['comprobante_file']['name'];
+			$cf_size = $_FILES['comprobante_file']['size'];
+			$cf_tmp  = $_FILES['comprobante_file']['tmp_name'];
+			$cf_ext  = strtolower(pathinfo($cf_name, PATHINFO_EXTENSION));
+			$allowed = array("jpg", "jpeg", "png", "pdf");
+			if (in_array($cf_ext, $allowed) && $cf_size <= 5242880) {
+				$upload_dir = "uploads/gastos/";
+				if (!is_dir($upload_dir)) { mkdir($upload_dir, 0755, true); }
+				$comprobante_archivo = "G_" . date("Ymd_His") . "_" . $store_id . "." . $cf_ext;
+				move_uploaded_file($cf_tmp, $upload_dir . $comprobante_archivo);
+			}
+		}
 
-            // --- RECIEN AQUI SE ABRE EL FICHERO PARA GUARDARLO EN UNA TABLA PROVISIONAL ----
-            $file = fopen( "uploads/".$file_name, "r");
-            $dati = array();
-            while (!feof($file)) {
-                $dati[] = fgetcsv($file,null,';');
-            }
-            fclose($file);
-            //print_r($dati);
-            //die();
+		$this->db->trans_begin();
 
-            $this->almaceno_en_temporal($_SESSION["usuario"], $dati);
+		$data_gasto = array(
+			"store_id"          => $store_id,
+			"fecha"             => $fecha,
+			"tipoDoc"           => $tipoDoc,
+			"nroDoc"            => $nroDoc,
+			"proveedor_id"      => $proveedor_id,
+			"monto_base"        => round($monto_base, 2),
+			"igv"               => $igv_calc,
+			"por_igv"           => $por_igv,
+			"total"             => $total_calc,
+			"redondeo"          => $redondeo,
+			"estado_pago"       => $estado_pago,
+			"fecha_vencimiento" => $fecha_vencimiento,
+			"observaciones"     => $observaciones,
+			"created_by"        => $user_id
+		);
+		if ($comprobante_archivo) {
+			$data_gasto["comprobante_archivo"] = $comprobante_archivo;
+		}
 
-        }else{
+		if ($modo_edicion == "1") {
+			$id = intval($_POST["id_gasto"]);
+			$this->gastos_model->actualizar_gasto($id, $data_gasto);
+			$this->gastos_model->eliminar_items_gasto($id);
+		} else {
+			$id = $this->gastos_model->insertar_gasto($data_gasto);
+		}
 
-            if(isset($_REQUEST['product_id'])){
-                $product_id = $_REQUEST['product_id'];
-                if (gettype($product_id) == 'string'){
-                    $this->data["msg"] = "No ha ingresado productos";
-                    $this->data["rpta_msg"] = "danger";
-                    $validacion = false; 
-                }
-            }
+		// Insertar items
+		for ($i = 0; $i < count($descripciones); $i++) {
+			$cant   = floatval($cantidades[$i]);
+			$precio = floatval($precios[$i]);
+			$item = array(
+				"gasto_id"        => $id,
+				"categoria_id"    => intval($categorias[$i]),
+				"descripcion"     => trim($descripciones[$i]),
+				"cantidad"        => $cant,
+				"precio_unitario" => $precio,
+				"subtotal"        => round($cant * $precio, 2)
+			);
+			$this->gastos_model->insertar_item($item);
+		}
 
-            if($validacion){
-                $this->db->trans_begin();
+		if ($this->db->trans_status() === FALSE) {
+			$this->db->trans_rollback();
+			if ($comprobante_archivo && file_exists("uploads/gastos/" . $comprobante_archivo)) {
+				@unlink("uploads/gastos/" . $comprobante_archivo);
+			}
+			$this->data["msg"] = "Error al guardar el gasto. Revise los datos.";
+			$this->data["rpta_msg"] = "danger";
+		} else {
+			$this->db->trans_commit();
+			$this->data["msg"] = "Gasto guardado correctamente.";
+			$this->data["rpta_msg"] = "success";
+		}
 
-                $this->db->set("store_id",$store_id);
-                $this->db->set("fecha",$fecha);
-                //$this->db->set("fecha_ingreso",$fecha_ingreso);
-                $this->db->set("tipoDoc",$tipoDoc);
-                $this->db->set("nroDoc",$nroDoc);
-                
-                $this->db->set("redondeo",$redondeo);
-                $this->db->set("proveedor_id", $proveedor_id);
-                $this->db->set("monto_base", $subtotal);
-        		$this->db->set("igv", $igv);
-                $this->db->set("por_igv", $por_igv*100);
+		$this->data['categorias'] = $this->gastos_model->get_categorias_activas();
+		$this->data["page_title"] = "Nuevo Gasto";
+		$this->template->load('production/index', 'gastos/add', $this->data);
+	}
 
-        		$this->db->set("total", $total);
-                $this->db->set("tipogasto", 'GASTOS');
+	function ver() {
+		$id = $_REQUEST["id"];
+		$gasto = $this->gastos_model->get_gasto_by_id($id);
+		if (!$gasto) {
+			echo "<p>Gasto no encontrado</p>";
+			return;
+		}
+		$items = $this->gastos_model->get_items_gasto($id);
+		?>
+		<style type="text/css">
+			.lbl_a{ font-weight:bold; }
+			.fila_a{ margin:10px; }
+			.celda_a{ padding:8px!important; }
+			.celda_a_footer{ padding:4px!important; background-color: rgb(180,200,220);}
+		</style>
+		<div class="row fila_a">
+			<div class="col-sm-3">
+				<label class="lbl_a">Fecha</label><br>
+				<?= date('d/m/Y', strtotime($gasto->fecha)) ?>
+			</div>
+			<div class="col-sm-3">
+				<label class="lbl_a">Tipo Doc</label><br>
+				<?= $gasto->tipo_doc_nombre ?>
+			</div>
+			<div class="col-sm-3">
+				<label class="lbl_a">Nro. Doc</label><br>
+				<?= $gasto->nroDoc ?>
+			</div>
+			<div class="col-sm-3">
+				<label class="lbl_a">Estado de Pago</label><br>
+				<?php if($gasto->estado_pago == 'PENDIENTE'): ?>
+					<span class="badge" style="background-color:#dc3545;color:#fff;padding:4px 8px;">PENDIENTE</span>
+					<?php if(!empty($gasto->fecha_vencimiento)): ?>
+						<br><small>Vence: <?= date('d/m/Y', strtotime($gasto->fecha_vencimiento)) ?></small>
+					<?php endif; ?>
+				<?php else: ?>
+					<span class="badge" style="background-color:#28a745;color:#fff;padding:4px 8px;">PAGADO</span>
+				<?php endif; ?>
+			</div>
+		</div>
 
-                /*
-                echo "subtotal:"    . $subtotal .   "<br>";
-                echo "igv:"         . $igv .        "<br>";
-                echo "total:"       . $total .      "<br>";
-                die();*/
+		<div class="row fila_a" style="margin-top:10px;">
+			<div class="col-sm-6">
+				<label class="lbl_a">Proveedor</label><br>
+				<?= $gasto->prov_nombre ?> <?= !empty($gasto->prov_ruc) ? '- RUC: ' . $gasto->prov_ruc : '' ?>
+			</div>
+			<div class="col-sm-3">
+				<?php if(!empty($gasto->comprobante_archivo)): ?>
+				<label class="lbl_a">Comprobante</label><br>
+				<a href="<?= base_url('gastos/ver_comprobante/' . $id) ?>" target="_blank" class="btn btn-xs btn-info">
+					<i class="fa fa-file-image-o"></i> Ver Comprobante
+				</a>
+				<?php endif; ?>
+			</div>
+			<div class="col-sm-3">
+				<label class="lbl_a">Registrado por</label><br>
+				<?= $gasto->usuario_nombre ?>
+			</div>
+		</div>
 
-                $bandera_grab = true;
+		<?php if(!empty($gasto->observaciones)): ?>
+		<div class="row fila_a" style="margin-top:10px;">
+			<div class="col-sm-12">
+				<label class="lbl_a">Observaciones</label><br>
+				<?= nl2br(htmlspecialchars($gasto->observaciones)) ?>
+			</div>
+		</div>
+		<?php endif; ?>
 
-                if($modo_edicion == "1"){
-                    $id = $_POST["id_compras"];
-                    $this->db->set("id",$id);
-                    $this->db->replace("tec_compras");    
-                }else{
-                    $this->db->insert("tec_compras");
-                    $id = $this->db->insert_id();
-                }
+		<table class="table table-hover" style="margin-top:20px;">
+			<tr>
+				<th class="celda_a_footer">CATEGORIA</th>
+				<th class="celda_a_footer">DESCRIPCION</th>
+				<th class="celda_a_footer text-center">CANTIDAD</th>
+				<th class="celda_a_footer text-right">P. UNIT.</th>
+				<th class="celda_a_footer text-right">SUBTOTAL</th>
+			</tr>
+			<?php foreach($items as $item): ?>
+			<tr>
+				<td class="celda_a"><span class="badge" style="background-color:<?= $item->categoria_color ?>;color:#fff;padding:3px 8px;"><?= $item->categoria_nombre ?></span></td>
+				<td class="celda_a"><?= htmlspecialchars($item->descripcion) ?></td>
+				<td class="celda_a text-center"><?= number_format($item->cantidad, 2) ?></td>
+				<td class="celda_a text-right"><?= number_format($item->precio_unitario, 2) ?></td>
+				<td class="celda_a text-right"><?= number_format($item->subtotal, 2) ?></td>
+			</tr>
+			<?php endforeach; ?>
+			<tr><th class="celda_a_footer" colspan="4">Monto Base</th><th class="celda_a_footer text-right"><?= number_format($gasto->monto_base, 2) ?></th></tr>
+			<tr><th class="celda_a_footer" colspan="4">IGV (<?= $gasto->por_igv ?>%)</th><th class="celda_a_footer text-right"><?= number_format($gasto->igv, 2) ?></th></tr>
+			<?php if($gasto->redondeo != 0): ?>
+			<tr><th class="celda_a_footer" colspan="4">Redondeo</th><th class="celda_a_footer text-right"><?= number_format($gasto->redondeo, 2) ?></th></tr>
+			<?php endif; ?>
+			<tr><th class="celda_a_footer" colspan="4">TOTAL</th><th class="celda_a_footer text-right"><?= number_format($gasto->total, 2) ?></th></tr>
+		</table>
+		<?php
+	}
 
-                if($bandera_grab){
-        			
-        			// Lo primero que debe hacerse es borrar los items anteriores
-                    if($modo_edicion == '1'){
-                        // Se elimina los item para luego volverlo a ingresar como nuevo
-                        $cSql = "select * from tec_compra_items where compra_id = ?";
-                        $query = $this->db->query($cSql,$id);
-                        foreach($query->result() as $r){
-                            $item_id    = $r->id;
-                            $cantidad   = $r->cantidad;
-                            $product_id = $r->product_id;
-                            $this->db->where("id",$item_id)->delete("tec_compra_items");
+	function eliminar() {
+		if (isset($_GET["id"])) {
+			$id = intval($_GET["id"]);
 
-                            // En el stock simple
-                            //$this->disminuir_al_stock($product_id, $store_id, $cantidad);
-                        }
-                    }
+			// Eliminar archivo comprobante si existe
+			$gasto = $this->gastos_model->get_gasto_by_id($id);
+			if ($gasto && !empty($gasto->comprobante_archivo)) {
+				$file_path = "uploads/gastos/" . $gasto->comprobante_archivo;
+				if (file_exists($file_path)) {
+					@unlink($file_path);
+				}
+			}
 
-                    $Lim = count($_REQUEST['product_id']);
+			// CASCADE borra tec_gastos_items automaticamente
+			$this->gastos_model->eliminar_gasto($id);
 
-        			// Averiguando tipoDoc
-                    $tipoDoc = $this->db->select("tipoDoc")->where('id',$id)->get("tec_compras")->row()->tipoDoc;
+			$ar["rpta_msg"] = "success";
+			$ar["message"] = "Se elimino correctamente el Gasto #{$id}";
+		} else {
+			$ar["rpta_msg"] = "danger";
+			$ar["message"] = "No se pudo eliminar";
+		}
+		echo json_encode($ar);
+	}
 
-                    for ($i = 0; $i < $Lim; $i++){
+	function buscar_proveedor() {
+		$q = isset($_GET["q"]) ? trim($_GET["q"]) : '';
+		if (strlen($q) < 1) {
+			header('Content-Type: application/json');
+			echo json_encode(array());
+			return;
+		}
+		$resultado = $this->gastos_model->buscar_proveedor($q);
+		header('Content-Type: application/json');
+		echo json_encode($resultado);
+	}
 
-        				$product_id     = $_REQUEST['product_id'][$i];
-                        $cantidad       = $_REQUEST['quantity'][$i];
+	function ver_comprobante($id) {
+		$gasto = $this->gastos_model->get_gasto_by_id($id);
+		if (!$gasto || empty($gasto->comprobante_archivo)) {
+			show_404();
+			return;
+		}
+		$file_path = "uploads/gastos/" . $gasto->comprobante_archivo;
+		if (!file_exists($file_path)) {
+			show_404();
+			return;
+		}
+		$ext = strtolower(pathinfo($file_path, PATHINFO_EXTENSION));
+		$mime_types = array("jpg" => "image/jpeg", "jpeg" => "image/jpeg", "png" => "image/png", "pdf" => "application/pdf");
+		$mime = isset($mime_types[$ext]) ? $mime_types[$ext] : "application/octet-stream";
+		header("Content-Type: " . $mime);
+		header("Content-Length: " . filesize($file_path));
+		readfile($file_path);
+	}
 
-                        $ar["compra_id"]    = $id;
-        				$ar["product_id"]   = $product_id;
-        				$ar["cantidad"]     = $cantidad;
-        				
-        				$precio_unitario = $_REQUEST['precio'][$i] * 1; // El precio se trata del valor unitario con Igv, tal cual se pone
-        				$subtotal       = $precio_unitario * ($_REQUEST['quantity'][$i] * 1);
-        				
-        				$ar["precio_con_igv"]   = $precio_unitario;			// con igv
+	// ---- CATEGORIAS DE GASTO ----
 
-                        if($tipoDoc == '5'){ // ticket
-                            $ar["precio_sin_igv"]   = $precio_unitario;
-                        }else{
-                            $ar["precio_sin_igv"]   = $_REQUEST['cost'][$i] * 1;
-                        }
-        				
-                        $ar["subtotal"]         = $subtotal;
-        				$ar["igv"]              = $ar["precio_sin_igv"] * $por_igv;
-        				$ar["product_name"]     = $_REQUEST['descripo'][$i];
-        				
-                        $this->db->set($ar)->insert("tec_compra_items");
-                        //$this->agregar_al_stock($product_id, $store_id, $cantidad);
-        			}
-        			
-                    if ($this->db->trans_status() === FALSE){
-                        $this->db->trans_rollback();
-                        $this->data["msg"] = "No se pudo guardar la compra ...revise";
-                        $this->data["rpta_msg"] = "danger";
-                    }else{
-                        $this->db->trans_commit();
-                        $this->data["msg"] = "Se guarda la compra correctamente";
-                        $this->data["rpta_msg"] = "success";
-                    }
+	function categorias() {
+		$this->data['page_title'] = "Categorias de Gasto";
+		$this->data['categorias'] = $this->gastos_model->get_all_categorias();
+		$this->template->load('production/index', 'gastos/categorias', $this->data);
+	}
 
-        		}else{
-                    $this->db->trans_rollback();
-                }
-            } // validacion
-        }
-        $this->data["page_title"] = "Agregar Gastos";
-        $this->template->load('production/index', 'gastos/add', $this->data);
-	}	
-	
-    function almaceno_en_temporal($usuario, $data){
-        // Limpio primero la tabla
-        $this->db->where("usuario",$usuario)->delete("tempo_compras");
-        $nLim = count($data) - 1;
+	function guardar_categoria() {
+		$data = array(
+			'id'     => isset($_POST['id']) ? intval($_POST['id']) : 0,
+			'nombre' => trim($_POST['nombre']),
+			'color'  => $_POST['color'],
+			'orden'  => intval($_POST['orden']),
+			'activo' => '1'
+		);
+		$id = $this->gastos_model->guardar_categoria($data);
+		header('Content-Type: application/json');
+		echo json_encode(array('rpta_msg' => 'success', 'id' => $id));
+	}
 
-        //echo "nLim:" . $nLim . "<br>";
-        for($i=1; $i<$nLim; $i++){
-            //usuario, product_id, code, nombre, precio, cantidad        
-            //echo $i . "<br>";
-            //echo $data[$i][0] . "<br>"; 
-            if(gettype($data[$i][0])=='string' || gettype($data[$i][0])=='integer'){
-                //if(!is_null($data[$i][0])){
-                $ar["usuario"]  = $usuario;
-                $ar["code"]     = $data[$i][0];
-                
-                //echo $this->db->select("id")->where("code",$data[$i][0])->get_compiled_select("tec_products");
-                //die();
-                $query = $this->db->select("id")->where("code",$data[$i][0])->get("tec_products");
-                $ar["product_id"] = 888888;
-                foreach($query->result() as $r){
-                    $ar["product_id"] = $r->id;
-                }
-                $ar["nombre"]   = $data[$i][1];
-                $ar["precio"]   = $data[$i][2];
-                $ar["cantidad"] = $data[$i][3];
-            
-                $this->db->set($ar)->insert("tempo_compras");
-            }
-        }
-        $this->data["msg"] = "Se encuentra almacenado los items";
-        $this->data["rpta_msg"] = "success";
-    }
+	function eliminar_categoria() {
+		$id = intval($_POST['id']);
+		$this->gastos_model->desactivar_categoria($id);
+		header('Content-Type: application/json');
+		echo json_encode(array('rpta_msg' => 'success'));
+	}
 
-    // change by fmz
-    public function agregar_al_stock($product_id, $store_id, $quantity){
-        $stock_actual   = $quantity;
-        $product_id     = $product_id;
-        
-        $cSql = "select id, stock from tec_prod_store where product_id = ? and store_id = ?";
-        $query = $this->db->query($cSql,array($product_id, $store_id));
-        $existe = false;
-        $stock = 0;
-        foreach($query->result() as $r){
-            $existe = true;
-            $stock = $r->stock;
-        }
-        
-        if (!$existe){
-            $ar["product_id"]   = $product_id;
-            $ar["store_id"]     = $store_id;
-            
-            $this->db->set($ar)->insert("tec_prod_store");
-        }
-        
-        $quantity = $quantity + $stock;
-        $cSql = "update tec_prod_store set stock = ? where product_id = ? and store_id = ?";
-        $this->db->query($cSql,array($quantity, $product_id, $store_id));
-    }
+	function getCategorias() {
+		$categorias = $this->gastos_model->get_categorias_activas();
+		header('Content-Type: application/json');
+		echo json_encode($categorias);
+	}
 
-    public function disminuir_al_stock($product_id, $store_id, $quantity){
-        $stock_actual   = $quantity;
-        $product_id     = $product_id;
-        
-        $cSql = "select id, stock from tec_prod_store where product_id = ? and store_id = ?";
-        $query = $this->db->query($cSql,array($product_id, $store_id));
-        $existe = false;
-        $stock = 0;
-        foreach($query->result() as $r){
-            $existe = true;
-            $stock = $r->stock;
-        }
-        
-        if (!$existe){
-            $ar["product_id"]   = $product_id;
-            $ar["store_id"]     = $store_id;
-            $ar["stock"]        = $quantity;
-            
-            $this->db->set($ar)->insert("tec_prod_store");
-        }
-        
-        $stock = $stock - $quantity > 0 ? $stock - $quantity : 0;
-        
-        $cSql = "update tec_prod_store set stock = ? where product_id = ? and store_id = ?";
-        $this->db->query($cSql,array($stock, $product_id, $store_id));
-    }
-
-    function eliminar(){  // Disminuye la cantidad de producto (tabla tec_prod_store) luego elimina la compra.
-        
-        if(isset($_GET["id"])){
-            $id = $_GET["id"];
-        
-            // Antes de eliminar la compra descuento la tabla stock
-            $query_i = $this->db->query("select a.store_id, b.product_id, b.cantidad from tec_compras a inner join tec_compra_items b on a.id=b.compra_id where a.id = {$id}");
-            foreach($query_i->result() as $r){
-                $this->disminuir_al_stock($r->product_id, $r->store_id, $r->cantidad);
-            }
-
-           // Tec_sales
-           $this->db->where("id",$id);
-           $this->db->delete("tec_compras");
-
-           // tec_sale_items:
-           $this->db->where("compra_id",$id);
-           $this->db->delete("tec_compra_items");
-
-           // tec_payments:
-           //$this->db->where("sale_id",$id);
-           //$this->db->delete("tec_payments");
-
-           $ar["rpta_msg"] = "success";
-           $ar["message"] = "Se eliminó correctamente el Documento {$id}";
-        }else{
-            $ar["rpta_msg"] = "danger";
-            $ar["message"] = "No se pudo eliminar";
-        }
-        echo json_encode($ar);
-        
-    }
-
-    public function envio_individual(){
-        $this->load->model('pos_model');
-        $sale_id = $_REQUEST["sale_id"];
-        
-        $this->pos_model->enviar_doc_sunat_nubefact_individual($sale_id);
-
-        $query = $this->db->select("envio_electronico")->where("id",$sale_id)->get("sales");
-
-        foreach($query->result() as $r){
-            $rpta = $r->envio_electronico;
-        }
-        if ($rpta == '1'){
-            echo "OK";
-        }else{
-            echo "No se pudo";
-        }
-    }
-
-    public function ver(){
-        $id = $_REQUEST["id"];
-        $cSql = "select a.fecha, fecha_ingreso, a.monto_base, a.igv, a.total, a.tipoDoc, a.nroDoc, a.proveedor_id, c.nombre nombre_proveedor, c.ruc,
-            b.product_id, d.code, b.product_name, b.cantidad, b.precio_sin_igv, b.precio_con_igv, b.descuento, b.igv igv2, b.subtotal, e.descrip tdocumento
-            from tec_compras a
-            left join tec_compra_items b on a.id=b.compra_id
-            left join tec_proveedores c on a.proveedor_id=c.id
-            left join tec_products d on b.product_id=d.id
-            left join tec_tipos_doc e on a.tipoDoc=e.id
-            where a.id=?";
-        $query = $this->db->query($cSql,array($id));
-        $i=0;
-        foreach($query->result() as $r){
-            $i++;
-            if($i==1){
-        ?>
-
-        <style type="text/css">
-            .lbl_a{ font-weight:bold; }
-            .fila_a{ margin:10px; }
-            .celda_a{ padding:8px!important; }
-            .celda_a_footer{ padding:4px!important; background-color: rgb(180,200,220);}
-        </style>
-        <div class="row fila_a">
-            <div class="col-sm-3">
-                <label class="lbl_a">Fecha de pago</label><br>
-                <?= $r->fecha ?>
-            </div>
-            <div class="col-sm-3">
-                <label class="lbl_a">fecha de Ingreso Alm</label><br>
-                <?= $r->fecha_ingreso ?>
-            </div>
-        </div>
-
-        <div class="row fila_a">
-            <div class="col-sm-2">
-                <label class="lbl_a">Tipo Doc</label><br>
-                <?= $r->tdocumento ?>
-            </div>
-            <div class="col-sm-2">
-                <label class="lbl_a">Nro. Doc</label><br>
-                <?= $r->nroDoc ?>
-            </div>
-            <div class="col-sm-4">
-                <label class="lbl_a">Proveedor</label><br>
-                <?= $r->nombre_proveedor . " " . $r->ruc ?>
-            </div>
-
-        </div>
-
-        <table class="table table-hover" style="margin-top:28px;">
-            <tr>
-                <th class="celda_a_footer">CODIGO</th>
-                <th class="celda_a_footer">PRODUCTO</th>
-                <th class="celda_a_footer">CANTIDAD</th>
-                <th class="celda_a_footer">PRECIO</th>
-                <th class="celda_a_footer">SUBTOTAL</th>
-            </tr>
-        <?php
-            }
-        ?>
-            <tr>
-                <td class="celda_a"><?= $r->code ?></td>
-                <td class="celda_a"><?= $r->product_name ?></td>
-                <td class="celda_a"><?= number_format($r->cantidad,0) ?></td>
-                <td class="celda_a"><?= number_format($r->precio_con_igv,2) ?></td>
-                <td class="celda_a text-right"><?= number_format($r->subtotal,2) ?></td>
-            </tr>
-        <?php        
-        }
-        ?>
-            <tr><th class="celda_a_footer" colspan="4">Monto Base</th><th class="celda_a_footer text-right"><?= number_format($r->monto_base,2) ?></th></tr>
-            <tr><th class="celda_a_footer" colspan="4">Igv</th><th class="celda_a_footer text-right"><?= number_format($r->igv,2) ?></th></tr>
-            <tr><th class="celda_a_footer" colspan="4">Total</th><th class="celda_a_footer text-right"><?= number_format($r->total,2) ?></th></tr>
-        </table>
-        <?php
-    }
-
-    function comillar($cad){
-        $cad = str_replace('"','',$cad);
-        $cad = "\"".$cad."\"";
-        return $cad; 
-    }
-
-    // Funcion que entrega valores de una tabla
-    function get_tempo(){
-        $usuario = $_REQUEST["usuario"];
-        if(!is_null($usuario)){
-            $cSql = "select * from tempo_compras where usuario = ? and product_id!=888888";
-            $ar = $this->db->query($cSql,array($usuario))->result_array();
-            echo json_encode($ar);
-        }
-    }
-	
+	// AJAX para cargar datos de un gasto al editar
+	function get_gasto_data() {
+		$id = intval($_GET["id"]);
+		$gasto = $this->gastos_model->get_gasto_by_id($id);
+		$items = $this->gastos_model->get_items_gasto($id);
+		header('Content-Type: application/json');
+		echo json_encode(array('gasto' => $gasto, 'items' => $items));
+	}
 }

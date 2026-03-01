@@ -67,7 +67,8 @@
 switch (ENVIRONMENT)
 {
 	case 'development':
-		error_reporting(-1);  // -1
+		//error_reporting(-1);  // -1
+		error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT & ~E_USER_NOTICE & ~E_USER_DEPRECATED);
 		ini_set('display_errors', 1); // 1
 	break;
 
@@ -313,7 +314,9 @@ switch (ENVIRONMENT)
  *
  * And away we go...
  */
+
 require_once BASEPATH.'core/CodeIgniter.php';
+
 //error_reporting(E_ALL);
 //ini_set('display_errors', 1);
 function lang($cad=""){

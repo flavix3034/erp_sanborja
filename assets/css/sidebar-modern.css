@@ -1,0 +1,786 @@
+/* ================================================================
+   SIDEBAR MODERN — Light / Minible-inspired Design
+   Sobreescribe los estilos del sidebar de Gentelella/custom.css
+   ================================================================ */
+
+/* ---- CSS VARIABLES ---- */
+:root {
+	--sb-bg: #ffffff;
+	--sb-text: #545a6d;
+	--sb-text-hover: #383c40;
+	--sb-text-active: #556ee6;
+	--sb-accent: #556ee6;
+	--sb-hover-bg: #f5f5f9;
+	--sb-active-bg: rgba(85,110,230,0.06);
+	--sb-border: #f0f0f4;
+	--sb-icon-color: #7b8190;
+	--sb-icon-active: #556ee6;
+	--sb-section-color: #a2a6b0;
+	--sb-width: 250px;
+	--sb-width-sm: 70px;
+	--sb-transition: all 0.2s ease;
+}
+
+/* ======================== LAYOUT FIJO — SCROLL INDEPENDIENTE ======================== */
+
+html, body {
+	height: 100%;
+	overflow-x: hidden;
+	background: #f8f8fb !important;
+}
+
+/* Override base dark background on ALL .left_col inside sidebar */
+.col-md-3.left_col,
+.col-md-3.left_col .left_col,
+.left_col.scroll-view {
+	background: var(--sb-bg) !important;
+}
+
+/* Sidebar fijo con scroll propio — solo el contenedor EXTERNO (col-md-3.left_col) */
+.col-md-3.left_col {
+	position: fixed !important;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	height: 100vh !important;
+	overflow-y: auto !important;
+	overflow-x: hidden;
+	z-index: 1000;
+	border-right: 1px solid var(--sb-border);
+	font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* El scroll-view INTERNO: fluye normal dentro del contenedor fijo */
+.left_col.scroll-view {
+	position: static !important;
+	height: auto !important;
+	overflow: visible !important;
+}
+
+/* Top nav fijo */
+.nav-md .main_container .top_nav {
+	position: fixed !important;
+	top: 0;
+	right: 0;
+	left: var(--sb-width);
+	z-index: 999;
+	height: 55px;
+	margin-left: 0 !important;
+}
+
+/* Contenido principal */
+.nav-md .container.body .right_col {
+	margin-left: var(--sb-width);
+	margin-top: 55px;
+	min-height: calc(100vh - 55px);
+}
+
+.nav-md .container.body .col-md-3.left_col {
+	width: var(--sb-width);
+}
+
+/* ======================== LOGO AREA ======================== */
+.nav_title {
+	width: var(--sb-width);
+	background: var(--sb-bg) !important;
+	height: 55px;
+	border-bottom: 1px solid var(--sb-border);
+	display: flex;
+	align-items: center;
+}
+
+.site_title {
+	font-size: 17px !important;
+	font-weight: 700 !important;
+	letter-spacing: 0.3px;
+	color: #2a3042 !important;
+	line-height: 55px !important;
+	height: 55px !important;
+	padding-left: 20px !important;
+	display: flex !important;
+	align-items: center;
+	gap: 10px;
+}
+
+.site_title:hover,
+.site_title:focus {
+	text-decoration: none;
+	color: #2a3042 !important;
+}
+
+.site_title i,
+.site_title .bx {
+	border: none !important;
+	padding: 0 !important;
+	border-radius: 0 !important;
+	font-size: 24px;
+	color: var(--sb-accent);
+	width: 28px;
+	text-align: center;
+}
+
+/* ======================== MENU SECTION HEADER ======================== */
+.menu_section {
+	margin-bottom: 0;
+	border-bottom: none;
+	padding-bottom: 0;
+}
+
+.menu_section + .menu_section {
+	margin-top: 4px;
+}
+
+.menu_section h3 {
+	padding: 20px 20px 8px !important;
+	color: var(--sb-section-color) !important;
+	text-transform: uppercase;
+	letter-spacing: 1.2px !important;
+	font-weight: 600 !important;
+	font-size: 11px !important;
+	margin: 0 !important;
+	text-shadow: none !important;
+}
+
+.menu_section > ul {
+	margin-top: 0;
+}
+
+/* ======================== MENU ITEMS ======================== */
+.nav.side-menu > li {
+	position: relative;
+	border-right: none !important;
+}
+
+.nav.side-menu > li > a {
+	padding: 11px 20px !important;
+	font-size: 13.5px !important;
+	font-weight: 400;
+	color: var(--sb-text) !important;
+	margin-bottom: 0 !important;
+	transition: var(--sb-transition);
+	border-left: none !important;
+	border-right: none !important;
+	display: flex;
+	align-items: center;
+	white-space: nowrap;
+	overflow: hidden;
+	border-radius: 0;
+}
+
+.nav.side-menu > li > a:hover {
+	color: var(--sb-text-hover) !important;
+	background: var(--sb-hover-bg) !important;
+}
+
+/* ======================== ACTIVE STATE ======================== */
+.nav.side-menu > li.current-page,
+.nav.side-menu > li.active {
+	border-right: none !important;
+}
+
+.nav.side-menu > li.active > a {
+	color: var(--sb-text-active) !important;
+	background: var(--sb-active-bg) !important;
+	border-left: none !important;
+	text-shadow: none !important;
+	box-shadow: none !important;
+}
+
+.nav li.current-page {
+	background: transparent !important;
+}
+
+.nav.side-menu > li.current-page > a {
+	color: var(--sb-text-active) !important;
+	background: var(--sb-active-bg) !important;
+	border-left: none !important;
+}
+
+/* ======================== ICONS (Boxicons + FA fallback) ======================== */
+/* Boxicons */
+.nav.side-menu > li > a > .bx {
+	width: 22px !important;
+	font-size: 20px !important;
+	margin-right: 10px;
+	text-align: center;
+	color: var(--sb-icon-color) !important;
+	transition: var(--sb-transition);
+	display: inline-flex !important;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	vertical-align: middle;
+	line-height: 1;
+}
+
+/* Font Awesome fallback */
+.nav.side-menu > li > a > .fa,
+.nav.side-menu > li > a > .glyphicon {
+	width: 22px !important;
+	font-size: 16px !important;
+	margin-right: 10px;
+	text-align: center;
+	color: var(--sb-icon-color) !important;
+	opacity: 1 !important;
+	transition: var(--sb-transition);
+	display: inline-block !important;
+	flex-shrink: 0;
+}
+
+.main_menu .fa,
+.main_menu .bx {
+	color: var(--sb-icon-color) !important;
+}
+
+/* Hover & active icon state */
+.nav.side-menu > li > a:hover > .bx,
+.nav.side-menu > li > a:hover > .fa,
+.nav.side-menu > li > a:hover > .glyphicon,
+.nav.side-menu > li.active > a > .bx,
+.nav.side-menu > li.active > a > .fa,
+.nav.side-menu > li.active > a > .glyphicon,
+.nav.side-menu > li.current-page > a > .bx,
+.nav.side-menu > li.current-page > a > .fa,
+.nav.side-menu > li.current-page > a > .glyphicon {
+	color: var(--sb-icon-active) !important;
+}
+
+/* Chevron */
+.nav.side-menu > li > a > .fa-chevron-down {
+	font-size: 10px !important;
+	margin-left: auto;
+	margin-right: 0 !important;
+	width: auto !important;
+	transition: transform 0.25s ease, color 0.2s ease;
+	color: #c3c7ce !important;
+}
+
+.nav.side-menu > li.active > a > .fa-chevron-down {
+	transform: rotate(180deg);
+	color: var(--sb-accent) !important;
+}
+
+/* ======================== CHILD MENU (SUBMENU) ======================== */
+.nav.child_menu {
+	background: transparent;
+	padding-left: 0;
+}
+
+.nav.child_menu li {
+	padding-left: 0 !important;
+}
+
+.nav.child_menu > li > a {
+	color: var(--sb-text) !important;
+	font-size: 13px !important;
+	padding: 7px 20px 7px 54px !important;
+	transition: var(--sb-transition);
+	display: block;
+}
+
+.nav.child_menu > li > a:hover {
+	color: var(--sb-text-active) !important;
+	background: transparent !important;
+}
+
+.nav.child_menu li:hover,
+.nav.child_menu li.active {
+	background-color: transparent !important;
+}
+
+.nav.child_menu li.active > a,
+.nav.child_menu li.current-page > a {
+	color: var(--sb-text-active) !important;
+}
+
+.nav li li.current-page a {
+	color: var(--sb-text-active) !important;
+}
+
+/* Submenu dots */
+.nav-md ul.nav.child_menu li:before {
+	background: #d4d8e0 !important;
+	height: 5px !important;
+	width: 5px !important;
+	left: 28px !important;
+	margin-top: 13px !important;
+	border-radius: 50%;
+}
+
+.nav-md ul.nav.child_menu li.active:before,
+.nav-md ul.nav.child_menu li.current-page:before {
+	background: var(--sb-accent) !important;
+}
+
+/* Submenu vertical line */
+.nav-md ul.nav.child_menu li:after {
+	border-left: 1px solid var(--sb-border) !important;
+	left: 30px !important;
+}
+
+/* Third level submenu */
+.nav.child_menu li li a:hover,
+.nav.child_menu li li a.active {
+	color: var(--sb-text-active) !important;
+}
+
+/* Third level icons */
+.nav.child_menu .bx {
+	color: var(--sb-icon-color) !important;
+	font-size: 16px !important;
+	width: 20px !important;
+	margin-right: 6px;
+	vertical-align: middle;
+}
+
+.nav.child_menu .fa,
+.nav.child_menu .glyphicon {
+	color: var(--sb-icon-color) !important;
+	font-size: 13px !important;
+	width: 18px !important;
+	margin-right: 6px;
+}
+
+/* ======================== SIDEBAR FOOTER ======================== */
+.sidebar-footer {
+	background: var(--sb-bg) !important;
+	width: var(--sb-width) !important;
+	border-top: 1px solid var(--sb-border);
+	padding: 0 !important;
+}
+
+.sidebar-footer a {
+	background: transparent !important;
+	color: var(--sb-icon-color) !important;
+	padding: 10px 0 8px !important;
+	font-size: 15px;
+	transition: var(--sb-transition);
+}
+
+.sidebar-footer a:hover {
+	background: var(--sb-hover-bg) !important;
+	color: var(--sb-accent) !important;
+}
+
+/* ======================== SCROLLBAR ======================== */
+.left_col::-webkit-scrollbar,
+.left_col .scroll-view::-webkit-scrollbar {
+	width: 4px;
+}
+
+.left_col::-webkit-scrollbar-track,
+.left_col .scroll-view::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.left_col::-webkit-scrollbar-thumb,
+.left_col .scroll-view::-webkit-scrollbar-thumb {
+	background: #e0e0e6;
+	border-radius: 4px;
+}
+
+.left_col::-webkit-scrollbar-thumb:hover,
+.left_col .scroll-view::-webkit-scrollbar-thumb:hover {
+	background: #c8c8d0;
+}
+
+.left_col .mCSB_scrollTools {
+	width: 4px !important;
+}
+
+.left_col .mCSB_draggerRail {
+	background: transparent !important;
+}
+
+.left_col .mCSB_dragger .mCSB_dragger_bar {
+	background: #e0e0e6 !important;
+	border-radius: 4px !important;
+	width: 4px !important;
+}
+
+/* ======================== TOP NAV BAR ======================== */
+.top_nav {
+	background: #fff;
+}
+
+.nav_menu {
+	background: #fff !important;
+	border-bottom: 1px solid #eff0f2 !important;
+	box-shadow: none !important;
+	min-height: 55px;
+	display: flex !important;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0 16px !important;
+	float: none !important;
+}
+
+/* --- Topnav Left (toggle + search) --- */
+.topnav-left {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.topnav-toggle {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 38px;
+	height: 38px;
+	border-radius: 8px;
+	color: #555b6d;
+	font-size: 22px;
+	transition: var(--sb-transition);
+	cursor: pointer;
+	text-decoration: none !important;
+}
+
+.topnav-toggle:hover {
+	background: var(--sb-hover-bg);
+	color: var(--sb-accent);
+}
+
+.topnav-search {
+	display: flex;
+	align-items: center;
+	background: #f3f3f9;
+	border-radius: 8px;
+	padding: 0 12px;
+	height: 38px;
+	min-width: 220px;
+	transition: var(--sb-transition);
+	border: 1px solid transparent;
+}
+
+.topnav-search:focus-within {
+	border-color: var(--sb-accent);
+	background: #fff;
+	box-shadow: 0 0 0 3px rgba(85,110,230,0.10);
+}
+
+.topnav-search i {
+	font-size: 18px;
+	color: #a2a6b0;
+	margin-right: 8px;
+	flex-shrink: 0;
+}
+
+.topnav-search input {
+	border: none;
+	background: transparent;
+	outline: none;
+	font-size: 13.5px;
+	color: #495057;
+	font-family: inherit;
+	width: 100%;
+	padding: 0;
+	line-height: 38px;
+}
+
+.topnav-search input::placeholder {
+	color: #a2a6b0;
+}
+
+/* --- Topnav Right (icons + user) --- */
+.topnav-right {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.topnav-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 38px;
+	height: 38px;
+	border-radius: 8px;
+	color: #555b6d;
+	font-size: 21px;
+	transition: var(--sb-transition);
+	cursor: pointer;
+	text-decoration: none !important;
+	position: relative;
+}
+
+.topnav-icon:hover {
+	background: var(--sb-hover-bg);
+	color: var(--sb-accent);
+}
+
+/* Notification dot */
+.topnav-notify::after {
+	content: '';
+	position: absolute;
+	top: 8px;
+	right: 8px;
+	width: 7px;
+	height: 7px;
+	background: #f46a6a;
+	border-radius: 50%;
+	border: 1.5px solid #fff;
+}
+
+/* --- User area --- */
+.topnav-user {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 4px 12px 4px 8px;
+	border-radius: 8px;
+	cursor: default;
+	margin-left: 4px;
+	transition: var(--sb-transition);
+}
+
+.topnav-user:hover {
+	background: var(--sb-hover-bg);
+}
+
+.topnav-avatar i {
+	font-size: 32px;
+	color: var(--sb-accent);
+	display: flex;
+	line-height: 1;
+}
+
+.topnav-username {
+	font-size: 13.5px;
+	font-weight: 500;
+	color: #2a3042;
+	white-space: nowrap;
+}
+
+/* --- Hide old toggle/nav elements --- */
+.nav.toggle,
+.nav_menu > nav.navbar-nav {
+	display: none !important;
+}
+
+@media (max-width: 767px) {
+	.topnav-search {
+		display: none;
+	}
+	.topnav-username {
+		display: none;
+	}
+}
+
+/* ======================== COLLAPSED SIDEBAR (nav-sm) ======================== */
+.nav-sm .container.body .col-md-3.left_col {
+	width: var(--sb-width-sm);
+	background: var(--sb-bg) !important;
+}
+
+.nav-sm .main_container .top_nav {
+	left: var(--sb-width-sm) !important;
+}
+
+.nav-sm .container.body .right_col {
+	margin-left: var(--sb-width-sm) !important;
+}
+
+.nav-sm .navbar.nav_title {
+	width: var(--sb-width-sm) !important;
+	background: var(--sb-bg) !important;
+}
+
+.nav-sm .navbar.nav_title a span {
+	display: none;
+}
+
+.nav-sm .navbar.nav_title a {
+	padding: 0 !important;
+	text-align: center;
+	width: 100%;
+	justify-content: center;
+}
+
+.nav-sm .navbar.nav_title a i,
+.nav-sm .navbar.nav_title a .bx {
+	font-size: 24px !important;
+	margin: 0 !important;
+	color: var(--sb-accent);
+}
+
+/* --- COLLAPSED: Hide ALL text, show ONLY icons --- */
+.nav-sm .nav.side-menu > li > a {
+	text-align: center !important;
+	padding: 14px 0 !important;
+	font-size: 0 !important;
+	color: transparent !important;
+	border-left: none !important;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	flex-direction: column;
+	height: auto;
+	line-height: 1;
+}
+
+.nav-sm .nav.side-menu > li > a > .bx {
+	font-size: 22px !important;
+	width: 100% !important;
+	margin: 0 !important;
+	display: block !important;
+	text-align: center;
+	color: var(--sb-icon-color) !important;
+	line-height: 1.4;
+}
+
+.nav-sm .nav.side-menu > li > a > .fa,
+.nav-sm .nav.side-menu > li > a > .glyphicon {
+	font-size: 18px !important;
+	width: 100% !important;
+	margin: 0 !important;
+	display: block !important;
+	text-align: center;
+	color: var(--sb-icon-color) !important;
+	line-height: 1.4;
+}
+
+/* Hide chevron in collapsed mode */
+.nav-sm .nav.side-menu > li > a > .fa-chevron-down {
+	display: none !important;
+}
+
+/* Active state in collapsed */
+.nav-sm .nav.side-menu > li.active-sm > a,
+.nav-sm .nav.side-menu > li.active > a {
+	color: transparent !important;
+	background: var(--sb-active-bg) !important;
+}
+
+.nav-sm .nav.side-menu > li.active-sm > a > .bx,
+.nav-sm .nav.side-menu > li.active-sm > a > .fa,
+.nav-sm .nav.side-menu > li.active-sm > a > .glyphicon,
+.nav-sm .nav.side-menu > li.active > a > .bx,
+.nav-sm .nav.side-menu > li.active > a > .fa,
+.nav-sm .nav.side-menu > li.active > a > .glyphicon {
+	color: var(--sb-icon-active) !important;
+}
+
+.nav-sm .nav.side-menu > li > a:hover {
+	background: var(--sb-hover-bg) !important;
+}
+
+.nav-sm .nav.side-menu > li > a:hover > .bx,
+.nav-sm .nav.side-menu > li > a:hover > .fa,
+.nav-sm .nav.side-menu > li > a:hover > .glyphicon {
+	color: var(--sb-icon-active) !important;
+}
+
+.nav-sm .nav.child_menu li.active {
+	border-right: none !important;
+}
+
+/* --- COLLAPSED: Submenu popup --- */
+.nav-sm ul.nav.child_menu {
+	background: #fff !important;
+	border-radius: 0 6px 6px 0;
+	box-shadow: 4px 4px 20px rgba(0,0,0,0.10);
+	border: 1px solid var(--sb-border);
+	border-left: none;
+	padding: 6px 0;
+	left: var(--sb-width-sm);
+	position: absolute;
+	min-width: 190px;
+	z-index: 1100;
+}
+
+.nav-sm ul.nav.child_menu li {
+	padding: 0 !important;
+}
+
+.nav-sm ul.nav.child_menu li:before,
+.nav-sm ul.nav.child_menu li:after {
+	display: none !important;
+}
+
+.nav-sm ul.nav.child_menu li a {
+	text-align: left !important;
+	padding: 8px 18px !important;
+	font-size: 13px !important;
+	color: var(--sb-text) !important;
+	white-space: nowrap;
+}
+
+.nav-sm ul.nav.child_menu li a:hover {
+	color: var(--sb-text-active) !important;
+	background: var(--sb-hover-bg) !important;
+}
+
+.nav-sm ul.nav.child_menu li.active a,
+.nav-sm ul.nav.child_menu li.current-page a {
+	color: var(--sb-text-active) !important;
+}
+
+/* --- COLLAPSED: Footer --- */
+.nav-sm .sidebar-footer {
+	width: var(--sb-width-sm) !important;
+}
+
+.nav-sm .sidebar-footer a {
+	padding: 10px 0 6px !important;
+	font-size: 14px;
+}
+
+/* --- COLLAPSED: Hide section headers --- */
+.nav-sm .menu_section h3 {
+	display: none;
+}
+
+/* ======================== RESPONSIVE ======================== */
+@media (max-width: 991px) {
+	.nav-md .container.body .col-md-3.left_col {
+		display: none;
+	}
+	.nav-md .main_container .top_nav {
+		left: 0 !important;
+		width: 100% !important;
+	}
+	.nav-md .container.body .right_col {
+		margin-left: 0 !important;
+		margin-top: 55px !important;
+		width: 100%;
+	}
+}
+
+/* ======================== MISC OVERRIDES ======================== */
+.nav-sm .nav.child_menu li.active,
+.nav-sm .nav.side-menu li.active-sm {
+	border-right: none !important;
+}
+
+.nav-sm > .nav.side-menu > li.active-sm > a {
+	color: transparent !important;
+}
+
+.nav-sm .profile {
+	display: none;
+}
+
+/* Remove <br> gap below logo */
+.left_col.scroll-view > br {
+	display: none;
+}
+
+/* Content padding */
+.right_col {
+	padding: 20px 20px 20px 20px;
+	background: #f8f8fb !important;
+}
+
+/* ======================== PAGE TITLE (Minible style) ======================== */
+.page-title-box {
+	margin-bottom: 16px;
+}
+
+.page-title-text {
+	font-size: 16px;
+	font-weight: 600;
+	color: #2a3042;
+	margin: 0;
+	font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
