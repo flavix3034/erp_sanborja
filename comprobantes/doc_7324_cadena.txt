@@ -1,0 +1,64 @@
+{
+          "ublVersion": "2.1",
+          "fecVencimiento": "2026-02-22T02:43:13-05:00",
+          "tipoOperacion": "0101", 
+          "tipoDoc": "03",
+          "serie": "B001",
+          "correlativo": "1224",
+          "fechaEmision": "2026-02-22T02:43:13-05:00",
+          "formaPago": {
+            "moneda": "PEN",
+            "tipo": "Contado"
+          },
+          "tipoMoneda": "PEN",
+          "client": {
+            "tipoDoc": "1",
+            "numDoc": "00000000",
+            "rznSocial": "VARIOS",
+            "address": {
+              "direccion": "sin direccion",
+              "provincia": "LIMA",
+              "departamento": "LIMA",
+              "distrito": "LIMA",
+              "ubigueo": "150101"
+            }
+          },"company": {
+            "ruc": 20612452858,
+            "razonSocial": "SBL PERU IMPORT E.I.R.L",
+            "address": {
+              "direccion": "Av. Aviacion 5092 Tda 113",
+              "provincia": "SURCO",
+              "departamento": "LIMA",
+              "distrito": "Surco",
+              "ubigueo": "150130"
+            }
+          },"mtoOperGravadas": 148.31,
+          "mtoOperExoneradas": 0,
+          "mtoIGV": 26.7,
+          "icbper": 0,
+          "valorVenta": 148.31,
+          "totalImpuestos": 26.7,
+          "subTotal": 175.01,
+          "redondeo": 0,
+          "mtoImpVenta": 175.01,
+          "details": [{
+              "codProducto": "PGRPg1",
+              "unidad": "NIU",
+              "descripcion": "conjunto pro",
+              "cantidad": 1,
+              "mtoValorUnitario": 148.31,
+              "mtoValorVenta": 148.31,
+              "mtoBaseIgv": 148.31,
+              "porcentajeIgv": 18,
+              "igv": 26.7,
+              "tipAfeIgv": 10,
+              "totalImpuestos": 26.7,
+              "mtoPrecioUnitario": 175.01
+            }],
+          "legends": [
+            {
+              "code": "1000",
+              "value": "Son ciento setenta y cinco y 01/100 Soles"
+            }
+          ]
+        }

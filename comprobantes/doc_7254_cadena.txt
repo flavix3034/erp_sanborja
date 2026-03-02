@@ -1,0 +1,64 @@
+{
+          "ublVersion": "2.1",
+          "fecVencimiento": "2024-08-12T08:33:26-05:00",
+          "tipoOperacion": "0101", 
+          "tipoDoc": "01",
+          "serie": "F001",
+          "correlativo": "2",
+          "fechaEmision": "2024-08-12T08:33:26-05:00",
+          "formaPago": {
+            "moneda": "PEN",
+            "tipo": "Contado"
+          },
+          "tipoMoneda": "PEN",
+          "client": {
+            "tipoDoc": "6",
+            "numDoc": "10075047946",
+            "rznSocial": "MORENO ZUÑIGA FLAVIO DAVID",
+            "address": {
+              "direccion": "sin direccion",
+              "provincia": "LIMA",
+              "departamento": "LIMA",
+              "distrito": "LIMA",
+              "ubigueo": "150101"
+            }
+          },"company": {
+            "ruc": 20612452858,
+            "razonSocial": "SBL PERU IMPORT E.I.R.L",
+            "address": {
+              "direccion": "Av. Aviacion 5092 Tda 113",
+              "provincia": "SURCO",
+              "departamento": "LIMA",
+              "distrito": "Surco",
+              "ubigueo": "150130"
+            }
+          },"mtoOperGravadas": 11.86,
+          "mtoOperExoneradas": 0,
+          "mtoIGV": 2.13,
+          "icbper": 0,
+          "valorVenta": 11.86,
+          "totalImpuestos": 2.13,
+          "subTotal": 13.99,
+          "redondeo": 0,
+          "mtoImpVenta": 13.99,
+          "details": [{
+              "codProducto": "P101284",
+              "unidad": "NIU",
+              "descripcion": "PANTALLA A24 SAMSUNG",
+              "cantidad": 1,
+              "mtoValorUnitario": 11.86,
+              "mtoValorVenta": 11.86,
+              "mtoBaseIgv": 11.86,
+              "porcentajeIgv": 18,
+              "igv": 2.13,
+              "tipAfeIgv": 10,
+              "totalImpuestos": 2.13,
+              "mtoPrecioUnitario": 13.99
+            }],
+          "legends": [
+            {
+              "code": "1000",
+              "value": "Son trece y 99/100 Soles"
+            }
+          ]
+        }

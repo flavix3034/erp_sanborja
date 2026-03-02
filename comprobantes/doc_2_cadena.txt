@@ -1,0 +1,64 @@
+{
+          "ublVersion": "2.1",
+          "fecVencimiento": "2026-02-23T15:40:15-05:00",
+          "tipoOperacion": "0101", 
+          "tipoDoc": "03",
+          "serie": "B001",
+          "correlativo": "1224",
+          "fechaEmision": "2026-02-23T15:40:15-05:00",
+          "formaPago": {
+            "moneda": "PEN",
+            "tipo": "Contado"
+          },
+          "tipoMoneda": "PEN",
+          "client": {
+            "tipoDoc": "1",
+            "numDoc": "72477535",
+            "rznSocial": "MORENO AGUILAR FLAVIO JULIO",
+            "address": {
+              "direccion": "sin direccion",
+              "provincia": "LIMA",
+              "departamento": "LIMA",
+              "distrito": "LIMA",
+              "ubigueo": "150101"
+            }
+          },"company": {
+            "ruc": 20612452858,
+            "razonSocial": "SBL PERU IMPORT E.I.R.L",
+            "address": {
+              "direccion": "Av. Aviacion 5092 Tda 113",
+              "provincia": "SURCO",
+              "departamento": "LIMA",
+              "distrito": "Surco",
+              "ubigueo": "150130"
+            }
+          },"mtoOperGravadas": 101.69,
+          "mtoOperExoneradas": 0,
+          "mtoIGV": 18.3,
+          "icbper": 0,
+          "valorVenta": 101.69,
+          "totalImpuestos": 18.3,
+          "subTotal": 119.99,
+          "redondeo": 0,
+          "mtoImpVenta": 119.99,
+          "details": [{
+              "codProducto": "P1",
+              "unidad": "NIU",
+              "descripcion": "PRODUCTO PRUEBA A",
+              "cantidad": 1,
+              "mtoValorUnitario": 101.69,
+              "mtoValorVenta": 101.69,
+              "mtoBaseIgv": 101.69,
+              "porcentajeIgv": 18,
+              "igv": 18.3,
+              "tipAfeIgv": 10,
+              "totalImpuestos": 18.3,
+              "mtoPrecioUnitario": 119.99
+            }],
+          "legends": [
+            {
+              "code": "1000",
+              "value": "Son ciento diecinueve y 99/100 Soles"
+            }
+          ]
+        }

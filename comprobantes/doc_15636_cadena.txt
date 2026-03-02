@@ -1,0 +1,64 @@
+{
+          "ublVersion": "2.1",
+          "fecVencimiento": "2025-11-19T23:51:07-05:00",
+          "tipoOperacion": "0101", 
+          "tipoDoc": "03",
+          "serie": "B001",
+          "correlativo": "1236",
+          "fechaEmision": "2025-11-19T23:51:07-05:00",
+          "formaPago": {
+            "moneda": "PEN",
+            "tipo": "Contado"
+          },
+          "tipoMoneda": "PEN",
+          "client": {
+            "tipoDoc": "1",
+            "numDoc": "00000000",
+            "rznSocial": "VARIOS",
+            "address": {
+              "direccion": "sin direccion",
+              "provincia": "LIMA",
+              "departamento": "LIMA",
+              "distrito": "LIMA",
+              "ubigueo": "150101"
+            }
+          },"company": {
+            "ruc": 20612452858,
+            "razonSocial": "SBL PERU IMPORT E.I.R.L",
+            "address": {
+              "direccion": "AV. AVIACION NRO. 5092 INT. 113 URB. RESIDENCIAL H",
+              "provincia": "SURCO",
+              "departamento": "LIMA",
+              "distrito": "Surco",
+              "ubigueo": "150130"
+            }
+          },"mtoOperGravadas": 50.85,
+          "mtoOperExoneradas": 0,
+          "mtoIGV": 9.15,
+          "icbper": 0,
+          "valorVenta": 50.85,
+          "totalImpuestos": 9.15,
+          "subTotal": 60,
+          "redondeo": 0,
+          "mtoImpVenta": 60,
+          "details": [{
+              "codProducto": "P101318",
+              "unidad": "NIU",
+              "descripcion": "SERVICIO DE REPARACION",
+              "cantidad": 1,
+              "mtoValorUnitario": 50.85,
+              "mtoValorVenta": 50.85,
+              "mtoBaseIgv": 50.85,
+              "porcentajeIgv": 18.0000,
+              "igv": 9.15,
+              "tipAfeIgv": 10,
+              "totalImpuestos": 9.15,
+              "mtoPrecioUnitario": 60
+            }],
+          "legends": [
+            {
+              "code": "1000",
+              "value": "Son  y 00/100 Soles"
+            }
+          ]
+        }

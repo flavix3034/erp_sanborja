@@ -1,0 +1,64 @@
+{
+          "ublVersion": "2.1",
+          "fecVencimiento": "2025-11-19T23:50:55-05:00",
+          "tipoOperacion": "0101", 
+          "tipoDoc": "03",
+          "serie": "B001",
+          "correlativo": "1231",
+          "fechaEmision": "2025-11-19T23:50:55-05:00",
+          "formaPago": {
+            "moneda": "PEN",
+            "tipo": "Contado"
+          },
+          "tipoMoneda": "PEN",
+          "client": {
+            "tipoDoc": "1",
+            "numDoc": "00000000",
+            "rznSocial": "VARIOS",
+            "address": {
+              "direccion": "sin direccion",
+              "provincia": "LIMA",
+              "departamento": "LIMA",
+              "distrito": "LIMA",
+              "ubigueo": "150101"
+            }
+          },"company": {
+            "ruc": 20612452858,
+            "razonSocial": "SBL PERU IMPORT E.I.R.L",
+            "address": {
+              "direccion": "AV. AVIACION NRO. 5092 INT. 113 URB. RESIDENCIAL H",
+              "provincia": "SURCO",
+              "departamento": "LIMA",
+              "distrito": "Surco",
+              "ubigueo": "150130"
+            }
+          },"mtoOperGravadas": 66.1,
+          "mtoOperExoneradas": 0,
+          "mtoIGV": 11.9,
+          "icbper": 0,
+          "valorVenta": 66.1,
+          "totalImpuestos": 11.9,
+          "subTotal": 78,
+          "redondeo": 0,
+          "mtoImpVenta": 78,
+          "details": [{
+              "codProducto": "P101318",
+              "unidad": "NIU",
+              "descripcion": "SERVICIO DE REPARACION",
+              "cantidad": 1,
+              "mtoValorUnitario": 66.1,
+              "mtoValorVenta": 66.1,
+              "mtoBaseIgv": 66.1,
+              "porcentajeIgv": 18.0000,
+              "igv": 11.9,
+              "tipAfeIgv": 10,
+              "totalImpuestos": 11.9,
+              "mtoPrecioUnitario": 78
+            }],
+          "legends": [
+            {
+              "code": "1000",
+              "value": "Son  y 80/100 Soles"
+            }
+          ]
+        }

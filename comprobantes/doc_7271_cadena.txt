@@ -1,0 +1,77 @@
+{
+          "ublVersion": "2.1",
+          "fecVencimiento": "2024-08-18T13:09:12-05:00",
+          "tipoOperacion": "0101", 
+          "tipoDoc": "03",
+          "serie": "B001",
+          "correlativo": "14",
+          "fechaEmision": "2024-08-18T13:09:12-05:00",
+          "formaPago": {
+            "moneda": "PEN",
+            "tipo": "Contado"
+          },
+          "tipoMoneda": "PEN",
+          "client": {
+            "tipoDoc": "1",
+            "numDoc": "00000000",
+            "rznSocial": "VARIOS",
+            "address": {
+              "direccion": "sin direccion",
+              "provincia": "LIMA",
+              "departamento": "LIMA",
+              "distrito": "LIMA",
+              "ubigueo": "150101"
+            }
+          },"company": {
+            "ruc": 20612452858,
+            "razonSocial": "SBL PERU IMPORT E.I.R.L",
+            "address": {
+              "direccion": "Av. Aviacion 5092 Tda 113",
+              "provincia": "SURCO",
+              "departamento": "LIMA",
+              "distrito": "Surco",
+              "ubigueo": "150130"
+            }
+          },"mtoOperGravadas": 227.12,
+          "mtoOperExoneradas": 0,
+          "mtoIGV": 40.88,
+          "icbper": 0,
+          "valorVenta": 227.12,
+          "totalImpuestos": 40.88,
+          "subTotal": 268,
+          "redondeo": 0,
+          "mtoImpVenta": 268,
+          "details": [{
+              "codProducto": "P101312",
+              "unidad": "NIU",
+              "descripcion": "SERVICIO DE REPARACION",
+              "cantidad": 1,
+              "mtoValorUnitario": 127.12,
+              "mtoValorVenta": 127.12,
+              "mtoBaseIgv": 127.12,
+              "porcentajeIgv": 18,
+              "igv": 22.88,
+              "tipAfeIgv": 10,
+              "totalImpuestos": 22.88,
+              "mtoPrecioUnitario": 150
+            },{
+              "codProducto": "P100983",
+              "unidad": "NIU",
+              "descripcion": "PANTALLA HUAWEI MATE 10 PRO",
+              "cantidad": 1,
+              "mtoValorUnitario": 100,
+              "mtoValorVenta": 100,
+              "mtoBaseIgv": 100,
+              "porcentajeIgv": 18,
+              "igv": 18,
+              "tipAfeIgv": 10,
+              "totalImpuestos": 18,
+              "mtoPrecioUnitario": 118
+            }],
+          "legends": [
+            {
+              "code": "1000",
+              "value": "Son  y 68/100 Soles"
+            }
+          ]
+        }

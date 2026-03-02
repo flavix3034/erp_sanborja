@@ -1,0 +1,64 @@
+{
+          "ublVersion": "2.1",
+          "fecVencimiento": "2025-07-02T22:16:18-05:00",
+          "tipoOperacion": "0101", 
+          "tipoDoc": "01",
+          "serie": "F001",
+          "correlativo": "5",
+          "fechaEmision": "2025-07-02T22:16:18-05:00",
+          "formaPago": {
+            "moneda": "PEN",
+            "tipo": "Contado"
+          },
+          "tipoMoneda": "PEN",
+          "client": {
+            "tipoDoc": "6",
+            "numDoc": "20553282773",
+            "rznSocial": "NETVOX S.A.C.",
+            "address": {
+              "direccion": "sin direccion",
+              "provincia": "LIMA",
+              "departamento": "LIMA",
+              "distrito": "LIMA",
+              "ubigueo": "150101"
+            }
+          },"company": {
+            "ruc": 20612452858,
+            "razonSocial": "SBL PERU IMPORT E.I.R.L",
+            "address": {
+              "direccion": "Av. Aviacion 5092 Tda 113",
+              "provincia": "SURCO",
+              "departamento": "LIMA",
+              "distrito": "Surco",
+              "ubigueo": "150130"
+            }
+          },"mtoOperGravadas": 169.49,
+          "mtoOperExoneradas": 0,
+          "mtoIGV": 30.51,
+          "icbper": 0,
+          "valorVenta": 169.49,
+          "totalImpuestos": 30.51,
+          "subTotal": 200,
+          "redondeo": 0,
+          "mtoImpVenta": 200,
+          "details": [{
+              "codProducto": "P101284",
+              "unidad": "NIU",
+              "descripcion": "PANTALLA A24 SAMSUNG",
+              "cantidad": 1,
+              "mtoValorUnitario": 169.49,
+              "mtoValorVenta": 169.49,
+              "mtoBaseIgv": 169.49,
+              "porcentajeIgv": 18,
+              "igv": 30.51,
+              "tipAfeIgv": 10,
+              "totalImpuestos": 30.51,
+              "mtoPrecioUnitario": 200
+            }],
+          "legends": [
+            {
+              "code": "1000",
+              "value": "Son  y 00/100 Soles"
+            }
+          ]
+        }

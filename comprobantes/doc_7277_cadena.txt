@@ -1,0 +1,77 @@
+{
+          "ublVersion": "2.1",
+          "fecVencimiento": "2024-08-21T08:24:14-05:00",
+          "tipoOperacion": "0101", 
+          "tipoDoc": "03",
+          "serie": "B001",
+          "correlativo": "18",
+          "fechaEmision": "2024-08-21T08:24:14-05:00",
+          "formaPago": {
+            "moneda": "PEN",
+            "tipo": "Contado"
+          },
+          "tipoMoneda": "PEN",
+          "client": {
+            "tipoDoc": "1",
+            "numDoc": "00000000",
+            "rznSocial": "VARIOS",
+            "address": {
+              "direccion": "sin direccion",
+              "provincia": "LIMA",
+              "departamento": "LIMA",
+              "distrito": "LIMA",
+              "ubigueo": "150101"
+            }
+          },"company": {
+            "ruc": 20612452858,
+            "razonSocial": "SBL PERU IMPORT E.I.R.L",
+            "address": {
+              "direccion": "Av. Aviacion 5092 Tda 113",
+              "provincia": "SURCO",
+              "departamento": "LIMA",
+              "distrito": "Surco",
+              "ubigueo": "150130"
+            }
+          },"mtoOperGravadas": 161.02,
+          "mtoOperExoneradas": 0,
+          "mtoIGV": 28.99,
+          "icbper": 0,
+          "valorVenta": 161.02,
+          "totalImpuestos": 28.99,
+          "subTotal": 190.01,
+          "redondeo": 0,
+          "mtoImpVenta": 190.01,
+          "details": [{
+              "codProducto": "P101312",
+              "unidad": "NIU",
+              "descripcion": "SERVICIO DE REPARACION",
+              "cantidad": 1,
+              "mtoValorUnitario": 84.75,
+              "mtoValorVenta": 84.75,
+              "mtoBaseIgv": 84.75,
+              "porcentajeIgv": 18,
+              "igv": 15.26,
+              "tipAfeIgv": 10,
+              "totalImpuestos": 15.26,
+              "mtoPrecioUnitario": 100.01
+            },{
+              "codProducto": "P101235",
+              "unidad": "NIU",
+              "descripcion": "PANTALLA HONOR 90 LITE NEGRO",
+              "cantidad": 1,
+              "mtoValorUnitario": 76.27,
+              "mtoValorVenta": 76.27,
+              "mtoBaseIgv": 76.27,
+              "porcentajeIgv": 18,
+              "igv": 13.73,
+              "tipAfeIgv": 10,
+              "totalImpuestos": 13.73,
+              "mtoPrecioUnitario": 90
+            }],
+          "legends": [
+            {
+              "code": "1000",
+              "value": "Son ciento noventa y 01/100 Soles"
+            }
+          ]
+        }

@@ -1,0 +1,64 @@
+{
+          "ublVersion": "2.1",
+          "fecVencimiento": "2024-08-12T08:40:03-05:00",
+          "tipoOperacion": "0101", 
+          "tipoDoc": "01",
+          "serie": "F001",
+          "correlativo": "3",
+          "fechaEmision": "2024-08-12T08:40:03-05:00",
+          "formaPago": {
+            "moneda": "PEN",
+            "tipo": "Contado"
+          },
+          "tipoMoneda": "PEN",
+          "client": {
+            "tipoDoc": "6",
+            "numDoc": "10075047946",
+            "rznSocial": "MORENO ZUÑIGA FLAVIO DAVID",
+            "address": {
+              "direccion": "sin direccion",
+              "provincia": "LIMA",
+              "departamento": "LIMA",
+              "distrito": "LIMA",
+              "ubigueo": "150101"
+            }
+          },"company": {
+            "ruc": 20612452858,
+            "razonSocial": "SBL PERU IMPORT E.I.R.L",
+            "address": {
+              "direccion": "Av. Aviacion 5092 Tda 113",
+              "provincia": "SURCO",
+              "departamento": "LIMA",
+              "distrito": "Surco",
+              "ubigueo": "150130"
+            }
+          },"mtoOperGravadas": 20,
+          "mtoOperExoneradas": 0,
+          "mtoIGV": 0,
+          "icbper": 0,
+          "valorVenta": 20,
+          "totalImpuestos": 0,
+          "subTotal": 20,
+          "redondeo": 0,
+          "mtoImpVenta": 20,
+          "details": [{
+              "codProducto": "P100974",
+              "unidad": "NIU",
+              "descripcion": "PANTALLA HONOR 70",
+              "cantidad": 1,
+              "mtoValorUnitario": 20,
+              "mtoValorVenta": 20,
+              "mtoBaseIgv": 20,
+              "porcentajeIgv": 0,
+              "igv": 0,
+              "tipAfeIgv": 10,
+              "totalImpuestos": 0,
+              "mtoPrecioUnitario": 20
+            }],
+          "legends": [
+            {
+              "code": "1000",
+              "value": "Son  y 00/100 Soles"
+            }
+          ]
+        }

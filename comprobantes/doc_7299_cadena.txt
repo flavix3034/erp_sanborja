@@ -1,0 +1,64 @@
+{
+          "ublVersion": "2.1",
+          "fecVencimiento": "2025-09-21T14:46:53-05:00",
+          "tipoOperacion": "0101", 
+          "tipoDoc": "03",
+          "serie": "B001",
+          "correlativo": "32",
+          "fechaEmision": "2025-09-21T14:46:53-05:00",
+          "formaPago": {
+            "moneda": "PEN",
+            "tipo": "Contado"
+          },
+          "tipoMoneda": "PEN",
+          "client": {
+            "tipoDoc": "1",
+            "numDoc": "00000000",
+            "rznSocial": "VARIOS",
+            "address": {
+              "direccion": "sin direccion",
+              "provincia": "LIMA",
+              "departamento": "LIMA",
+              "distrito": "LIMA",
+              "ubigueo": "150101"
+            }
+          },"company": {
+            "ruc": 20612452858,
+            "razonSocial": "SBL PERU IMPORT E.I.R.L",
+            "address": {
+              "direccion": "Av. Aviacion 5092 Tda 113",
+              "provincia": "SURCO",
+              "departamento": "LIMA",
+              "distrito": "Surco",
+              "ubigueo": "150130"
+            }
+          },"mtoOperGravadas": 8473.73,
+          "mtoOperExoneradas": 0,
+          "mtoIGV": 1525.27,
+          "icbper": 0,
+          "valorVenta": 8473.73,
+          "totalImpuestos": 1525.27,
+          "subTotal": 9999,
+          "redondeo": 0,
+          "mtoImpVenta": 9999,
+          "details": [{
+              "codProducto": "P101249",
+              "unidad": "NIU",
+              "descripcion": "PANTALLA HONOR 50",
+              "cantidad": 1,
+              "mtoValorUnitario": 8473.73,
+              "mtoValorVenta": 8473.73,
+              "mtoBaseIgv": 8473.73,
+              "porcentajeIgv": 18,
+              "igv": 1525.27,
+              "tipAfeIgv": 10,
+              "totalImpuestos": 1525.27,
+              "mtoPrecioUnitario": 9999
+            }],
+          "legends": [
+            {
+              "code": "1000",
+              "value": "Son  y 99/100 Soles"
+            }
+          ]
+        }
