@@ -1030,6 +1030,15 @@ class Products extends CI_controller
         }
 
         move_uploaded_file($file_tmp, 'assets/uploads/' . $file_name);
+
+        // Limpiar BOM y asegurar encoding UTF-8
+        $contenido = file_get_contents('assets/uploads/' . $file_name);
+        $contenido = preg_replace('/^\xEF\xBB\xBF/', '', $contenido);
+        if(!mb_check_encoding($contenido, 'UTF-8')){
+            $contenido = mb_convert_encoding($contenido, 'UTF-8', 'Windows-1252');
+        }
+        file_put_contents('assets/uploads/' . $file_name, $contenido);
+
         $file = fopen('assets/uploads/' . $file_name, "r");
 
         if($file == false){
