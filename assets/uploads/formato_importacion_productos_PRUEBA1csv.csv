@@ -1,0 +1,6 @@
+tipo;codigo;nombre;marca;modelo;categoria;unidad;precio_x_menor;precio_x_mayor;alerta_cantidad;Color;Capacidad
+P;CAB001;SALCHIPAPA;SAMSUNG;X100;3;1;15.00;12.00;10;;
+PV;;HOT DOG BLUETOOTH;UGREEN;XM50;3;1;50.00;40.00;5;;
+V;;;;;;;60.00;50.00;;Azul;32gb
+V;;;;;;;55.00;45.00;;Blanco;64gb
+P;MOU001;MOUSE GAMER;LOGITECH;G502;3;1;80.00;70.00;8;;

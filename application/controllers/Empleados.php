@@ -40,6 +40,7 @@ class Empleados extends CI_controller {
             "telefono" => trim($_POST["telefono"]),
             "cargo" => strtoupper(trim($_POST["cargo"])),
             "area" => strtoupper(trim($_POST["area"])),
+            "especialidad" => strtoupper(trim($_POST["cargo"])) == 'TECNICO' ? strtoupper(trim($_POST["especialidad"])) : null,
             "fecha_ingreso" => !empty($_POST["fecha_ingreso"]) ? $_POST["fecha_ingreso"] : null
         );
 

@@ -169,10 +169,11 @@ class Compras extends CI_Controller {
                             $item_id    = $r->id;
                             $cantidad   = $r->cantidad;
                             $product_id = $r->product_id;
+                            $variant_id = isset($r->variant_id) ? $r->variant_id : 0;
                             $this->db->where("id",$item_id)->delete("tec_compra_items");
 
                             // En el stock simple
-                            $this->compras_model->disminuir_al_stock($product_id, $store_id, $cantidad);
+                            $this->compras_model->disminuir_al_stock($product_id, $store_id, $cantidad, $variant_id);
                         }
                     }
 
@@ -204,9 +205,11 @@ class Compras extends CI_Controller {
                         $ar["subtotal"]         = $subtotal;
         				$ar["igv"]              = $ar["precio_sin_igv"] * $por_igv;
         				$ar["product_name"]     = $_REQUEST['descripo'][$i];
-        				
+    				$ar["variant_id"]       = isset($_REQUEST['variant_id_item'][$i]) ? $_REQUEST['variant_id_item'][$i] : 0;
+
                         $this->db->set($ar)->insert("tec_compra_items");
-                        $this->compras_model->agregar_al_stock($product_id, $store_id, $cantidad);
+                        $variant_id = isset($ar["variant_id"]) ? $ar["variant_id"] : 0;
+                        $this->compras_model->agregar_al_stock($product_id, $store_id, $cantidad, $variant_id);
         			}
         			
                     if ($this->db->trans_status() === FALSE){
@@ -267,9 +270,10 @@ class Compras extends CI_Controller {
             $id = $_GET["id"];
         
             // Antes de eliminar la compra descuento la tabla stock
-            $query_i = $this->db->query("select a.store_id, b.product_id, b.cantidad from tec_compras a inner join tec_compra_items b on a.id=b.compra_id where a.id = {$id}");
+            $query_i = $this->db->query("select a.store_id, b.product_id, b.cantidad, b.variant_id from tec_compras a inner join tec_compra_items b on a.id=b.compra_id where a.id = {$id}");
             foreach($query_i->result() as $r){
-                $this->compras_model->disminuir_al_stock($r->product_id, $r->store_id, $r->cantidad);
+                $variant_id = isset($r->variant_id) ? $r->variant_id : 0;
+                $this->compras_model->disminuir_al_stock($r->product_id, $r->store_id, $r->cantidad, $variant_id);
             }
 
            // tec_sale_items:

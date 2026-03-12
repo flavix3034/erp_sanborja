@@ -128,6 +128,14 @@ class Atributos_model extends CI_Model
         return $cnt > 0;
     }
 
+    function get_atributo_by_nombre($nombre) {
+        return $this->db->query("SELECT * FROM tec_atributos WHERE UPPER(nombre) = UPPER(?) AND activo = '1'", array($nombre))->row();
+    }
+
+    function get_valor_by_texto($atributo_id, $valor) {
+        return $this->db->query("SELECT * FROM tec_atributo_valores WHERE atributo_id = ? AND UPPER(valor) = UPPER(?)", array($atributo_id, $valor))->row();
+    }
+
     function get_atributos_de_producto($product_id) {
         $sql = "SELECT DISTINCT a.id, a.nombre
                 FROM tec_variante_atributos va

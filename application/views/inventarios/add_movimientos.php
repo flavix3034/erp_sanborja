@@ -105,16 +105,22 @@
             <label>Productos</label><br>
             <select class="form-control" name="product_id" id="product_id">
             <?php 
-                $cSql = "select a.id, a.code, a.name, a.price, a.unidad, a.marca, a.modelo, b.stock from tec_products a".
-                    " left join tec_prod_store b on a.id = b.product_id and b.store_id = ?".
-                    " order by a.name";
-                $result = $this->db->query($cSql, array($_SESSION["store_id"]))->result_array();
-                
+                $store_id = $_SESSION["store_id"];
+                $cSql = "SELECT a.id AS product_id, 0 AS variant_id, a.name FROM tec_products a".
+                    " WHERE a.activo='1' AND a.id NOT IN (SELECT product_id FROM tec_product_variantes WHERE activo='1')".
+                    " UNION ALL".
+                    " SELECT pv.product_id, pv.id AS variant_id, CONVERT(fn_product_display_name(pv.product_id, pv.id) USING latin1) AS name".
+                    " FROM tec_product_variantes pv".
+                    " INNER JOIN tec_products a ON pv.product_id = a.id".
+                    " WHERE a.activo='1' AND pv.activo='1'".
+                    " ORDER BY name";
+                $result = $this->db->query($cSql)->result_array();
+
                 $nx=0;
                 foreach($result as $r){
                     $nx++;
                     if($nx==1){ echo "<option value=\"\">Seleccione</option>"; }
-                    echo "<option value=\"" . $r["id"] . "\">" . $r["name"] . "</option>";
+                    echo "<option value=\"" . $r["product_id"] . "\" data-variant=\"" . $r["variant_id"] . "\">" . $r["name"] . "</option>";
                 }
             ?>
             </select>
@@ -167,11 +173,16 @@
         </div>
     </div>
 
+    <input type="hidden" name="variant_id" id="variant_id" value="0">
     <?= form_close(); ?>
 
 </section>
 
 <script type="text/javascript">
+    $('#product_id').on('change', function(){
+        var sel = $(this).find(':selected');
+        $('#variant_id').val(sel.data('variant') || 0);
+    });
     function validar(){
         //document.getElementById("form_compra").submit()
     }

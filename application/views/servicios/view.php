@@ -261,6 +261,10 @@
 			<i class="glyphicon glyphicon-arrow-left"></i> Volver al Listado
 		</a>
 		
+		<a href="javascript:void(0)" onclick="window.open('<?= base_url('servicios/print_etiqueta/'.$servicio->id) ?>', 'etiqueta', 'width=500,height=300')" class="btn btn-default">
+			<i class="glyphicon glyphicon-print"></i> Etiqueta
+		</a>
+
 		<!-- Cambio de Estado Rápido -->
 		<button type="button" class="btn btn-warning" data-toggle="modal" data-target="#modalCambiarEstado">
 			<i class="glyphicon glyphicon-refresh"></i> Cambiar Estado

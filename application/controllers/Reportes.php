@@ -62,7 +62,7 @@ class Reportes extends CI_Controller {
 
 
         $cSql = "select c.name tienda, date(a.`date`) fecha, p.code,
-          if(b.product_id=99999, b.product_name, p.name) producto,  
+          if(b.product_id=99999, b.product_name, fn_product_display_name(b.product_id, b.variant_id)) producto,
           round(avg(b.real_unit_price),2) precio, round(sum(b.quantity),2) cant,
           round(avg(b.real_unit_price) * sum(b.quantity),2) subtotal
           from tec_sales a
@@ -71,7 +71,7 @@ class Reportes extends CI_Controller {
           inner join tec_stores c on a.store_id = c.id
           left join tec_users d on a.created_by = d.id
           where a.anulado!='1' $cad_desde $cad_hasta $cad_store_id
-          group by c.name, date(`date`), p.code, if(b.product_id=99999, b.product_name, p.name)";
+          group by c.name, date(`date`), p.code, if(b.product_id=99999, b.product_name, fn_product_display_name(b.product_id, b.variant_id))";
         
         //echo($cSql);
         //die();
@@ -326,7 +326,7 @@ class Reportes extends CI_Controller {
             , sum(b.unit_price) - sum(if(c.precio_con_igv is null, 0, c.precio_con_igv)) dif   
             from tec_sales a
             inner join tec_sale_items b on a.id=b.sale_id
-            left join tec_compra_items c on b.compra_id=c.compra_id and b.product_id=c.product_id
+            left join tec_compra_items c on b.compra_id=c.compra_id and b.product_id=c.product_id and COALESCE(b.variant_id,0)=COALESCE(c.variant_id,0)
             where a.anulado!='1' $cad_desde $cad_hasta $cad_store_id
             group by a.store_id, date(a.`date`)";*/
 
@@ -334,7 +334,7 @@ class Reportes extends CI_Controller {
             sum(b.net_unit_price*b.quantity) - sum(if(c.precio_sin_igv is null, 0, c.precio_sin_igv*b.quantity)) dif   
             from tec_sales a
             inner join tec_sale_items b on a.id=b.sale_id
-            left join tec_compra_items c on b.compra_id=c.compra_id and b.product_id=c.product_id
+            left join tec_compra_items c on b.compra_id=c.compra_id and b.product_id=c.product_id and COALESCE(b.variant_id,0)=COALESCE(c.variant_id,0)
             where a.anulado!='1' $cad_desde $cad_hasta $cad_store_id
             group by a.store_id, date(a.`date`)";
 
@@ -389,7 +389,7 @@ class Reportes extends CI_Controller {
             }
         }
 
-        $cSql = "select a.store_id tienda, date(a.`date`) dia, b.product_id, d.name,
+        $cSql = "select a.store_id tienda, DATE_FORMAT(a.`date`, '%Y-%m-%d %H:%i') dia, b.product_id, fn_product_display_name(b.product_id, b.variant_id) name,
             round(b.net_unit_price,2) net_unit_price, round(b.quantity,0) quantity,
             round(b.net_unit_price*b.quantity,2) ventas, 
             round(if(c.precio_sin_igv is null, 0, c.precio_sin_igv*b.quantity),2) costos, 
@@ -398,7 +398,7 @@ class Reportes extends CI_Controller {
             from tec_sales a
             inner join tec_sale_items b on a.id=b.sale_id
             left join tec_compras tc on b.compra_id = tc.id
-            left join tec_compra_items c on b.compra_id=c.compra_id and b.product_id=c.product_id
+            left join tec_compra_items c on b.compra_id=c.compra_id and b.product_id=c.product_id and COALESCE(b.variant_id,0)=COALESCE(c.variant_id,0)
             left join tec_products d on b.product_id = d.id
             where a.anulado!='1' $cad_desde $cad_hasta $cad_store_id
             order by a.store_id, date(a.`date`)";
@@ -477,7 +477,7 @@ class Reportes extends CI_Controller {
                 $ar_pie     = array('0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0');
                 */
 
-                $cSql = "select a.id, a.date, a.customer_id, a.customer_name, a.total, a.product_tax, a.total_tax, a.grand_total, c.descrip documento, a.serie, a.correlativo nro, a.fecha_registro, a.anulado, b.product_id, d.name nombre_producto, round(b.quantity,0) quantity, b.net_unit_price, b.unit_price
+                $cSql = "select a.id, a.date, a.customer_id, a.customer_name, a.total, a.product_tax, a.total_tax, a.grand_total, c.descrip documento, a.serie, a.correlativo nro, a.fecha_registro, a.anulado, b.product_id, fn_product_display_name(b.product_id, b.variant_id) nombre_producto, round(b.quantity,0) quantity, b.net_unit_price, b.unit_price
                     from tec_sales a
                     left join tec_sale_items b on a.id=b.sale_id
                     left join tec_tipos_doc c on a.tipodoc=c.id
@@ -663,7 +663,7 @@ class Reportes extends CI_Controller {
             COALESCE(ROUND(SUM(IF(c.precio_sin_igv IS NULL, 0, c.precio_sin_igv * b.quantity)), 2), 0) AS costos
             FROM tec_sales a
             INNER JOIN tec_sale_items b ON a.id = b.sale_id
-            LEFT JOIN tec_compra_items c ON b.compra_id = c.compra_id AND b.product_id = c.product_id
+            LEFT JOIN tec_compra_items c ON b.compra_id = c.compra_id AND b.product_id = c.product_id AND COALESCE(b.variant_id,0)=COALESCE(c.variant_id,0)
             WHERE a.anulado != '1' AND DATE(a.`date`) = ? AND a.store_id = ?", array($fecha, $store_id))->row();
 
         $ventas_netas = floatval($rent->ventas_netas);

@@ -95,11 +95,12 @@ class Inventarios extends CI_Controller {
             $ar["tipo_mov"]     = $_POST["tipo_mov"];
             $ar["metodo"]       = $_POST["metodo"];
             $ar["product_id"]   = $_POST["product_id"];
+            $ar["variant_id"]   = isset($_POST["variant_id"]) ? $_POST["variant_id"] : 0;
             //$ar["unidad"]     = $_POST["unidad"];
             $ar["cantidad"]     = $_POST["cantidad"];
             $ar["obs"]          = $_POST["obs"];
 
-            
+
             // Nota.- En caso de ser SALIDA : costo mas antiguo, de lo contrario costo mas moderno:
             $ar["compra_id"]    = $this->enlazar_compra($ar["store_id"], $ar["product_id"], $ar["cantidad"], $ar["tipo_mov"]);
             
@@ -107,10 +108,11 @@ class Inventarios extends CI_Controller {
                 $this->data["rpta_msg"] = "success";
                 $this->data["msg"]      = "Se agrega correctamente.";
 
+                $v_id = isset($ar["variant_id"]) ? $ar["variant_id"] : 0;
                 if($ar["tipo_mov"]=='I'){
-                    $this->compras_model->agregar_al_stock($ar["product_id"], $ar["store_id"], $ar["cantidad"]);
+                    $this->compras_model->agregar_al_stock($ar["product_id"], $ar["store_id"], $ar["cantidad"], $v_id);
                 }else{
-                    $this->compras_model->disminuir_al_stock($ar["product_id"], $ar["store_id"], $ar["cantidad"]);
+                    $this->compras_model->disminuir_al_stock($ar["product_id"], $ar["store_id"], $ar["cantidad"], $v_id);
                 }
             }else{
                 $this->data["rpta_msg"] = "warning";
@@ -133,6 +135,7 @@ class Inventarios extends CI_Controller {
             $ar["tipo_mov"]     = 'S';
             $ar["metodo"]       = 1;
             $ar["product_id"]   = $_POST["product_id"];
+            $ar["variant_id"]   = isset($_POST["variant_id"]) ? $_POST["variant_id"] : 0;
             $ar["cantidad"]     = $_POST["cantidad"];
             $ar["obs"]          = $_POST["obs"];
             $ar["user_id"]      = $_POST["user_id"];
@@ -147,7 +150,8 @@ class Inventarios extends CI_Controller {
                 $this->data["msg"]      = "Se agrega correctamente.";
 
                 // Se disminuye el stock
-                $this->compras_model->disminuir_al_stock($ar["product_id"], $ar["store_id"], $ar["cantidad"]);
+                $v_id = isset($ar["variant_id"]) ? $ar["variant_id"] : 0;
+                $this->compras_model->disminuir_al_stock($ar["product_id"], $ar["store_id"], $ar["cantidad"], $v_id);
 
             }else{
                 $this->data["rpta_msg"] = "warning";
@@ -165,7 +169,8 @@ class Inventarios extends CI_Controller {
                 $this->data["msg"]      = "Se agrega correctamente.";
 
                 // Se incrementa el stock
-                $this->compras_model->agregar_al_stock($ar["product_id"], $ar["store_id"], $ar["cantidad"]);
+                $v_id = isset($ar["variant_id"]) ? $ar["variant_id"] : 0;
+                $this->compras_model->agregar_al_stock($ar["product_id"], $ar["store_id"], $ar["cantidad"], $v_id);
             }else{
                 $this->data["rpta_msg"] = "warning";
                 $this->data["msg"]      = "No se pudo grabar, verifique su informacion";
@@ -198,7 +203,14 @@ class Inventarios extends CI_Controller {
         //}
         
         $this->data["query_stock"]  = $query;
-        $this->data['page_title']   = "Stock Avanzado de Productos";
+        // Variantes agrupadas por product_id
+        $qv = $this->inventarios_model->stock_variantes($_SESSION["store_id"]);
+        $variantes_map = array();
+        foreach($qv->result() as $v){
+            $variantes_map[$v->product_id][] = $v;
+        }
+        $this->data["variantes_map"] = $variantes_map;
+        $this->data['page_title']   = "Stock Avanzado";
         $this->template->load('production/index', 'inventarios/stock_productos', $this->data);
     }
 
@@ -229,9 +241,10 @@ class Inventarios extends CI_Controller {
         return $n;
     }
 
-    function actualizar_stock_products($store_id, $product_id, $stock){
-        $cSql = "select id from tec_prod_store where product_id = ? and store_id = ?";
-        $query = $this->db->query($cSql,array($product_id, $store_id));
+    function actualizar_stock_products($store_id, $product_id, $stock, $variant_id = 0){
+        $variant_id = $variant_id * 1;
+        $cSql = "select id from tec_prod_store where product_id = ? and store_id = ? and COALESCE(variant_id,0) = ?";
+        $query = $this->db->query($cSql,array($product_id, $store_id, $variant_id));
         $existe = false;
         foreach($query->result() as $r){
             $existe = true;
@@ -239,19 +252,21 @@ class Inventarios extends CI_Controller {
         if (!$existe){
             $ar["product_id"]   = $product_id;
             $ar["store_id"]     = $store_id;
+            $ar["variant_id"]   = $variant_id;
             $this->db->set($ar)->insert('tec_prod_store');
         }
-        $cSql = "update tec_prod_store set stock = ? where product_id = ? and store_id = ?";
-        $this->db->query($cSql,array($stock, $product_id, $store_id));
+        $cSql = "update tec_prod_store set stock = ? where product_id = ? and store_id = ? and COALESCE(variant_id,0) = ?";
+        $this->db->query($cSql,array($stock, $product_id, $store_id, $variant_id));
     }
 
     function eliminar_movimiento(){
         $id = $_GET["id"];
         
         // debo averiguar product_id, store_id, cantidad
-        $query = $this->db->select("product_id, store_id, cantidad, tipo_mov")->where("id",$id)->get("tec_movim");
+        $query = $this->db->select("product_id, variant_id, store_id, cantidad, tipo_mov")->where("id",$id)->get("tec_movim");
         foreach($query->result() as $r){
             $product_id = $r->product_id;
+            $variant_id = isset($r->variant_id) ? $r->variant_id : 0;
             $store_id   = $r->store_id;
             $cantidad   = $r->cantidad;
             $tipo_mov   = $r->tipo_mov;
@@ -259,9 +274,9 @@ class Inventarios extends CI_Controller {
 
         if($this->db->where("id",$id)->delete("tec_movim")){
             if($tipo_mov == 'I'){
-                $this->compras_model->disminuir_al_stock($product_id, $store_id, $cantidad);
+                $this->compras_model->disminuir_al_stock($product_id, $store_id, $cantidad, $variant_id);
             }else{
-                $this->compras_model->agregar_al_stock($product_id, $store_id, $cantidad);
+                $this->compras_model->agregar_al_stock($product_id, $store_id, $cantidad, $variant_id);
             }
             $rpta = "OK";
         }else{
@@ -307,15 +322,22 @@ class Inventarios extends CI_Controller {
         
         //select id, fecha, product_id, cantidad, unidad, store_id, maestro_id from tec_inventarios;
         $fecha          = date("Y-m-d");
-        $product_id     = $_GET["product_id"];
-        $cantidad       = $_GET["cantidad"];
-        $unidad         = $_GET["unidad"];
+        $product_id     = isset($_GET["product_id"]) ? intval($_GET["product_id"]) : 0;
+        $variant_id     = isset($_GET["variant_id"]) ? intval($_GET["variant_id"]) : 0;
+        $cantidad       = isset($_GET["cantidad"]) ? floatval($_GET["cantidad"]) : 0;
+        $unidad         = isset($_GET["unidad"]) ? $_GET["unidad"] : "";
         //$store_id       = $_SESSION["store_id"];
-        $maestro_id     = $_GET["maestro_id"];
+        $maestro_id     = isset($_GET["maestro_id"]) ? intval($_GET["maestro_id"]) : 0;
+
+        if ($product_id == 0 || $cantidad == 0 || $maestro_id == 0) {
+            echo '{"msg":"Debe completar todos los campos.","rpta_msg":"danger"}';
+            return;
+        }
 
         $ar = array(
             "fecha"         =>$fecha,
             "product_id"    =>$product_id,
+            "variant_id"    =>$variant_id,
             "cantidad"      =>$cantidad,
             "unidad"        =>$unidad,
             //"store_id"      =>$store_id,
@@ -332,7 +354,9 @@ class Inventarios extends CI_Controller {
         $maestro_id = $_GET["maestro_id"];
         $limit      = isset($_GET["limit"]) ? intval($_GET["limit"]) : 50000;
         // fecha product_id cantidad unidad store_id maestro_id
-        $cSql = "select a.id, a.fecha, a.product_id, b.name productos, a.cantidad, a.unidad, c.descrip des_unidad
+        $cSql = "select a.id, a.fecha, a.product_id,
+            IF(a.variant_id > 0, CONVERT(fn_product_display_name(a.product_id, a.variant_id) USING latin1), b.name) productos,
+            a.cantidad, a.unidad, c.descrip des_unidad
             from tec_inventarios a
             inner join tec_products b on a.product_id = b.id
             left join tec_unidades c on a.unidad = c.id
@@ -376,13 +400,10 @@ class Inventarios extends CI_Controller {
     function kardex(){
         $id_inv = $_SESSION["inventario_vigente"];
         $product_id = isset($_GET["producto"]) ? $_GET["producto"] : "";
-        //die($product_id);
-        
+        $variant_id = isset($_GET["variant_id"]) ? intval($_GET["variant_id"]) : 0;
+
         if(strlen($product_id)>0){
-            //$this->data["product_id"]   = $product_id;
-            //$this->data["product_name"]   = $this->inventarios_model->getNombre_producto($product_id);
-            //$this->data["query_kardex"]  = $query;
-            echo $this->inventarios_model->kardex($product_id, $id_inv, $_SESSION["store_id"]);
+            echo $this->inventarios_model->kardex($product_id, $id_inv, $_SESSION["store_id"], $variant_id);
         }else{
             $this->data['page_title']   = "Kardex";
             $this->template->load('production/index', 'inventarios/kardex', $this->data);    
@@ -499,110 +520,102 @@ class Inventarios extends CI_Controller {
         }
         $store_id =  $row->store_id;
 
-        $cSql = "select a.id, a.name, a.alert_cantidad, 0 cantidad_inicial, compras.cantidad_comprada, ventas.cantidad_vendida, movim.ingreso, movim.salida,
-                if(isnull(compras.cantidad_comprada),0,compras.cantidad_comprada) 
-                - if(isnull(ventas.cantidad_vendida),0,ventas.cantidad_vendida) 
-                + if(isnull(movim.ingreso),0,movim.ingreso) 
+        // Query de stock calculado por product_id + variant_id
+        $cSql = "SELECT ps.product_id, COALESCE(ps.variant_id,0) AS variant_id,
+                IF(COALESCE(ps.variant_id,0) > 0, CONVERT(fn_product_display_name(ps.product_id, ps.variant_id) USING latin1), a.name) AS name,
+                if(isnull(compras.cantidad_comprada),0,compras.cantidad_comprada)
+                - if(isnull(ventas.cantidad_vendida),0,ventas.cantidad_vendida)
+                + if(isnull(movim.ingreso),0,movim.ingreso)
                 - if(isnull(movim.salida),0,movim.salida) as stock
-                from tec_products a
+                FROM tec_prod_store ps
+                INNER JOIN tec_products a ON ps.product_id = a.id
                 left join (
-                    select com_i.product_id, sum(com_i.cantidad) cantidad_comprada from tec_compras com
+                    select com_i.product_id, COALESCE(com_i.variant_id,0) variant_id, sum(com_i.cantidad) cantidad_comprada from tec_compras com
                     inner join tec_compra_items com_i on com.id = com_i.compra_id
                     where com.store_id='{$store_id}' $cad_fecha_f
-                    group by com_i.product_id
-                ) compras on a.id = compras.product_id
+                    group by com_i.product_id, COALESCE(com_i.variant_id,0)
+                ) compras on ps.product_id = compras.product_id AND COALESCE(ps.variant_id,0) = compras.variant_id
                 left join (
-                    select sxi.product_id, sum(sxi.quantity) cantidad_vendida 
-                    from tec_sales sx 
+                    select sxi.product_id, COALESCE(sxi.variant_id,0) variant_id, sum(sxi.quantity) cantidad_vendida
+                    from tec_sales sx
                     inner join tec_sale_items sxi on sx.id = sxi.sale_id
                     where sx.store_id='{$store_id}' $cad_fecha_f2 and sx.anulado != '1'
-                    group by sxi.product_id
-                ) ventas on a.id = ventas.product_id
+                    group by sxi.product_id, COALESCE(sxi.variant_id,0)
+                ) ventas on ps.product_id = ventas.product_id AND COALESCE(ps.variant_id,0) = ventas.variant_id
                 left join (
-                    select mo.product_id, sum(if(mo.tipo_mov='I', mo.cantidad, 0)) Ingreso, sum(if(mo.tipo_mov='S', mo.cantidad, 0)) Salida
+                    select mo.product_id, COALESCE(mo.variant_id,0) variant_id, sum(if(mo.tipo_mov='I', mo.cantidad, 0)) Ingreso, sum(if(mo.tipo_mov='S', mo.cantidad, 0)) Salida
                     from tec_movim mo
                     where mo.store_id='{$store_id}' $cad_fecha_f3
-                    group by mo.product_id 
-                ) movim on a.id = movim.product_id 
-                where a.activo='1' order by a.name";        
+                    group by mo.product_id, COALESCE(mo.variant_id,0)
+                ) movim on ps.product_id = movim.product_id AND COALESCE(ps.variant_id,0) = movim.variant_id
+                where a.activo='1' AND ps.store_id = '{$store_id}'
+                order by a.name, ps.variant_id";
 
-        //die($cSql);
         $result = $this->db->query($cSql)->result_array();
+
+        // Indexar resultado por clave compuesta product_id_variant_id
+        $stock_map = array();
+        foreach($result as $row){
+            $key = $row['product_id'] . '_' . $row['variant_id'];
+            $stock_map[$key] = $row;
+        }
 
         // Ahora recien recorriendo los productos del inventario --------------------------
         $cSql = "select * from tec_inventarios where maestro_id = $inv_id";
         $query = $this->db->query($cSql);
-        
+
         foreach($query->result() as $r){
             $product_id = $r->product_id;
+            $variant_id = isset($r->variant_id) ? intval($r->variant_id) : 0;
 
-            // Averiguando su nombre
-            $nombre_prod = $this->buscar_raw($result, "id", $product_id, "name");   
-            //echo $product_id . " " . $nombre_prod . "<br>";
-            
-            //$stock    = $this->buscar($result, "id", $product_id);
-            $stock      = $this->buscar_raw($result, "id", $product_id, "stock"); 
-            
+            // Buscar stock calculado por clave compuesta
+            $key = $product_id . '_' . $variant_id;
+            $stock = isset($stock_map[$key]) ? $stock_map[$key]['stock'] : 0;
+
             $stock_de_inv = $r->cantidad;
             $ar = array();
 
             // datos en común
             $ar["store_id"]     = $store_id;
             $ar["product_id"]   = $product_id;
+            $ar["variant_id"]   = $variant_id;
             $ar["fechah"]       = date("Y-m-d H:i");
             $ar["user_id"]      = $_SESSION["usuario"];
 
-            //echo $product_id . " " . $nombre_prod . ", Stock :" . $stock . "<br>". $product_id . " " . $nombre_prod . ", Stock de inventario :" . $stock_de_inv . "<br>";
-            
+            if($stock != $stock_de_inv){
 
-            if($stock != ''){
-                if($stock != $stock_de_inv){
+                if($stock > $stock_de_inv){
+                    // Crear Movimiento de salida (por perdida)
+                    $cantidad = $stock - $stock_de_inv;
+                    $ar["cantidad"]     = $cantidad;
+                    $ar["tipo_mov"]     = 'S';
+                    $ar["obs"]          = 'POR PERDIDA DE PRODUCTOS';
+                }else{
+                    $cantidad = $stock_de_inv - $stock;
+                    // Crear Movimiento de Ingreso (por haber mas)
+                    $ar["cantidad"]     = $cantidad;
+                    $ar["tipo_mov"]     = 'I';
+                    $ar["obs"]          = "PARA SINCERAR INVENTARIO ($stock_de_inv - $stock)";
+                }
+                $ar["inv_id"]   = $inv_id;
+                $ar["metodo"]   = 4; // otros
 
-                    if($stock > $stock_de_inv){
-                        // Crear Movimiento de salida (por perdida)
-                        $cantidad = $stock - $stock_de_inv;
-                        //echo "Movimiento de salida $cantidad<br>";
-                        $ar["cantidad"]     = $cantidad;
-                        $ar["tipo_mov"]     = 'S';
-                        $ar["obs"]          = 'POR PERDIDA DE PRODUCTOS';
-                    }else{
-                        $cantidad = $stock_de_inv - $stock;
-                        // Crear Movimiento de Ingreso (por haber mas)
-                        $ar["cantidad"]     = $cantidad;
-                        //echo "Movimiento de Entrada $cantidad<br>";
-                        $ar["tipo_mov"]     = 'I';
-                        $ar["obs"]          = "PARA SINCERAR INVENTARIO ($stock_de_inv - $stock)";
-                    }
-                    $ar["inv_id"]   = $inv_id;
-                    $ar["metodo"]   = 4; // otros
-
-                    //die("Fin previo");
-                    
-                    if ($this->db->set($ar)->insert("tec_movim")){
-                        $this->data["rpta_msg"] = "success";
-                        $this->data["msg"]      = "Se agrega correctamente.";
-                    }else{
-                        $this->data["rpta_msg"] = "warning";
-                        $this->data["msg"]      = "No se pudo grabar en tec_movim";
-                    }
-                    
-                    //die($this->data["msg"]);
+                if ($this->db->set($ar)->insert("tec_movim")){
+                    $this->data["rpta_msg"] = "success";
+                    $this->data["msg"]      = "Se agrega correctamente.";
+                }else{
+                    $this->data["rpta_msg"] = "warning";
+                    $this->data["msg"]      = "No se pudo grabar en tec_movim";
                 }
             }
-            //echo "<br>";
-
-            
-            // Grabando el Stock Contador
-            //$this->db->set("stock",$stock_de_inv)->where("store_id",$store_id)->where("product_id",$product_id)->update("tec_prod_store");
 
             // Finalizando el inventario
             $cSql = "update tec_maestro_inv set finaliza='1' where id = $inv_id";
             $this->db->query($cSql);
 
             // Actualizando en stock contador
-            $this->actualizar_stock_products($store_id, $product_id, $stock_de_inv);
-            
-            
+            $this->actualizar_stock_products($store_id, $product_id, $stock_de_inv, $variant_id);
+
         }
         //die("Fin");
         $this->data["rpta_msg"]     = "success";
@@ -658,9 +671,15 @@ class Inventarios extends CI_Controller {
         // Sabemos que el stock tambien se lleva en una tabla aparte llamada (tec_prod_store) por tanto se registrará
         $store_id = $_SESSION["store_id"];
         if(isset($_REQUEST["modo"])){
-            $cSql = "select * from tec_products";
-            
-            $query = $this->db->query($cSql);
+
+            // Obtener todos los registros de prod_store para esta tienda (productos con y sin variantes)
+            $cSql = "SELECT ps.product_id, COALESCE(ps.variant_id,0) AS variant_id, ps.stock,
+                CONVERT(fn_product_display_name(ps.product_id, ps.variant_id) USING latin1) AS nombre
+                FROM tec_prod_store ps
+                INNER JOIN tec_products p ON ps.product_id = p.id
+                WHERE ps.store_id = ? AND p.activo = '1'
+                ORDER BY p.name, ps.variant_id";
+            $query_ps = $this->db->query($cSql, array($store_id));
 
             $datis = "<table class='table table-bordered'><tr>
                 <th>Producto</th>
@@ -668,47 +687,39 @@ class Inventarios extends CI_Controller {
                 <th>Nuevo</th>
             </tr>";
 
-            foreach($query->result() as $r){
-                
-                $product_id     = $r->id;
+            foreach($query_ps->result() as $r){
 
-                $query = $this->db->select("stock")->where('product_id',$product_id)->where('store_id',$store_id)->get('tec_prod_store');
-                
-                $stock_actual = 0;
-                foreach($query->result() as $r){
-                    $stock_actual = $r->stock * 1;
-                }
+                $product_id     = $r->product_id;
+                $variant_id     = $r->variant_id * 1;
+                $stock_actual   = $r->stock * 1;
 
-                $nuevo_stock    = 1*$this->inventarios_model->kardex_guardar($product_id, $store_id);
-                
-                //die($nuevo_stock . ' '.$stock_actual);
+                $nuevo_stock    = 1*$this->inventarios_model->kardex_guardar($product_id, $store_id, $variant_id);
+
                 if($nuevo_stock != $stock_actual){
-                
-                    $descrip_producto = $this->db->select("name")->where('id',$product_id)->get('tec_products')->row()->name;
-
-                    $datis          .= "<tr><td>" . $product_id . ") " . $descrip_producto . "</td><td>" . $stock_actual . "</td><td>" . $nuevo_stock . "</td></tr>";
+                    $datis .= "<tr><td>" . $product_id . ") " . $r->nombre . "</td><td>" . $stock_actual . "</td><td>" . $nuevo_stock . "</td></tr>";
                 }
-                
+
             }
+            $datis .= "</table>";
             $this->data['datis']        = $datis;
         }
         $this->data['page_title']   = "Registro de Inventario F&iacute;sico";
-        
+
         $this->template->load('production/index', 'inventarios/actualiza_stock', $this->data);
-        
+
     }
 
     function listar_stock(){ // LISTA STOCK DE LA TABLA tec_prod_store
         $this->data['q_lista_stock']    = $this->inventarios_model->listar_stock(); // Lista todos los Stocks
         $this->data['store_id']         = $_SESSION["store_id"];
-        $this->data['page_title']   = "Listar Stock de todos los Productos";
+        $this->data['page_title']   = "Stock de Productos";
         $this->template->load('production/index', 'inventarios/listar_stock', $this->data);    
     }
 
     function get_listar_stock(){
         $query = $this->inventarios_model->listar_stock(); // Lista todos los Stocks
         $result = $query->result_array();
-        $ar_campos = array("product_id", "name", "marca", "modelo", "stock");
+        $ar_campos = array("product_id", "name", "marca", "stock");
         echo $this->fm->json_datatable($ar_campos, $result);
     }
 

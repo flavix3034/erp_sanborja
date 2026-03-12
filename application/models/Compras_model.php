@@ -51,56 +51,56 @@ class Compras_model extends CI_Model
     }
 
     // change by fmz
-    public function agregar_al_stock($product_id, $store_id, $quantity){
-        $stock_actual   = $quantity;
-        $product_id     = $product_id;
-        
-        $cSql = "select id, stock from tec_prod_store where product_id = ? and store_id = ?";
-        $query = $this->db->query($cSql,array($product_id, $store_id));
+    public function agregar_al_stock($product_id, $store_id, $quantity, $variant_id = 0){
+        $variant_id = $variant_id * 1; // asegurar numerico
+
+        $cSql = "select id, stock from tec_prod_store where product_id = ? and store_id = ? and COALESCE(variant_id,0) = ?";
+        $query = $this->db->query($cSql,array($product_id, $store_id, $variant_id));
         $existe = false;
         $stock = 0;
         foreach($query->result() as $r){
             $existe = true;
             $stock = $r->stock;
         }
-        
+
         if (!$existe){
             $ar["product_id"]   = $product_id;
             $ar["store_id"]     = $store_id;
-            
+            $ar["variant_id"]   = $variant_id;
+
             $this->db->set($ar)->insert("tec_prod_store");
         }
-        
+
         $quantity = $quantity + $stock;
-        $cSql = "update tec_prod_store set stock = ? where product_id = ? and store_id = ?";
-        $this->db->query($cSql,array($quantity, $product_id, $store_id));
+        $cSql = "update tec_prod_store set stock = ? where product_id = ? and store_id = ? and COALESCE(variant_id,0) = ?";
+        $this->db->query($cSql,array($quantity, $product_id, $store_id, $variant_id));
     }
 
-    public function disminuir_al_stock($product_id, $store_id, $quantity){
-        $stock_actual   = $quantity;
-        $product_id     = $product_id;
-        
-        $cSql = "select id, stock from tec_prod_store where product_id = ? and store_id = ?";
-        $query = $this->db->query($cSql,array($product_id, $store_id));
+    public function disminuir_al_stock($product_id, $store_id, $quantity, $variant_id = 0){
+        $variant_id = $variant_id * 1; // asegurar numerico
+
+        $cSql = "select id, stock from tec_prod_store where product_id = ? and store_id = ? and COALESCE(variant_id,0) = ?";
+        $query = $this->db->query($cSql,array($product_id, $store_id, $variant_id));
         $existe = false;
         $stock = 0;
         foreach($query->result() as $r){
             $existe = true;
             $stock = $r->stock;
         }
-        
+
         if (!$existe){
             $ar["product_id"]   = $product_id;
             $ar["store_id"]     = $store_id;
+            $ar["variant_id"]   = $variant_id;
             $ar["stock"]        = $quantity;
-            
+
             $this->db->set($ar)->insert("tec_prod_store");
         }
-        
+
         $stock = $stock - $quantity > 0 ? $stock - $quantity : 0;
-        
-        $cSql = "update tec_prod_store set stock = ? where product_id = ? and store_id = ?";
-        $this->db->query($cSql,array($stock, $product_id, $store_id));
+
+        $cSql = "update tec_prod_store set stock = ? where product_id = ? and store_id = ? and COALESCE(variant_id,0) = ?";
+        $this->db->query($cSql,array($stock, $product_id, $store_id, $variant_id));
     }
     
 }

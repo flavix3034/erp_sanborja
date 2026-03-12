@@ -1,19 +1,19 @@
 {
           "ublVersion": "2.1",
-          "fecVencimiento": "2026-02-22T16:43:06-05:00",
+          "fecVencimiento": "2026-03-02T23:49:49-05:00",
           "tipoOperacion": "0101", 
-          "tipoDoc": "03",
-          "serie": "B001",
+          "tipoDoc": "",
+          "serie": "",
           "correlativo": "1",
-          "fechaEmision": "2026-02-22T16:43:06-05:00",
+          "fechaEmision": "2026-03-02T23:49:49-05:00",
           "formaPago": {
             "moneda": "PEN",
             "tipo": "Contado"
           },
           "tipoMoneda": "PEN",
           "client": {
-            "tipoDoc": "1",
-            "numDoc": "00000000",
+            "tipoDoc": "",
+            "numDoc": "",
             "rznSocial": "VARIOS",
             "address": {
               "direccion": "sin direccion",
@@ -32,33 +32,33 @@
               "distrito": "Surco",
               "ubigueo": "150130"
             }
-          },"mtoOperGravadas": 101.69,
+          },"mtoOperGravadas": 30.51,
           "mtoOperExoneradas": 0,
-          "mtoIGV": 18.3,
+          "mtoIGV": 5.49,
           "icbper": 0,
-          "valorVenta": 101.69,
-          "totalImpuestos": 18.3,
-          "subTotal": 119.99,
+          "valorVenta": 30.51,
+          "totalImpuestos": 5.49,
+          "subTotal": 36,
           "redondeo": 0,
-          "mtoImpVenta": 119.99,
+          "mtoImpVenta": 36,
           "details": [{
-              "codProducto": "P1",
+              "codProducto": "P3",
               "unidad": "NIU",
-              "descripcion": "PRODUCTO PRUEBA A",
-              "cantidad": 1,
-              "mtoValorUnitario": 101.69,
-              "mtoValorVenta": 101.69,
-              "mtoBaseIgv": 101.69,
+              "descripcion": "PELOTA DE TRAPO (25gb, Amarillo)",
+              "cantidad": 3,
+              "mtoValorUnitario": 10.17,
+              "mtoValorVenta": 30.51,
+              "mtoBaseIgv": 30.51,
               "porcentajeIgv": 18,
-              "igv": 18.3,
+              "igv": 5.49,
               "tipAfeIgv": 10,
-              "totalImpuestos": 18.3,
-              "mtoPrecioUnitario": 119.99
+              "totalImpuestos": 5.49,
+              "mtoPrecioUnitario": 12
             }],
           "legends": [
             {
               "code": "1000",
-              "value": "Son ciento diecinueve y 99/100 Soles"
+              "value": "Son  y 60/100 Soles"
             }
           ]
         }

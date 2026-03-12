@@ -221,17 +221,36 @@ class Servicios extends CI_Controller
     function buscar_producto(){
         $term = $this->input->get('term');
         $store_id = isset($_SESSION['store_id']) ? $_SESSION['store_id'] : 1;
+        $term_safe = $this->db->escape_like_str($term);
 
-        $cSql = "SELECT a.id, a.name as nombres, IF(b.stock IS NULL,0,b.stock) stock,
+        $cSql = "SELECT a.id, 0 AS variant_id, a.name AS nombres, IF(b.stock IS NULL,0,b.stock) stock,
                     c.name categoria, a.impuesto, a.prod_serv, a.price
                 FROM tec_products a
-                LEFT JOIN tec_prod_store b ON a.id=b.product_id AND b.store_id=?
+                LEFT JOIN tec_prod_store b ON a.id=b.product_id AND b.store_id={$store_id} AND (b.variant_id IS NULL OR b.variant_id=0)
                 LEFT JOIN tec_categories c ON a.category_id=c.id
-                WHERE a.activo='1' AND a.name LIKE ? AND (a.category_id != 9000 OR a.prod_serv = 'S')
-                ORDER BY a.name
+                WHERE a.activo='1' AND a.name LIKE '%{$term_safe}%'
+                AND (a.category_id != 9000 OR a.prod_serv = 'S')
+                AND a.id NOT IN (SELECT product_id FROM tec_product_variantes WHERE activo='1')
+
+                UNION ALL
+
+                SELECT pv.product_id AS id, pv.id AS variant_id,
+                CONVERT(fn_product_display_name(pv.product_id, pv.id) USING latin1) AS nombres,
+                IF(ps.stock IS NULL,0,ps.stock) stock,
+                c.name categoria, a.impuesto, a.prod_serv,
+                IF(pv.price IS NOT NULL AND pv.price > 0, pv.price, a.price) AS price
+                FROM tec_product_variantes pv
+                INNER JOIN tec_products a ON pv.product_id = a.id
+                LEFT JOIN tec_prod_store ps ON pv.product_id = ps.product_id AND ps.variant_id = pv.id AND ps.store_id={$store_id}
+                LEFT JOIN tec_categories c ON a.category_id=c.id
+                WHERE a.activo='1' AND pv.activo='1'
+                AND (a.category_id != 9000 OR a.prod_serv = 'S')
+                AND fn_product_display_name(pv.product_id, pv.id) LIKE '%{$term_safe}%'
+
+                ORDER BY nombres
                 LIMIT 20";
 
-        $result = $this->db->query($cSql, array($store_id, '%'.$term.'%'))->result();
+        $result = $this->db->query($cSql)->result();
         echo json_encode($result);
     }
 
@@ -290,6 +309,17 @@ class Servicios extends CI_Controller
         } else {
             echo json_encode(array('rpta'=>'danger', 'msg'=>'No se pudo agregar la nota'));
         }
+    }
+
+    function print_etiqueta($id) {
+        $servicio = $this->Servicios_model->get_servicio_by_id($id);
+        if (!$servicio) {
+            show_error('Servicio no encontrado', 404);
+            return;
+        }
+
+        $data['servicio'] = $servicio;
+        $this->load->view('servicios/print_etiqueta', $data);
     }
 
 }

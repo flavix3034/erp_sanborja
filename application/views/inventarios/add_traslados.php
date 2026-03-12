@@ -119,16 +119,24 @@
             <label>Productos</label><br>
             <select class="form-control" name="product_id" id="product_id">
             <?php 
-                $cSql = "select a.id, a.code, a.name, a.price, a.unidad, a.marca, a.modelo, b.stock from tec_products a".
-                    " left join tec_prod_store b on a.id = b.product_id and b.store_id = ?".
-                    " order by a.name";
-                $result = $this->db->query($cSql, array($_SESSION["store_id"]))->result_array();
-                
+                $store_id = $_SESSION["store_id"];
+                $cSql = "SELECT a.id AS product_id, 0 AS variant_id, a.name, IF(b.stock IS NULL,0,b.stock) AS stock FROM tec_products a".
+                    " LEFT JOIN tec_prod_store b ON a.id = b.product_id AND b.store_id = ? AND (b.variant_id IS NULL OR b.variant_id = 0)".
+                    " WHERE a.activo='1' AND a.id NOT IN (SELECT product_id FROM tec_product_variantes WHERE activo='1')".
+                    " UNION ALL".
+                    " SELECT pv.product_id, pv.id AS variant_id, CONVERT(fn_product_display_name(pv.product_id, pv.id) USING latin1) AS name, IF(ps.stock IS NULL,0,ps.stock) AS stock".
+                    " FROM tec_product_variantes pv".
+                    " INNER JOIN tec_products a ON pv.product_id = a.id".
+                    " LEFT JOIN tec_prod_store ps ON pv.product_id = ps.product_id AND ps.variant_id = pv.id AND ps.store_id = ?".
+                    " WHERE a.activo='1' AND pv.activo='1'".
+                    " ORDER BY name";
+                $result = $this->db->query($cSql, array($store_id, $store_id))->result_array();
+
                 $nx=0;
                 foreach($result as $r){
                     $nx++;
                     if($nx==1){ echo "<option value=\"\" data-subtext=\"\">Seleccione</option>"; }
-                    echo "<option value=\"" . $r["id"] . "\" data-subtext=\"" . $r["stock"] . "\">" . $r["name"] . "</option>";
+                    echo "<option value=\"" . $r["product_id"] . "\" data-variant=\"" . $r["variant_id"] . "\" data-subtext=\"" . $r["stock"] . "\">" . $r["name"] . "</option>";
                 }
             ?>
             </select>
@@ -181,8 +189,16 @@
         </div>
     </div>
 
+    <input type="hidden" name="variant_id" id="variant_id" value="0">
     <input type="hidden" name="user_id" value="<?= $user_id ?>">
     <?= form_close(); ?>
+
+<script type="text/javascript">
+    $('#product_id').on('change', function(){
+        var sel = $(this).find(':selected');
+        $('#variant_id').val(sel.data('variant') || 0);
+    });
+</script>
 
 </section>
 

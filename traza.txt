@@ -1665,3 +1665,228 @@ Iniciando...
 grabacion Correcta de TK-1 <button type="button" onclick="ver_documento(5)" class="btn btn-info">Imprimir</button>
 ard: 5, 1, 1, 18.00, 120.00, 120.00, 120, 120.00, 1, PRODUCTO PRUEBA A, , , , 
 items: 5, 1, 1, 120.00, 120.00, 120, 120.00, PRODUCTO PRUEBA A 
+
+
+Iniciando...
+grabacion Correcta de TK-1224 <button type="button" onclick="ver_documento(6)" class="btn btn-info">Imprimir</button>
+ard: 6, 7, 1, 18.00, 300.00, 300.00, 300, 300.00, 4, GATO NEGRO (256GB, GX), , , 27, , 
+items: 6, 7, 1, 300.00, 300.00, 300, 300.00, GATO NEGRO (256GB, GX) 
+
+
+Iniciando...
+grabacion Correcta de TK-1224 <button type="button" onclick="ver_documento(7)" class="btn btn-info">Imprimir</button>
+ard: 7, 7, 3, 18.00, 300.00, 300.00, 900, 300.00, 4, GATO NEGRO (8GB, GX), , , 29, , 
+items: 7, 7, 3, 300.00, 300.00, 900, 300.00, GATO NEGRO (8GB, GX) 
+
+
+Iniciando...
+grabacion Correcta de TK-1224 <button type="button" onclick="ver_documento(8)" class="btn btn-info">Imprimir</button>
+ard: 8, 9, 1, 18.00, 123, 123, 123, 123, 5, PELOTA (Blanco, 8GB), , , 31, , 
+items: 8, 9, 1, 123, 123, 123, 123, PELOTA (Blanco, 8GB) 
+
+
+Iniciando...
+grabacion Correcta de -1 <button type="button" onclick="ver_documento(1)" class="btn btn-info">Imprimir</button>
+ard: 1, 3, 3, 18.00, 12.00, 10.169491525424, 30.508474576271, 12.00, 1, PELOTA DE TRAPO (25gb, Amarillo), , , 1, , 
+items: 1, 3, 3, 12.00, 12.00, 30.508474576271, 12.00, PELOTA DE TRAPO (25gb, Amarillo) 
+
+ - 1
+tax : 18
+igv : 5.49
+"mtoOperGravadas": 30.51,
+          "mtoOperExoneradas": 0,
+          "mtoIGV": 5.49,
+          "icbper": 0,
+          "valorVenta": 30.51,
+          "totalImpuestos": 5.49,
+          "subTotal": 36,
+          "redondeo": 0,
+          "mtoImpVenta": 36,
+          "details": [
+
+
+Iniciando...
+grabacion Correcta de TK-1 <button type="button" onclick="ver_documento(2)" class="btn btn-info">Imprimir</button>
+ard: 2, 3, 5, 18.00, 12.00, 12.00, 60, 12.00, 1, PELOTA DE TRAPO (25gb, Amarillo), , , 1, , 
+items: 2, 3, 5, 12.00, 12.00, 60, 12.00, PELOTA DE TRAPO (25gb, Amarillo) 
+
+
+Iniciando...
+grabacion Correcta de B001-1 <button type="button" onclick="ver_documento(3)" class="btn btn-info">Imprimir</button>
+ard: 3, 3, 1, 18.00, 12.00, 10.169491525424, 10.169491525424, 12.00, 1, PELOTA DE TRAPO (25gb, Amarillo), , , 1, , 
+items: 3, 3, 1, 12.00, 12.00, 10.169491525424, 12.00, PELOTA DE TRAPO (25gb, Amarillo) 
+
+B001 - 1
+tax : 18
+igv : 1.83
+"mtoOperGravadas": 10.17,
+          "mtoOperExoneradas": 0,
+          "mtoIGV": 1.83,
+          "icbper": 0,
+          "valorVenta": 10.17,
+          "totalImpuestos": 1.83,
+          "subTotal": 12,
+          "redondeo": 0,
+          "mtoImpVenta": 12,
+          "details": [
+
+
+Iniciando...
+grabacion Correcta de TK-1224 <button type="button" onclick="ver_documento(4)" class="btn btn-info">Imprimir</button>
+ard: 4, 3, 1, 18.00, 12.00, 12.00, 12, 12.00, 1, PELOTA DE TRAPO (32gb, Amarillo), , , 3, , 
+items: 4, 3, 1, 12.00, 12.00, 12, 12.00, PELOTA DE TRAPO (32gb, Amarillo) 
+
+
+Iniciando...
+grabacion Correcta de TK-1224 <button type="button" onclick="ver_documento(5)" class="btn btn-info">Imprimir</button>
+ard: 5, 3, 1, 18.00, 12.00, 12.00, 12, 12.00, 1, PELOTA DE TRAPO (25gb, Amarillo), , , 1, , 
+items: 5, 3, 1, 12.00, 12.00, 12, 12.00, PELOTA DE TRAPO (25gb, Amarillo) 
+
+
+Iniciando...
+grabacion Correcta de TK-1224 <button type="button" onclick="ver_documento(6)" class="btn btn-info">Imprimir</button>
+ard: 6, 10, 1, 18.00, 13.00, 13.00, 13, 13.00, 4, CARAMANDUNGA (32gb, Amarillo), , , 24, , 
+items: 6, 10, 1, 13.00, 13.00, 13, 13.00, CARAMANDUNGA (32gb, Amarillo) 
+
+
+Iniciando...
+grabacion Correcta de TK-1224 <button type="button" onclick="ver_documento(7)" class="btn btn-info">Imprimir</button>
+ard: 7, 10, 1, 18.00, 13.00, 13.00, 13, 13.00, 4, CARAMANDUNGA (32gb, Amarillo), , , 24, , 
+items: 7, 10, 1, 13.00, 13.00, 13, 13.00, CARAMANDUNGA (32gb, Amarillo) 
+ard: 7, 10, 2, 18.00, 13.00, 13.00, 26, 13.00, 4, CARAMANDUNGA (25gb, Azul), , , 25, , 
+items: 7, 10, 2, 13.00, 13.00, 26, 13.00, CARAMANDUNGA (25gb, Azul) 
+
+
+Iniciando...
+grabacion Correcta de TK-1224 <button type="button" onclick="ver_documento(8)" class="btn btn-info">Imprimir</button>
+ard: 8, 10, 2, 18.00, 13.00, 13.00, 26, 13.00, 4, CARAMANDUNGA (25gb, Amarillo), , , 23, , 
+items: 8, 10, 2, 13.00, 13.00, 26, 13.00, CARAMANDUNGA (25gb, Amarillo) 
+
+
+Iniciando...
+grabacion Correcta de TK-1224 <button type="button" onclick="ver_documento(9)" class="btn btn-info">Imprimir</button>
+ard: 9, 11, 1, 18.00, 30.00, 30.00, 30, 30.00, 5, AUDÍFONOS XM50 UGREEN (25gb, Amarillo), , , 27, , 
+items: 9, 11, 1, 30.00, 30.00, 30, 30.00, AUDÍFONOS XM50 UGREEN (25gb, Amarillo) 
+ard: 9, 11, 1, 18.00, 60.00, 60.00, 60, 60.00, 5, AUDÍFONOS XM50 UGREEN (32gb, Amarillo), , , 29, , 
+items: 9, 11, 1, 60.00, 60.00, 60, 60.00, AUDÍFONOS XM50 UGREEN (32gb, Amarillo) 
+
+
+Iniciando...
+grabacion Correcta de B001-1224 <button type="button" onclick="ver_documento(10)" class="btn btn-info">Imprimir</button>
+ard: 10, 11, 1, 18.00, 30.00, 25.423728813559, 25.423728813559, 30.00, 5, AUDÍFONOS XM50 UGREEN (25gb, Amarillo), , , 27, , 
+items: 10, 11, 1, 30.00, 30.00, 25.423728813559, 30.00, AUDÍFONOS XM50 UGREEN (25gb, Amarillo) 
+ard: 10, 11, 1, 18.00, 60.00, 50.847457627119, 50.847457627119, 60.00, 5, AUDÍFONOS XM50 UGREEN (32gb, Amarillo), , , 29, , 
+items: 10, 11, 1, 60.00, 60.00, 50.847457627119, 60.00, AUDÍFONOS XM50 UGREEN (32gb, Amarillo) 
+
+B001 - 1224
+tax : 18
+igv : 4.58
+igv : 9.15
+"mtoOperGravadas": 76.27,
+          "mtoOperExoneradas": 0,
+          "mtoIGV": 13.73,
+          "icbper": 0,
+          "valorVenta": 76.27,
+          "totalImpuestos": 13.73,
+          "subTotal": 90,
+          "redondeo": 0,
+          "mtoImpVenta": 90,
+          "details": [
+
+
+Iniciando...
+grabacion Correcta de TK-1224 <button type="button" onclick="ver_documento(11)" class="btn btn-info">Imprimir</button>
+ard: 11, 12, 1, 18.00, 200.00, 200.00, 200, 200.00, 6, PASHNINA UMBRO (25gb, Amarillo), , , 31, , 
+items: 11, 12, 1, 200.00, 200.00, 200, 200.00, PASHNINA UMBRO (25gb, Amarillo) 
+ard: 11, 12, 1, 18.00, 500.00, 500.00, 500, 500.00, 6, PASHNINA UMBRO (32gb, Azul), , , 34, , 
+items: 11, 12, 1, 500.00, 500.00, 500, 500.00, PASHNINA UMBRO (32gb, Azul) 
+
+
+Iniciando...
+grabacion Correcta de TK-1224 <button type="button" onclick="ver_documento(12)" class="btn btn-info">Imprimir</button>
+ard: 12, 11, 5, 18, 60, 60, 300, 60, 5, AUDÍFONOS XM50 UGREEN (32gb, Blanco), , , 30, , 
+items: 12, 11, 5, 60, 60, 300, 60, AUDÍFONOS XM50 UGREEN (32gb, Blanco)
+
+
+Iniciando...
+grabacion Correcta de B001-1224 <button type="button" onclick="ver_documento(13)" class="btn btn-info">Imprimir</button>
+ard: 13, 11, 7, 18.00, 30.00, 25.423728813559, 177.96610169492, 30.00, 5, AUDÍFONOS XM50 UGREEN (25gb, Blanco), , , 28, , 
+items: 13, 11, 7, 30.00, 30.00, 177.96610169492, 30.00, AUDÍFONOS XM50 UGREEN (25gb, Blanco) 
+
+B001 - 1224
+tax : 18
+igv : 32.03
+"mtoOperGravadas": 177.97,
+          "mtoOperExoneradas": 0,
+          "mtoIGV": 32.03,
+          "icbper": 0,
+          "valorVenta": 177.97,
+          "totalImpuestos": 32.03,
+          "subTotal": 210,
+          "redondeo": 0,
+          "mtoImpVenta": 210,
+          "details": [
+fma:{
+          "ublVersion": "2.1",
+          "fecVencimiento": "2026-03-08T20:21:42-05:00",
+          "tipoOperacion": "0101", 
+          "tipoDoc": "03",
+          "serie": "B001",
+          "correlativo": "1224",
+          "fechaEmision": "2026-03-08T20:21:42-05:00",
+          "formaPago": {
+            "moneda": "PEN",
+            "tipo": "Contado"
+          },
+          "tipoMoneda": "PEN",
+          "client": {
+            "tipoDoc": "1",
+            "numDoc": "00000000",
+            "rznSocial": "VARIOS",
+            "address": {
+              "direccion": "sin direccion",
+              "provincia": "LIMA",
+              "departamento": "LIMA",
+              "distrito": "LIMA",
+              "ubigueo": "150101"
+            }
+          },"company": {
+            "ruc": 20612452858,
+            "razonSocial": "SBL PERU IMPORT E.I.R.L",
+            "address": {
+              "direccion": "Av. Aviacion 5092 Tda 113",
+              "provincia": "SURCO",
+              "departamento": "LIMA",
+              "distrito": "Surco",
+              "ubigueo": "150130"
+            }
+          },"mtoOperGravadas": 177.97,
+          "mtoOperExoneradas": 0,
+          "mtoIGV": 32.03,
+          "icbper": 0,
+          "valorVenta": 177.97,
+          "totalImpuestos": 32.03,
+          "subTotal": 210,
+          "redondeo": 0,
+          "mtoImpVenta": 210,
+          "details": [{
+              "codProducto": "P11",
+              "unidad": "NIU",
+              "descripcion": "AUDÍFONOS XM50 UGREEN (25gb, Blanco)",
+              "cantidad": 7,
+              "mtoValorUnitario": 25.42,
+              "mtoValorVenta": 177.97,
+              "mtoBaseIgv": 177.97,
+              "porcentajeIgv": 18,
+              "igv": 32.03,
+              "tipAfeIgv": 10,
+              "totalImpuestos": 32.03,
+              "mtoPrecioUnitario": 30
+            }],
+          "legends": [
+            {
+              "code": "1000",
+              "value": "Son  y 10/100 Soles"
+            }
+          ]
+        }

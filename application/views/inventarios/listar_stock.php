@@ -13,7 +13,6 @@
 				echo $this->fm->celda_h("ID",0,$est_cab);
 				echo $this->fm->celda_h("Producto",0,$est_cab);
 				echo $this->fm->celda_h("Marca",0,$est_cab);
-				echo $this->fm->celda_h("Modelo",0,$est_cab);
 				echo $this->fm->celda_h("Stock",0,$est_cab);
 				echo "</tr>";
 				
@@ -23,7 +22,6 @@
 						echo $this->fm->celda($r->product_id,0,$estilos);
 						echo $this->fm->celda($r->name,0,$estilos);
 						echo $this->fm->celda($r->marca,0,$estilos);
-						echo $this->fm->celda($r->modelo,0,$estilos);
 						echo $this->fm->celda($r->stock,2,$estilos);
 						echo "</tr>";
 					}
@@ -37,17 +35,15 @@
 		<table id="example" class="display" style="width:100%; font-size: 12px; margin-bottom: 20px;">
 			<thead>
 				<tr>
-					<!-- "product_id", "name", "marca", "modelo", "stock" -->
+					<!-- "product_id", "name", "marca", "stock" -->
 					<th style="max-width: 35px;">Id Producto</th>
 					<th>Nombre</th>
 					<th>Marca</th>
-					<th>Modelo</th>
 					<th>Stock</th>
 				</tr>
 			</thead>
 			<tfoot>
 				<tr>
-					<th></th>
 					<th></th>
 					<th></th>
 					<th></th>

@@ -72,7 +72,7 @@ class Sales_model extends CI_Model
 	}
 
 	function view($idx){
-		$this->db->select('a.tipoDoc, e.descrip tipo_documento,concat(a.serie,\'-\',a.correlativo) recibo, a.customer_name razon, concat(d.cf1,\' \',d.cf2) doc_personal, date(a.date) as fecha, a.id, a.total, a.total_discount, a.total_tax, a.grand_total, b.product_id, b.product_name, if(b.discount is null,0,b.discount) discount, c.name, c.marca, c.modelo, c.color, b.quantity, b.unit_price, b.net_unit_price, (b.net_unit_price - if(b.discount is null,0,b.discount))*b.quantity as subtotal, b.comment, b.group_id, b.group_name');
+		$this->db->select('a.tipoDoc, e.descrip tipo_documento,concat(a.serie,\'-\',a.correlativo) recibo, a.customer_name razon, concat(d.cf1,\' \',d.cf2) doc_personal, date(a.date) as fecha, a.id, a.total, a.total_discount, a.total_tax, a.grand_total, b.product_id, b.product_name, if(b.discount is null,0,b.discount) discount, fn_product_display_name(b.product_id, b.variant_id) name, c.marca, b.quantity, b.unit_price, b.net_unit_price, (b.net_unit_price - if(b.discount is null,0,b.discount))*b.quantity as subtotal, b.comment, b.group_id, b.group_name', FALSE);
 		$this->db->from('tec_sales as a');
 		$this->db->join('tec_sale_items as b','a.id=b.sale_id','left');
 		$this->db->join('tec_products as c','b.product_id=c.id', 'left');
@@ -86,7 +86,7 @@ class Sales_model extends CI_Model
 	}
 
     function view_interno($idx){
-        $this->db->select('a.tipoDoc, e.descrip tipo_documento,concat(a.serie,\'-\',a.correlativo) recibo, a.customer_name razon, concat(d.cf1,\' \',d.cf2) doc_personal, date(a.date) as fecha, a.id, a.total, a.total_discount, a.total_tax, a.grand_total, b.product_id, b.product_name, if(b.discount is null,0,b.discount) discount, c.name, c.marca, c.modelo, c.color, b.quantity, b.unit_price, b.net_unit_price, (b.net_unit_price - if(b.discount is null,0,b.discount))*b.quantity as subtotal, b.series, b.group_id, b.group_name');
+        $this->db->select('a.tipoDoc, e.descrip tipo_documento,concat(a.serie,\'-\',a.correlativo) recibo, a.customer_name razon, concat(d.cf1,\' \',d.cf2) doc_personal, date(a.date) as fecha, a.id, a.total, a.total_discount, a.total_tax, a.grand_total, b.product_id, b.product_name, if(b.discount is null,0,b.discount) discount, fn_product_display_name(b.product_id, b.variant_id) name, c.marca, b.quantity, b.unit_price, b.net_unit_price, (b.net_unit_price - if(b.discount is null,0,b.discount))*b.quantity as subtotal, b.series, b.group_id, b.group_name', FALSE);
         $this->db->from('tec_sales as a');
         $this->db->join('tec_sale_items as b','a.id=b.sale_id','left');
         $this->db->join('tec_products as c','b.product_id=c.id', 'left');
@@ -414,6 +414,7 @@ class Sales_model extends CI_Model
         }";
         
         $campos = $campus1 . $campus2 . $campus3 . $campus4 . $campus5;
+        traza("fma:".$campos);
 
         switch ($tipo_envio) {
             case 'ENVIO':

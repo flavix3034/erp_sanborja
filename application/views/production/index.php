@@ -152,7 +152,7 @@ if (!isset($_SESSION["usuario"])){
 											<?php if(in_array($grupo_id,array(1,2))){ ?>
 												<li><a href="<?= base_url('products/add'); ?>">Agregar Productos</a></li>
 												<li><a href="<?= base_url('products/add_servicio'); ?>">Agregar Servicios</a></li>
-												<li><a href="<?= base_url('inventarios/stock_productos'); ?>">STOCKS</a></li>
+												<li><a href="<?= base_url('inventarios/stock_productos'); ?>">Stock Avanzado</a></li>
 											<?php } ?>
 											<li><a href="<?= base_url('products/print_compra'); ?>">C&oacute;digo de Barras</a></li>
 											<li><a><i class='bx bx-purchase-tag'></i> Categorias <span class="fa fa-chevron-down"></span></a>
@@ -174,7 +174,7 @@ if (!isset($_SESSION["usuario"])){
 											<li><a href="<?= base_url('inventarios/add'); ?>">Agregar</a></li>
 											<li><a href="<?= base_url('inventarios/registrar_productos'); ?>">Registrar</a></li>
 											<li><a href="<?= base_url('inventarios/kardex'); ?>">Kardex de Producto</a></li>
-											<li><a href="<?= base_url('inventarios/listar_stock'); ?>">Ver Stocks</a></li>
+											<li><a href="<?= base_url('inventarios/listar_stock'); ?>">Stock de Productos</a></li>
 											<li><a href="<?= base_url('inventarios/actualizar_stock'); ?>">Actualizar Stock</a></li>
 											<li><a href="<?= base_url('inventarios/ver_movimientos'); ?>">Ver movimientos</a></li>
 											<li><a href="<?= base_url('inventarios/add_traslados'); ?>">Movim. Traslado</a></li>
@@ -217,6 +217,7 @@ if (!isset($_SESSION["usuario"])){
 											<li><a href="<?= base_url('reportes/productos_sin_compra'); ?>">Productos sin compra</a></li>
 											<li><a href="<?= base_url('reportes/analisis'); ?>">Reportes para An&aacute;lisis</a></li>
 											<li><a href="<?= base_url('reportes/gastos_cajachica'); ?>">Gastos Caja Chica</a></li>
+											<li><a href="<?= base_url('reportes/cierre_diario'); ?>">Cierre Diario</a></li>
 										</ul>
 									</li>
 								</ul>

@@ -1,11 +1,11 @@
 {
           "ublVersion": "2.1",
-          "fecVencimiento": "2026-03-02T23:53:30-05:00",
+          "fecVencimiento": "2026-03-08T20:21:42-05:00",
           "tipoOperacion": "0101", 
           "tipoDoc": "03",
           "serie": "B001",
-          "correlativo": "1",
-          "fechaEmision": "2026-03-02T23:53:30-05:00",
+          "correlativo": "1224",
+          "fechaEmision": "2026-03-08T20:21:42-05:00",
           "formaPago": {
             "moneda": "PEN",
             "tipo": "Contado"
@@ -32,33 +32,33 @@
               "distrito": "Surco",
               "ubigueo": "150130"
             }
-          },"mtoOperGravadas": 10.17,
+          },"mtoOperGravadas": 177.97,
           "mtoOperExoneradas": 0,
-          "mtoIGV": 1.83,
+          "mtoIGV": 32.03,
           "icbper": 0,
-          "valorVenta": 10.17,
-          "totalImpuestos": 1.83,
-          "subTotal": 12,
+          "valorVenta": 177.97,
+          "totalImpuestos": 32.03,
+          "subTotal": 210,
           "redondeo": 0,
-          "mtoImpVenta": 12,
+          "mtoImpVenta": 210,
           "details": [{
-              "codProducto": "P3",
+              "codProducto": "P11",
               "unidad": "NIU",
-              "descripcion": "PELOTA DE TRAPO (25gb, Amarillo)",
-              "cantidad": 1,
-              "mtoValorUnitario": 10.17,
-              "mtoValorVenta": 10.17,
-              "mtoBaseIgv": 10.17,
+              "descripcion": "AUDÍFONOS XM50 UGREEN (25gb, Blanco)",
+              "cantidad": 7,
+              "mtoValorUnitario": 25.42,
+              "mtoValorVenta": 177.97,
+              "mtoBaseIgv": 177.97,
               "porcentajeIgv": 18,
-              "igv": 1.83,
+              "igv": 32.03,
               "tipAfeIgv": 10,
-              "totalImpuestos": 1.83,
-              "mtoPrecioUnitario": 12
+              "totalImpuestos": 32.03,
+              "mtoPrecioUnitario": 30
             }],
           "legends": [
             {
               "code": "1000",
-              "value": "Son  y 20/100 Soles"
+              "value": "Son  y 10/100 Soles"
             }
           ]
         }

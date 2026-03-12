@@ -174,6 +174,7 @@
 
                 <ul id="lista"></ul>
                 <input type="hidden" name="product_id" id="product_id">
+                <input type="hidden" name="variant_id" id="variant_id" value="0">
             </div>
 
             <script>
@@ -518,9 +519,10 @@
         }
     }
 
-    function mostrar(id,cp) {
+    function mostrar(id, cp, variant_id) {
         lista.style.display = 'none'
         $("#product_id").val(id)
+        $("#variant_id").val(variant_id || 0)
         lBuscar = false
         $("#campo").val(cp)
         $("#campo").attr("readonly","readonly");
@@ -635,13 +637,16 @@
             x4      = x4.toFixed(2)
         }
 
-        ar_items.push({id:x1, 
-            name:       x1_name, 
-            quantity:   x2, 
-            cost:       x3, 
+        var x1_variant = $('#variant_id').val() || 0;
+        ar_items.push({id:x1,
+            variant_id: x1_variant,
+            name:       x1_name,
+            quantity:   x2,
+            cost:       x3,
             subtotal:   x4,
             precio:     x5
         })
+        $('#variant_id').val(0);
         console.log("Se agrega Item...")
         console.log(ar_items)
     }
@@ -676,6 +681,7 @@
             // Nombre
             cad += '<td style="text-align: left" class="col-xs-5 col-sm-4">' + ar_items[i]["name"] 
             cad += '<input type="hidden" name="product_id[]" value="'+ar_items[i]['id'] + '" class="form-control">'
+            cad += '<input type="hidden" name="variant_id_item[]" value="' + (ar_items[i]['variant_id'] || 0) + '">'
             cad += '<input type="hidden" name="rubro_id[]" value="' + ar_items[i]['rubro_id'] + '">'
             cad += '<input type="hidden" name="descripo[]" value="' + ar_items[i]['name'] + '"</td>'
             

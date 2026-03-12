@@ -18,11 +18,11 @@ class Servicios_model extends CI_Model
         
         $cSql = "select a.id, a.codigo, a.cliente_nombre, a.cliente_telefono, 
                     a.equipo_descripcion, a.estado, a.prioridad, a.fecha_recepcion,
-                    ifnull(b.nombre,'Sin Asignar') tecnico_nombre,
+                    ifnull(CONCAT(b.apellidos,' ',b.nombres),'Sin Asignar') tecnico_nombre,
                     concat('<a href=\"#\" onclick=\"modificar(',a.id,')\"><i class=\"glyphicon glyphicon-edit\"></i></a>&nbsp;&nbsp;
                     <a href=\"#\" onclick=\"eliminar(',a.id,')\"><i class=\"glyphicon glyphicon-remove\"></i></a>') op
                 from tec_servicios_tecnicos a
-                left join tec_tecnicos b on a.tecnico_asignado = b.id
+                left join tec_empleados b on a.tecnico_asignado = b.id
                 where a.activo='1' ".$cad_estado.$cad_tecnico."
                 order by a.id desc";
         
@@ -51,7 +51,7 @@ class Servicios_model extends CI_Model
 
     function guardar_servicio($data) {
         // Extraer items del POST antes de guardar en tec_servicios_tecnicos
-        $items_keys = array('item', 'descripo', 'quantity', 'cost', 'impuestos', 'obs', 'prod_serv_arr');
+        $items_keys = array('item', 'variant_id', 'descripo', 'quantity', 'cost', 'impuestos', 'obs', 'prod_serv_arr');
         $items_data = array();
         foreach($items_keys as $key) {
             if(isset($data[$key])) {
@@ -119,6 +119,7 @@ class Servicios_model extends CI_Model
             $ar = array(
                 'servicio_id'  => $servicio_id,
                 'product_id'   => $items_data['item'][$i],
+                'variant_id'   => isset($items_data['variant_id'][$i]) ? intval($items_data['variant_id'][$i]) : 0,
                 'product_name' => $items_data['descripo'][$i],
                 'prod_serv'    => $items_data['prod_serv_arr'][$i],
                 'quantity'     => $qty,
@@ -136,7 +137,7 @@ class Servicios_model extends CI_Model
         $store_id = isset($_SESSION['store_id']) ? $_SESSION['store_id'] : 1;
         $cSql = "SELECT a.*, IF(c.stock IS NULL, 0, c.stock) as stock_actual
                  FROM tec_servicio_items a
-                 LEFT JOIN tec_prod_store c ON a.product_id = c.product_id AND c.store_id = ?
+                 LEFT JOIN tec_prod_store c ON a.product_id = c.product_id AND COALESCE(c.variant_id,0) = COALESCE(a.variant_id,0) AND c.store_id = ?
                  WHERE a.servicio_id = ?
                  ORDER BY a.id";
         return $this->db->query($cSql, array($store_id, $servicio_id))->result();
@@ -149,17 +150,19 @@ class Servicios_model extends CI_Model
     }
 
     function get_servicio_by_id($id) {
-        $cSql = "select a.*, b.nombre tecnico_nombre
+        $cSql = "select a.*, CONCAT(b.apellidos,' ',b.nombres) tecnico_nombre
                 from tec_servicios_tecnicos a
-                left join tec_tecnicos b on a.tecnico_asignado = b.id
+                left join tec_empleados b on a.tecnico_asignado = b.id
                 where a.id = ".$id;
         
         return $this->db->query($cSql)->row();
     }
 
     function listar_tecnicos() {
-        $cSql = "select id, codigo, nombre, especialidad, telefono 
-                from tec_tecnicos where activo='1' order by nombre";
+        $cSql = "SELECT id, CONCAT(apellidos,' ',nombres) AS nombre, especialidad, telefono
+                 FROM tec_empleados
+                 WHERE activo='1' AND UPPER(cargo) = 'TECNICO'
+                 ORDER BY apellidos, nombres";
         return $this->db->query($cSql)->result();
     }
 
@@ -236,9 +239,9 @@ class Servicios_model extends CI_Model
     }
 
     function get_historial_estados($servicio_id) {
-        $cSql = "select a.*, b.nombre tecnico_nombre
+        $cSql = "select a.*, CONCAT(b.apellidos,' ',b.nombres) tecnico_nombre
                 from tec_servicios_estados a
-                left join tec_tecnicos b on a.tecnico_id = b.id
+                left join tec_empleados b on a.tecnico_id = b.id
                 where a.servicio_id = ".$servicio_id."
                 order by a.fecha_registro desc";
         
@@ -246,9 +249,9 @@ class Servicios_model extends CI_Model
     }
 
     function get_notas_servicio($servicio_id) {
-        $cSql = "select a.*, b.nombre tecnico_nombre
+        $cSql = "select a.*, CONCAT(b.apellidos,' ',b.nombres) tecnico_nombre
                 from tec_servicios_notas a
-                left join tec_tecnicos b on a.tecnico_id = b.id
+                left join tec_empleados b on a.tecnico_id = b.id
                 where a.servicio_id = ".$servicio_id."
                 order by a.fecha_registro desc";
         
@@ -271,17 +274,18 @@ class Servicios_model extends CI_Model
             
             $cSql = "select a.id, a.codigo, a.cliente_nombre, a.cliente_telefono, 
                         a.equipo_descripcion, a.estado, a.prioridad, 
-                        a.fecha_recepcion, ifnull(b.nombre,'Sin Asignar') tecnico_nombre,
+                        a.fecha_recepcion, ifnull(CONCAT(b.apellidos,' ',b.nombres),'Sin Asignar') tecnico_nombre,
                         concat('<button onclick=\"ver(', a.id, ')\" title=\"Detalles\" style=\"color:rgb(0,120,200)\"><i class=\"glyphicon glyphicon-eye-open\"></i></button> ',
                                '<button onclick=\"editar(', a.id, ')\" title=\"Editar\"><i class=\"glyphicon glyphicon-edit\"></i></button> ',
+                               '<button onclick=\"print_etiqueta(', a.id, ')\" title=\"Imprimir Etiqueta\" style=\"color:rgb(100,100,100)\"><i class=\"glyphicon glyphicon-print\"></i></button> ',
                                '<button onclick=\"anular(', a.id, ')\" style=\"color:rgb(255,100,100)\" title=\"Anular\"><i class=\"glyphicon glyphicon-remove\"></i></button>') as acciones
                     from tec_servicios_tecnicos a
-                    left join tec_tecnicos b on a.tecnico_asignado = b.id
+                    left join tec_empleados b on a.tecnico_asignado = b.id
                     where a.activo='1'".$cad_estado.$cad_tecnico."
                     order by a.id desc";
 
             $result = $this->db->query($cSql, $ar)->result_array();
-            
+
             // Preparar datos para DataTables JSON
             $data = array();
             foreach($result as $row) {
@@ -329,9 +333,10 @@ class Servicios_model extends CI_Model
                         ifnull(a.costo_final,0) costo_final,
                         concat('<button onclick=\"ver(', a.id, ')\" title=\"Detalles\" style=\"color:rgb(0,120,200)\"><i class=\"glyphicon glyphicon-eye-open\"></i></button> ',
                                '<button onclick=\"editar(', a.id, ')\" title=\"Editar\"><i class=\"glyphicon glyphicon-edit\"></i></button> ',
+                               '<button onclick=\"print_etiqueta(', a.id, ')\" title=\"Imprimir Etiqueta\" style=\"color:rgb(100,100,100)\"><i class=\"glyphicon glyphicon-print\"></i></button> ',
                                '<button onclick=\"anular(', a.id, ')\" style=\"color:rgb(255,100,100)\" title=\"Anular\"><i class=\"glyphicon glyphicon-remove\"></i></button>') as acciones
                     from tec_servicios_tecnicos a
-                    left join tec_tecnicos b on a.tecnico_asignado = b.id
+                    left join tec_empleados b on a.tecnico_asignado = b.id
                     where a.activo='1'".$cad_estado.$cad_tecnico."
                     order by a.id desc";
 

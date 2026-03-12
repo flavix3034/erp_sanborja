@@ -5,48 +5,94 @@
         die("<a href=\"" . base_url("welcome/cierra_sesion") . "\">Regresar</a>");
     }
 ?>
-<style type="text/css">
-    tbody{
-        font-family: Arial, courier, verdana;
-    }
-</style>
-<div class="row" style="margin-top:10px;">
-    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-8">
-        <?php
-            $estilo             = "padding:5px 4px;";
-            $estilo_tit         = "padding:10px 4px;font-style:normal;";
-            $estilo_tit_minimo  = "padding:10px 4px;font-style:normal;color:rgb(120,120,120);";
-            $estilo_alarma      = "padding:5px 4px;color:red;";
-            $estilo_minimo      = "padding:5px 4px; color:rgb(120,120,120);";
-            
-            echo "<table border='1'>";
-            echo "<tr>";
-            echo $this->fm->celda("Producto",0,$estilo_tit."min-width:200px;");
-            //echo $this->fm->celda("Inventario<br>Inicial",0,$estilo_tit);
-            //echo $this->fm->celda("Comprado",0,$estilo_tit);
-            //echo $this->fm->celda("Vendido",0,$estilo_tit);
-            //echo $this->fm->celda("Ingresos",0,$estilo_tit);
-            //echo $this->fm->celda("Salidas",0,$estilo_tit);
-            echo $this->fm->celda("Stock",0,$estilo_tit);
-            echo $this->fm->celda("Cantidad<br>Mínima",0,$estilo_tit_minimo);
-            echo "</tr>";    
-            
-            foreach($query_stock->result() as $r){
-                //die("Luz...");
-                echo "<tr>";
-                echo $this->fm->celda($r->name,0,$estilo);
-                //echo $this->fm->celda(number_format($r->cantidad_inicial,0),0,$estilo);
-                //echo $this->fm->celda(number_format($r->cantidad_comprada,0),0,$estilo);
-                //echo $this->fm->celda(number_format($r->cantidad_vendida,0),0,$estilo);
-                //echo $this->fm->celda(number_format($r->ingreso,0),0,$estilo);
-                //echo $this->fm->celda(number_format($r->salida,0),0,$estilo);
-                $estilo_per = ($r->stock < $r->alert_cantidad ? $estilo_alarma : $estilo);
-                echo $this->fm->celda($r->stock*1,2,$estilo_per);
-                echo $this->fm->celda($r->alert_cantidad,2,$estilo_minimo);
-                echo "</tr>";
-            }
-            echo "</table>";
-        ?>
-    </div>
 
+<div class="row" style="margin-top:10px;">
+    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-10">
+        <div class="table-responsive">
+            <table id="tabla_stock_avanzado" class="table table-striped table-bordered" style="width:100%">
+                <thead>
+                    <tr>
+                        <th style="width:30px;"></th>
+                        <th>Producto</th>
+                        <th>Stock</th>
+                        <th>Cant. M&iacute;nima</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach($query_stock->result() as $r):
+                        $tiene_variantes = isset($variantes_map[$r->id]);
+                        $stock_val = $r->stock * 1;
+                        $clase_stock = ($stock_val < $r->alert_cantidad) ? 'color:red;font-weight:bold;' : '';
+                    ?>
+                    <tr data-pid="<?= $r->id ?>">
+                        <td class="text-center">
+                            <?php if($tiene_variantes): ?>
+                            <button class="btn btn-xs btn-default btn-toggle-var" data-pid="<?= $r->id ?>" title="Ver variantes" style="padding:2px 6px;">
+                                <i class="fa fa-plus"></i>
+                            </button>
+                            <?php endif; ?>
+                        </td>
+                        <td><?= $r->name ?></td>
+                        <td class="text-right" style="<?= $clase_stock ?>"><?= $stock_val ?></td>
+                        <td class="text-right" style="color:rgb(120,120,120);"><?= $r->alert_cantidad * 1 ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
+
+<script type="text/javascript">
+// Datos de variantes en JS
+var variantesMap = <?php
+    $js_map = array();
+    foreach($variantes_map as $pid => $vars){
+        $js_map[$pid] = array();
+        foreach($vars as $v){
+            $js_map[$pid][] = array('name' => $v->name, 'stock' => $v->stock * 1);
+        }
+    }
+    echo json_encode($js_map);
+?>;
+
+$(document).ready(function(){
+    $('#tabla_stock_avanzado').DataTable({
+        "paging": false,
+        "ordering": true,
+        "info": false,
+        "columnDefs": [{ "orderable": false, "targets": 0 }],
+        "language": {
+            "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Spanish.json"
+        }
+    });
+
+    $(document).on('click', '.btn-toggle-var', function(){
+        var btn = $(this);
+        var pid = btn.data('pid');
+        var icon = btn.find('i');
+        var parentRow = btn.closest('tr');
+
+        // Si ya están visibles, removerlas
+        if (icon.hasClass('fa-minus')) {
+            parentRow.nextUntil('tr:not(.variante-row)').remove();
+            icon.removeClass('fa-minus').addClass('fa-plus');
+            return;
+        }
+
+        // Insertar filas de variantes justo debajo
+        var vars = variantesMap[pid] || [];
+        var html = '';
+        for (var i = 0; i < vars.length; i++) {
+            html += '<tr class="variante-row" style="background-color:#f0f7ff;">'
+                + '<td></td>'
+                + '<td style="padding-left:30px;"><i class="fa fa-caret-right" style="color:#999;margin-right:6px;"></i>' + vars[i].name + '</td>'
+                + '<td class="text-right">' + vars[i].stock + '</td>'
+                + '<td></td>'
+                + '</tr>';
+        }
+        parentRow.after(html);
+        icon.removeClass('fa-plus').addClass('fa-minus');
+    });
+});
+</script>

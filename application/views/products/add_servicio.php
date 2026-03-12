@@ -9,8 +9,6 @@
         $price      = "";
         $imagen     = "";
         $marca      = "";
-        $modelo     = "";
-        $color      = "";
         $precio_x_mayor = "";
         $prod_serv  = "";
     }else{
@@ -22,8 +20,6 @@
         $price      = $row->price;
         $imagen     = $row->imagen;
         $marca      = $row->marca;
-        $modelo     = $row->modelo;
-        $color      = $row->color;
         $precio_x_mayor = $row->precio_x_mayor;
         $prod_serv  = $row->prod_serv;
     }

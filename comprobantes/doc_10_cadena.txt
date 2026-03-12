@@ -1,11 +1,11 @@
 {
           "ublVersion": "2.1",
-          "fecVencimiento": "2026-03-02T23:53:30-05:00",
+          "fecVencimiento": "2026-03-05T16:23:58-05:00",
           "tipoOperacion": "0101", 
           "tipoDoc": "03",
           "serie": "B001",
-          "correlativo": "1",
-          "fechaEmision": "2026-03-02T23:53:30-05:00",
+          "correlativo": "1224",
+          "fechaEmision": "2026-03-05T16:23:58-05:00",
           "formaPago": {
             "moneda": "PEN",
             "tipo": "Contado"
@@ -32,33 +32,46 @@
               "distrito": "Surco",
               "ubigueo": "150130"
             }
-          },"mtoOperGravadas": 10.17,
+          },"mtoOperGravadas": 76.27,
           "mtoOperExoneradas": 0,
-          "mtoIGV": 1.83,
+          "mtoIGV": 13.73,
           "icbper": 0,
-          "valorVenta": 10.17,
-          "totalImpuestos": 1.83,
-          "subTotal": 12,
+          "valorVenta": 76.27,
+          "totalImpuestos": 13.73,
+          "subTotal": 90,
           "redondeo": 0,
-          "mtoImpVenta": 12,
+          "mtoImpVenta": 90,
           "details": [{
-              "codProducto": "P3",
+              "codProducto": "P11",
               "unidad": "NIU",
-              "descripcion": "PELOTA DE TRAPO (25gb, Amarillo)",
+              "descripcion": "AUDÍFONOS XM50 UGREEN (25gb, Amarillo)",
               "cantidad": 1,
-              "mtoValorUnitario": 10.17,
-              "mtoValorVenta": 10.17,
-              "mtoBaseIgv": 10.17,
+              "mtoValorUnitario": 25.42,
+              "mtoValorVenta": 25.42,
+              "mtoBaseIgv": 25.42,
               "porcentajeIgv": 18,
-              "igv": 1.83,
+              "igv": 4.58,
               "tipAfeIgv": 10,
-              "totalImpuestos": 1.83,
-              "mtoPrecioUnitario": 12
+              "totalImpuestos": 4.58,
+              "mtoPrecioUnitario": 30
+            },{
+              "codProducto": "P11",
+              "unidad": "NIU",
+              "descripcion": "AUDÍFONOS XM50 UGREEN (32gb, Amarillo)",
+              "cantidad": 1,
+              "mtoValorUnitario": 50.85,
+              "mtoValorVenta": 50.85,
+              "mtoBaseIgv": 50.85,
+              "porcentajeIgv": 18,
+              "igv": 9.15,
+              "tipAfeIgv": 10,
+              "totalImpuestos": 9.15,
+              "mtoPrecioUnitario": 60
             }],
           "legends": [
             {
               "code": "1000",
-              "value": "Son  y 20/100 Soles"
+              "value": "Son  y 00/100 Soles"
             }
           ]
         }

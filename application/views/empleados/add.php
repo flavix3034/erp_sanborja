@@ -55,6 +55,10 @@
 							<label>Fecha de Ingreso</label>
 							<input type="date" name="fecha_ingreso" class="form-control" value="<?= $e ? $e->fecha_ingreso : '' ?>">
 						</div>
+						<div class="col-sm-4" id="div_especialidad" style="<?= ($e && strtoupper($e->cargo) == 'TECNICO') ? '' : 'display:none;' ?>">
+							<label>Especialidad</label>
+							<input type="text" name="especialidad" class="form-control" value="<?= $e ? htmlspecialchars($e->especialidad) : '' ?>" placeholder="Ej: Computadoras y Laptops" style="text-transform:uppercase;">
+						</div>
 					</div>
 
 					<hr>
@@ -74,3 +78,16 @@
 .filitas { margin-bottom: 15px; }
 .panel-heading h4 { margin: 0; font-size: 15px; font-weight: bold; }
 </style>
+
+<script>
+$(function(){
+	$('input[name="cargo"]').on('input', function(){
+		var val = $(this).val().trim().toUpperCase();
+		if(val === 'TECNICO') {
+			$('#div_especialidad').show();
+		} else {
+			$('#div_especialidad').hide();
+		}
+	});
+});
+</script>

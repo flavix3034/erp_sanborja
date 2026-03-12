@@ -95,9 +95,6 @@
                         <th>Nombre</th>
                         <th>Categoria</th>
                         <th>Marca</th>
-
-                        <th>Modelo</th>
-                        <th>Color</th>
                         <th>Alerta<br>Cantidad</th>
                         <th>Precio</th>
                         <th>Precio<br>xMayor</th>
@@ -113,13 +110,9 @@
                         <th></th>
                         <th></th>
                         <th></th>
-
                         <th></th>
                         <th></th>
                         <th></th>
-                        <th></th>
-                        <th></th>
-
                         <th></th>
                         <th></th>
                     </tr>

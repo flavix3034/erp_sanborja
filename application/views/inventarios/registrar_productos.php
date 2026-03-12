@@ -42,12 +42,25 @@
         <label>Producto:</label>
         <?php
             // fecha product_id cantidad unidad store_id maestro_id
-            $cSql = "select a.id, a.name from tec_products a order by a.name";
+            $cSql = "SELECT a.id AS product_id, 0 AS variant_id, a.name FROM tec_products a".
+                " WHERE a.activo='1' AND a.id NOT IN (SELECT product_id FROM tec_product_variantes WHERE activo='1')".
+                " UNION ALL".
+                " SELECT pv.product_id, pv.id AS variant_id, CONVERT(fn_product_display_name(pv.product_id, pv.id) USING latin1) AS name".
+                " FROM tec_product_variantes pv".
+                " INNER JOIN tec_products a ON pv.product_id = a.id".
+                " WHERE a.activo='1' AND pv.activo='1'".
+                " ORDER BY name";
             $result = $this->db->query($cSql)->result_array();
-            $indice = "id";
-            $descrip = "name";
-            $ar     = $this->fm->conver_dropdown($result, $indice, $descrip);
-            echo form_dropdown('product_id', $ar, $product_id, 'class="form-control tip" id="product_id" required="required"');
+        ?>
+        <select class="form-control tip" id="sel_producto" required="required">
+            <option value="">Seleccione</option>
+            <?php foreach($result as $r): ?>
+                <option value="<?= $r['product_id'] ?>_<?= $r['variant_id'] ?>"><?= $r['name'] ?></option>
+            <?php endforeach; ?>
+        </select>
+        <input type="hidden" name="product_id" id="product_id" value="">
+        <input type="hidden" name="variant_id" id="variant_id" value="0">
+        <?php
 
         ?>
     </div>
@@ -121,10 +134,23 @@
         })
     }
 
+    $('#sel_producto').on('change', function(){
+        var val = $(this).val();
+        if (val) {
+            var parts = val.split('_');
+            $('#product_id').val(parts[0]);
+            $('#variant_id').val(parts[1]);
+        } else {
+            $('#product_id').val('');
+            $('#variant_id').val('0');
+        }
+    });
+
     function registrar_productos(){
         $.ajax({
             data    :{
                 product_id  : $("#product_id").val(),
+                variant_id  : $("#variant_id").val(),
                 unidad      : $("#unidad").val(),
                 cantidad    : $("#cantidad").val(),
                 maestro_id  : $("#maestro_id").val()

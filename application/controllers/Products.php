@@ -82,8 +82,6 @@ class Products extends CI_controller
         $price          = $_POST["price"];
         $imagen         = $_POST["imagen"];
         $marca          = $_POST["marca"];
-        $modelo         = $_POST["modelo"];
-        $color          = $_POST["color"];
         $precio_x_mayor = $_POST["precio_x_mayor"];
 
         $validacion = true;
@@ -138,8 +136,6 @@ class Products extends CI_controller
         $ar["price"]        = $price;
         //$ar["imagen"]       = $imagen;
         $ar["marca"]        = $marca;
-        $ar["modelo"]       = $modelo;
-        $ar["color"]        = $color;
         $ar["precio_x_mayor"] = $precio_x_mayor;
         $ar["impuesto"]     = $this->Igv;
         $ar["prod_serv"]    = "P"; // Producto
@@ -188,7 +184,7 @@ class Products extends CI_controller
 
             if($modo == 'insert'){
 
-                $cSql = "select max(id)+1 nuevo from tec_products where id < 99999";
+                $cSql = "select COALESCE(max(id),0)+1 nuevo from tec_products where id < 99999";
                 $ar["id"] = $this->db->query($cSql)->row()->nuevo;
 
                 if($this->db->insert("tec_products", $ar)){
@@ -240,6 +236,30 @@ class Products extends CI_controller
     /**
      * Guarda las variantes enviadas desde el formulario de producto
      */
+    private function generar_barcode_unico() {
+        do {
+            $barcode = str_pad(random_int(0, 999999999999), 12, '0', STR_PAD_LEFT);
+            $row = $this->db->select("barcode")->where("barcode", $barcode)->get("tec_product_variantes")->row();
+        } while ($row);
+        return $barcode;
+    }
+
+    private function generar_sku_unico() {
+        do {
+            $sku = ("" . random_int(1,9)) . random_int(0,999999999999);
+            $row = $this->db->select("sku")->where("sku", $sku)->get("tec_product_variantes")->row();
+        } while ($row);
+        return $sku;
+    }
+
+    private function generar_code_producto_unico() {
+        do {
+            $code = 'P' . str_pad(random_int(0, 9999999), 7, '0', STR_PAD_LEFT);
+            $row = $this->db->select("id")->where("code", $code)->get("tec_products")->row();
+        } while ($row);
+        return $code;
+    }
+
     private function guardar_variantes_producto($product_id) {
         $this->load->model('atributos_model');
 
@@ -262,6 +282,23 @@ class Products extends CI_controller
         for ($i = 0; $i < count($var_skus); $i++) {
             $sku     = trim($var_skus[$i]);
             $barcode = isset($var_barcodes[$i]) ? trim($var_barcodes[$i]) : '';
+
+            // Autogenerar SKU si está vacío
+            if (strlen($sku) == 0) {
+                do {
+                    $sku = ("" . random_int(1,9)) . random_int(0,999999999999);
+                    $row = $this->db->select("sku")->where("sku",$sku)->get("tec_product_variantes")->row();
+                } while ($row);
+            }
+
+            // Autogenerar barcode si está vacío (12 dígitos numéricos únicos)
+            if (strlen($barcode) == 0) {
+                do {
+                    $barcode = str_pad(random_int(0, 999999999999), 12, '0', STR_PAD_LEFT);
+                    $row = $this->db->select("barcode")->where("barcode",$barcode)->get("tec_product_variantes")->row();
+                } while ($row);
+            }
+
             $price   = isset($var_prices[$i]) && strlen(trim($var_prices[$i])) > 0 ? floatval($var_prices[$i]) : null;
             $pmayor  = isset($var_pmayors[$i]) && strlen(trim($var_pmayors[$i])) > 0 ? floatval($var_pmayors[$i]) : null;
             $activo  = in_array(strval($i), $var_activos) ? '1' : '';
@@ -366,8 +403,6 @@ class Products extends CI_controller
         $price          = $_POST["price"];
         $imagen         = (isset($_POST["imagen"]) ? $_POST["imagen"] : "");
         $marca          = $_POST["marca"];
-        $modelo         = $_POST["modelo"];
-        $color          = $_POST["color"];
         $precio_x_mayor = $_POST["precio_x_mayor"];
 
         $validacion = true;
@@ -421,8 +456,6 @@ class Products extends CI_controller
         $ar["alert_cantidad"] = $alert_cantidad;
         $ar["price"]        = $price;
         $ar["marca"]        = $marca;
-        $ar["modelo"]       = $modelo;
-        $ar["color"]        = $color;
         $ar["precio_x_mayor"] = $precio_x_mayor;
         $ar["impuesto"]     = $this->Igv;
         $ar["prod_serv"]    = "P"; // Producto
@@ -432,7 +465,7 @@ class Products extends CI_controller
 
             if($modo == 'insert'){
 
-                $cSql = "select max(id)+1 nuevo from tec_products where id < 99999";
+                $cSql = "select COALESCE(max(id),0)+1 nuevo from tec_products where id < 99999";
                 $ar["id"] = $this->db->query($cSql)->row()->nuevo;
                 
 
@@ -526,8 +559,6 @@ class Products extends CI_controller
         $ar["price"]        = $price;
         //$ar["imagen"]       = $imagen;
         $ar["marca"]        = $marca;
-        $ar["modelo"]       = $modelo;
-        $ar["color"]        = $color;
         $ar["precio_x_mayor"] = $precio_x_mayor;
         $ar["impuesto"]     = $this->Igv;
         $ar["prod_serv"]    = 'S';  // Servicio
@@ -576,7 +607,7 @@ class Products extends CI_controller
 
         if($validacion == true){
             if(strtolower($modo) == 'insert'){
-                $cSql = "select max(id)+1 nuevo from tec_products where id < 99999";
+                $cSql = "select COALESCE(max(id),0)+1 nuevo from tec_products where id < 99999";
                 $ar["id"] = $this->db->query($cSql)->row()->nuevo;
 
                 if($this->db->insert("tec_products", $ar)){
@@ -610,21 +641,30 @@ class Products extends CI_controller
 
     function busqueda_precio(){
         $dato1          = $_REQUEST["dato1"];
+        $variant_id     = isset($_REQUEST["variant_id"]) ? intval($_REQUEST["variant_id"]) : 0;
         $tipo_precio    = $_REQUEST["tipo_precio"];
 
-        $this->db->select("price, precio_x_mayor");
-        $this->db->where("id",$dato1);
-        
-        $result = $this->db->get("tec_products")->result();
-
+        // Si hay variante, buscar precio de la variante primero
         $respuesta = "";
-        foreach($result as $r){
-            if($tipo_precio == 'por_menor'){
-                $respuesta = $r->price;
-            }else{
-                $respuesta = $r->precio_x_mayor;
+        if ($variant_id > 0) {
+            $row = $this->db->select("price, precio_x_mayor")->where("id", $variant_id)->get("tec_product_variantes")->row();
+            if ($row) {
+                if ($tipo_precio == 'por_menor' && !is_null($row->price) && $row->price > 0) {
+                    $respuesta = $row->price;
+                } elseif ($tipo_precio != 'por_menor' && !is_null($row->precio_x_mayor) && $row->precio_x_mayor > 0) {
+                    $respuesta = $row->precio_x_mayor;
+                }
             }
         }
+
+        // Fallback al producto padre si no se encontró precio en variante
+        if ($respuesta == "") {
+            $row = $this->db->select("price, precio_x_mayor")->where("id", $dato1)->get("tec_products")->row();
+            if ($row) {
+                $respuesta = ($tipo_precio == 'por_menor') ? $row->price : $row->precio_x_mayor;
+            }
+        }
+
         echo $respuesta;
     } 
 
@@ -648,20 +688,40 @@ class Products extends CI_controller
 
         $cad_3 = " and a.prod_serv = '$tipo'";        
 
-        $cSql       = "select a.id, a.code, a.name, b.name category_id, a.marca, a.modelo, a.color, a.alert_cantidad, a.price, a.precio_x_mayor,
+        $cSql       = "SELECT a.id, a.code, a.name, b.name category_id, a.marca, a.alert_cantidad, a.price, a.precio_x_mayor,
             concat('<button onclick=editar(', a.id, ')><i class=\'glyphicon glyphicon-edit\'></i></button>',
-            '<button onclick=anular(', a.id, ') style=\'color:rgb(255,100,100)\' title=\'Anular\'><i class=\'glyphicon glyphicon-remove\'></i></button>')".
-            " as acciones, z.costo_con_igv".
-            " from tec_products a".
-            " left join (
-                select b.product_id, round(max(b.precio_con_igv),2) costo_con_igv from tec_compra_items b
-                inner join tec_compras c on b.compra_id=c.id
-                group by b.product_id
-            ) z on a.id=z.product_id".
-            " inner join tec_categories b on a.category_id=b.id".
-            $cad_1 . $cad_2 . $cad_3 .
-            " where a.activo='1'".
-            " order by a.name";
+            '<button onclick=anular(', a.id, ') style=\'color:rgb(255,100,100)\' title=\'Anular\'><i class=\'glyphicon glyphicon-remove\'></i></button>')
+            as acciones, z.costo_con_igv
+            FROM tec_products a
+            LEFT JOIN (
+                SELECT b.product_id, COALESCE(b.variant_id,0) variant_id, round(max(b.precio_con_igv),2) costo_con_igv FROM tec_compra_items b
+                INNER JOIN tec_compras c ON b.compra_id=c.id
+                GROUP BY b.product_id, COALESCE(b.variant_id,0)
+            ) z ON a.id=z.product_id AND z.variant_id = 0
+            INNER JOIN tec_categories b ON a.category_id=b.id
+            WHERE a.activo='1' AND a.id NOT IN (SELECT product_id FROM tec_product_variantes WHERE activo='1')
+            " . $cad_2 . $cad_3 . "
+
+            UNION ALL
+
+            SELECT a.id, pv.barcode code, CONVERT(fn_product_display_name(pv.product_id, pv.id) USING latin1) name,
+            b.name category_id, a.marca, a.alert_cantidad,
+            COALESCE(pv.price, a.price) price, COALESCE(pv.precio_x_mayor, a.precio_x_mayor) precio_x_mayor,
+            concat('<button onclick=editar(', a.id, ')><i class=\'glyphicon glyphicon-edit\'></i></button>',
+            '<button onclick=anular(', a.id, ') style=\'color:rgb(255,100,100)\' title=\'Anular\'><i class=\'glyphicon glyphicon-remove\'></i></button>')
+            as acciones, zv.costo_con_igv
+            FROM tec_product_variantes pv
+            INNER JOIN tec_products a ON pv.product_id = a.id
+            INNER JOIN tec_categories b ON a.category_id=b.id
+            LEFT JOIN (
+                SELECT b.product_id, COALESCE(b.variant_id,0) variant_id, round(max(b.precio_con_igv),2) costo_con_igv FROM tec_compra_items b
+                INNER JOIN tec_compras c ON b.compra_id=c.id
+                GROUP BY b.product_id, COALESCE(b.variant_id,0)
+            ) zv ON pv.product_id=zv.product_id AND pv.id=zv.variant_id
+            WHERE a.activo='1' AND pv.activo='1'
+            " . $cad_2 . $cad_3 . "
+
+            ORDER BY name";
 
         //echo($cSql);
 
@@ -670,7 +730,7 @@ class Products extends CI_controller
         //fclose($gn);
         // '<button onclick=eliminar(', a.id, ') style=\'color:rgb(200,0,0)\' title=\'Eliminar\'><i class=\'glyphicon glyphicon-remove\'></i></button>',
         $result     = $this->db->query($cSql)->result_array();
-        $ar_campos  = array('id', 'code', 'name', 'category_id', 'marca', 'modelo', 'color', 'alert_cantidad', 'price', 'precio_x_mayor','costo_con_igv','acciones');
+        $ar_campos  = array('id', 'code', 'name', 'category_id', 'marca', 'alert_cantidad', 'price', 'precio_x_mayor','costo_con_igv','acciones');
         echo $this->fm->json_datatable($ar_campos, $result);
     }
 
@@ -681,7 +741,7 @@ class Products extends CI_controller
             $cad_2 = " and a.category_id = {$categoria}";
         }
         
-        $cSql   = "select a.id, a.code, a.name, b.name category_id, a.unidad, a.alert_cantidad, a.price, a.imagen, a.marca, a.modelo, a.color".
+        $cSql   = "select a.id, a.code, a.name, b.name category_id, a.unidad, a.alert_cantidad, a.price, a.imagen, a.marca".
                 " from tec_products a".
                 " inner join tec_categories b on a.category_id=b.id".
                 $cad_1 . $cad_2 .
@@ -945,143 +1005,338 @@ class Products extends CI_controller
     */
 
     function leer_csv(){
-
         $opciones_csv = $_POST["opciones_csv"];
-
-        // ---- Recibiendo el archivo -----
-        $file_tmp   = $_FILES['fichero1']['tmp_name'];
-        
-        
-        if(strlen($file_tmp)>0){
-            $file_name  = $_FILES['fichero1']['name'];
-            $file_size  = $_FILES['fichero1']['size'];
-            $file_type  = $_FILES['fichero1']['type'];
-            
-            $ar_f = explode('.',$file_name);
-            $miE  = end($ar_f);
-
-            $file_ext  = strtolower($miE);
-
-            //$expensions = array("jpeg","jpg","png");
-            //if(in_array($file_ext, $expensions) === false){
-            //    $errors[]="extension not allowed, please choose a JPEG or PNG file.";
-            //}
-         
-            if($file_size > 2097152*2) {
-                $errors[]='File size must be exactely 4 MB';
-            }
-         
-            if(empty($errors) == true) {
-                $ar["imagen"] = $file_name;
-                
-                move_uploaded_file($file_tmp, 'assets/uploads/'.$file_name);
-                
-                // GRABANDO EL NOMBRE DEL ARCHIVO EN LA TABLA
-                //$arx = array("archivo1"=>$file_name);
-                //$this->db->set($arx)->where("suscrip_id",$suscrip_id)->where("examen_id",$examen_id)->update("suscrip_detalle");
-
-                $data["msg"]            = "Se sube correctamente el archivo";
-                $data["rpta_msg"]       = "success";
-
-            }else{
-                
-                $data["msg"]            = print_r($errors,true);
-                $data["rpta_msg"]       = "warning";
-            }
-        }
-        
-
-        //**** LEER UN FICHERO CSV DESDE PHP ****
+        $file_tmp = $_FILES['fichero1']['tmp_name'];
+        $file_name = $_FILES['fichero1']['name'];
         $cads = "";
-        $file = fopen(base_url('/assets/uploads/'.$file_name), "r");
+        $errors = array();
 
-        if($file != false){
-            $data = array();
-            $n=0; $nr=0; 
-            while (!feof($file) && $n < 10000) {
-                $n++;
-                $validar_fila = true;
-                
-                if($opciones_csv == "2"){ // un simple texto delimitado por ;
-                    $cLinea = fgets($file);
-                    $ar = explode(";",$cLinea);
-                }
-
-                if($opciones_csv == "1"){ // delimitado ; e entrcomillado
-                    $ar = array();
-                    $ar[] = fgetcsv($file,null,';','"');
-                    //print_r($ar);
-                    //echo "<br><br>";
-                }
-
-                if($n>1){
-                    
-                    // codigo   nombre  marca   modelo  categoria   unidad  precio_x_menor  precio_x_mayor  alerta_cantidad
-
-                    if($opciones_csv == "2"){
-                        $code       = $ar[0];
-                        $name       = $ar[1];
-                        $marca      = $ar[2];
-                        $modelo     = $ar[3];
-                        $categoria  = $ar[4];
-                        $unidad     = $ar[5];
-                        $precio_x_menor = $ar[6];
-                        $precio_x_mayor = $ar[7];
-                        $alerta_cantidad = $ar[8];
-                    }
-
-                    if($opciones_csv == "1"){
-                        $code       = $ar[0][0];
-                        $name       = $ar[0][1];
-                        $marca      = $ar[0][2];
-                        $modelo     = $ar[0][3];
-                        $categoria  = $ar[0][4];
-                        $unidad     = $ar[0][5];
-                        $precio_x_menor = $ar[0][6];
-                        $precio_x_mayor = $ar[0][7];
-                        $alerta_cantidad = $ar[0][8];
-                    }
-                    
-                    $fec_act    = date("Y-m-d");
-                    
-                    // Verificando su Unicidad
-                    $cSql = "select id from tec_products where code='".$code."'"; 
-                    if($n==2){
-                        //$cads .= $cSql . "<br><br>";
-                    }
-                    $query = $this->db->query($cSql); // ,array($cod_afi, $ccodigo, $anno, $mes)
-                    $existe = false;
-                    foreach($query->result() as $r){
-                        $existe = true;
-                    }
-
-                    // Validando la categoria
-                    $que = $this->db->where("id",$categoria)->get("tec_categories");
-                    $n_que = 0;
-                    foreach($que->result() as $r){
-                        $n_que++;
-                    }
-                    if($n_que == 0){ $validar_fila = false; }
-
-                    if(!$existe && $validar_fila==true){
-                        $cSql = "insert into tec_products(code, name, marca, modelo, category_id, unidad, price, precio_x_mayor, alert_cantidad) values".
-                            "('".$code."','".$name."','".$marca."','".$modelo."','".$categoria."','".$unidad."','".$precio_x_menor."','".$precio_x_mayor."','".$alerta_cantidad."')";
-                        $this->db->query($cSql);
-                        $nr++;
-                    }else{
-                        $cads .= $n.") [YA EXISTE O NO ES VALIDO LA CATEGORIA] ". $code . ' ' . $name . ' ' . $marca . ' ' . $modelo . "<br>";
-                    }
-                }
-            }
-            fclose($file);
-            $cads .= "<p style=\"font-weight:bold;\">Ingresadas:".$nr." de ".($n-1)." filas</p>";
+        if(strlen($file_tmp) == 0){
+            $data["page_title"] = "Importación de Productos";
+            $data["respuesta"] = "<div class='alert alert-danger'>No se seleccionó ningún archivo.</div>";
+            $this->template->load('production/index', 'products/importacion', $data);
+            return;
         }
 
-        $data["page_title"] = "Agregar Productos en CSV";
-        $data["respuesta"]  = $cads;
-            
-        $this->template->load('production/index', 'products/importacion', $data);
+        if($_FILES['fichero1']['size'] > 2097152*2){
+            $errors[] = 'El archivo excede el tamaño máximo de 4MB';
+        }
 
+        if(!empty($errors)){
+            $data["page_title"] = "Importación de Productos";
+            $data["respuesta"] = "<div class='alert alert-danger'>" . implode('<br>', $errors) . "</div>";
+            $this->template->load('production/index', 'products/importacion', $data);
+            return;
+        }
+
+        move_uploaded_file($file_tmp, 'assets/uploads/' . $file_name);
+        $file = fopen('assets/uploads/' . $file_name, "r");
+
+        if($file == false){
+            $data["page_title"] = "Importación de Productos";
+            $data["respuesta"] = "<div class='alert alert-danger'>No se pudo abrir el archivo.</div>";
+            $this->template->load('production/index', 'products/importacion', $data);
+            return;
+        }
+
+        // Leer todas las filas
+        $filas = array();
+        while(!feof($file)){
+            if($opciones_csv == "1"){
+                $row = fgetcsv($file, null, ';', '"');
+            } else {
+                $linea = fgets($file);
+                if($linea === false) break;
+                $row = explode(";", rtrim($linea, "\r\n"));
+            }
+            if($row !== false && count($row) > 0 && strlen(trim(implode('', $row))) > 0){
+                $filas[] = $row;
+            }
+        }
+        fclose($file);
+
+        if(count($filas) < 2){
+            $data["page_title"] = "Importación de Productos";
+            $data["respuesta"] = "<div class='alert alert-warning'>El archivo no tiene filas de datos.</div>";
+            $this->template->load('production/index', 'products/importacion', $data);
+            return;
+        }
+
+        // Detectar modo: nuevo (col 0 = "tipo") o legacy (col 0 = "codigo")
+        $header = $filas[0];
+        $col0 = strtolower(trim($header[0]));
+        $modo_nuevo = ($col0 == 'tipo');
+
+        if(!$modo_nuevo){
+            // === MODO LEGACY (sin variantes) ===
+            $this->_leer_csv_legacy($filas);
+            return;
+        }
+
+        // === MODO NUEVO (con soporte de variantes) ===
+        $this->load->model('atributos_model');
+        $store_id = intval(isset($_SESSION['store_id']) ? $_SESSION['store_id'] : 1);
+
+        // Fase 1: Parsear atributos del header (cols 9+)
+        $attr_map = array(); // col_index => atributo_id
+        $val_map = array();  // atributo_id => [valor_upper => valor_id]
+
+        for($col = 9; $col < count($header); $col++){
+            $attr_nombre = trim($header[$col]);
+            if(strlen($attr_nombre) == 0) continue;
+            $attr = $this->atributos_model->get_atributo_by_nombre($attr_nombre);
+            if(!$attr){
+                $data["page_title"] = "Importación de Productos";
+                $data["respuesta"] = "<div class='alert alert-danger'>Error en cabecera: El atributo '<b>" . htmlspecialchars($attr_nombre) . "</b>' (columna " . ($col+1) . ") no existe en el sistema.</div>";
+                $this->template->load('production/index', 'products/importacion', $data);
+                return;
+            }
+            $attr_map[$col] = $attr->id;
+            // Pre-cargar valores de este atributo
+            if(!isset($val_map[$attr->id])){
+                $val_map[$attr->id] = array();
+                $valores = $this->atributos_model->get_valores($attr->id);
+                foreach($valores as $v){
+                    $val_map[$attr->id][mb_strtoupper($v->valor)] = $v->id;
+                }
+            }
+        }
+
+        // Fase 2: Parsear y agrupar filas
+        $entradas = array(); // lista de {tipo, data, variantes[]}
+        $nr = 0; $n_errores = 0;
+        $current_pv = null;
+
+        for($i = 1; $i < count($filas); $i++){
+            $row = $filas[$i];
+            $nfila = $i + 1;
+            $tipo = strtoupper(trim($row[0]));
+
+            if($tipo == 'P'){
+                // Producto simple
+                $entradas[] = array(
+                    'tipo' => 'P',
+                    'fila' => $nfila,
+                    'code' => trim(isset($row[1]) ? $row[1] : ''),
+                    'name' => trim(isset($row[2]) ? $row[2] : ''),
+                    'marca' => trim(isset($row[3]) ? $row[3] : ''),
+                    'categoria' => trim(isset($row[4]) ? $row[4] : ''),
+                    'unidad' => trim(isset($row[5]) ? $row[5] : ''),
+                    'precio_x_menor' => trim(isset($row[6]) ? $row[6] : '0'),
+                    'precio_x_mayor' => trim(isset($row[7]) ? $row[7] : '0'),
+                    'alerta_cantidad' => trim(isset($row[8]) ? $row[8] : '0'),
+                    'variantes' => array()
+                );
+                $current_pv = null;
+
+            } elseif($tipo == 'PV'){
+                // Producto padre con variantes
+                $entry = array(
+                    'tipo' => 'PV',
+                    'fila' => $nfila,
+                    'code' => '',
+                    'name' => trim(isset($row[2]) ? $row[2] : ''),
+                    'marca' => trim(isset($row[3]) ? $row[3] : ''),
+                    'categoria' => trim(isset($row[4]) ? $row[4] : ''),
+                    'unidad' => trim(isset($row[5]) ? $row[5] : ''),
+                    'precio_x_menor' => trim(isset($row[6]) ? $row[6] : '0'),
+                    'precio_x_mayor' => trim(isset($row[7]) ? $row[7] : '0'),
+                    'alerta_cantidad' => trim(isset($row[8]) ? $row[8] : '0'),
+                    'variantes' => array()
+                );
+                $entradas[] = $entry;
+                $current_pv = count($entradas) - 1;
+
+            } elseif($tipo == 'V'){
+                if($current_pv === null){
+                    $cads .= "Fila {$nfila}: <span style='color:red;'>Variante (V) sin producto padre (PV) previo. Se omite.</span><br>";
+                    $n_errores++;
+                    continue;
+                }
+                // Parsear atributos de la variante
+                $attrs_var = array();
+                foreach($attr_map as $col_idx => $atributo_id){
+                    $valor_text = isset($row[$col_idx]) ? trim($row[$col_idx]) : '';
+                    if(strlen($valor_text) == 0) continue;
+                    $valor_upper = mb_strtoupper($valor_text);
+                    if(!isset($val_map[$atributo_id][$valor_upper])){
+                        $cads .= "Fila {$nfila}: <span style='color:red;'>Valor '" . htmlspecialchars($valor_text) . "' no existe para el atributo. Se omite variante.</span><br>";
+                        $n_errores++;
+                        continue 2;
+                    }
+                    $attrs_var[] = array(
+                        'atributo_id' => $atributo_id,
+                        'valor_id' => $val_map[$atributo_id][$valor_upper]
+                    );
+                }
+                if(empty($attrs_var)){
+                    $cads .= "Fila {$nfila}: <span style='color:red;'>Variante sin ningún atributo definido. Se omite.</span><br>";
+                    $n_errores++;
+                    continue;
+                }
+
+                $precio_var = isset($row[6]) ? trim($row[6]) : '';
+                $pmayor_var = isset($row[7]) ? trim($row[7]) : '';
+
+                $entradas[$current_pv]['variantes'][] = array(
+                    'fila' => $nfila,
+                    'precio' => strlen($precio_var) > 0 ? floatval($precio_var) : null,
+                    'precio_x_mayor' => strlen($pmayor_var) > 0 ? floatval($pmayor_var) : null,
+                    'attrs' => $attrs_var
+                );
+            } else {
+                $cads .= "Fila {$nfila}: <span style='color:orange;'>Tipo '" . htmlspecialchars($tipo) . "' no reconocido. Se omite.</span><br>";
+                $n_errores++;
+            }
+        }
+
+        // Fase 3 y 4: Validar e insertar
+        $this->db->trans_start();
+
+        foreach($entradas as $entry){
+            $nfila = $entry['fila'];
+
+            // Validar categoría
+            $cat_row = $this->db->where("id", $entry['categoria'])->get("tec_categories")->row();
+            if(!$cat_row){
+                $cads .= "Fila {$nfila}: <span style='color:red;'>Categoría '" . htmlspecialchars($entry['categoria']) . "' no existe.</span><br>";
+                $n_errores++;
+                continue;
+            }
+
+            if($entry['tipo'] == 'P'){
+                // Validar código único
+                $existe = $this->db->select("id")->where("code", $entry['code'])->get("tec_products")->row();
+                if($existe){
+                    $cads .= "Fila {$nfila}: <span style='color:red;'>Código '" . htmlspecialchars($entry['code']) . "' ya existe.</span><br>";
+                    $n_errores++;
+                    continue;
+                }
+                // Insertar producto simple
+                $this->db->insert('tec_products', array(
+                    'code' => $entry['code'],
+                    'name' => $entry['name'],
+                    'marca' => $entry['marca'],
+                    'category_id' => $entry['categoria'],
+                    'unidad' => $entry['unidad'],
+                    'price' => floatval($entry['precio_x_menor']),
+                    'precio_x_mayor' => floatval($entry['precio_x_mayor']),
+                    'alert_cantidad' => intval($entry['alerta_cantidad'])
+                ));
+                $nr++;
+                $cads .= "Fila {$nfila}: <span style='color:green;'>Producto '" . htmlspecialchars($entry['name']) . "' importado.</span><br>";
+
+            } elseif($entry['tipo'] == 'PV'){
+                if(empty($entry['variantes'])){
+                    $cads .= "Fila {$nfila}: <span style='color:orange;'>Producto PV sin variantes (V). Se omite.</span><br>";
+                    $n_errores++;
+                    continue;
+                }
+                // Autogenerar código para padre
+                $code_padre = $this->generar_code_producto_unico();
+
+                $this->db->insert('tec_products', array(
+                    'code' => $code_padre,
+                    'name' => $entry['name'],
+                    'marca' => $entry['marca'],
+                    'category_id' => $entry['categoria'],
+                    'unidad' => $entry['unidad'],
+                    'price' => floatval($entry['precio_x_menor']),
+                    'precio_x_mayor' => floatval($entry['precio_x_mayor']),
+                    'alert_cantidad' => intval($entry['alerta_cantidad'])
+                ));
+                $product_id = $this->db->insert_id();
+                $nr++;
+
+                // Insertar variantes
+                $nv = 0;
+                foreach($entry['variantes'] as $var){
+                    $barcode = $this->generar_barcode_unico();
+                    $sku = $this->generar_sku_unico();
+
+                    $price_var = $var['precio'] !== null ? $var['precio'] : floatval($entry['precio_x_menor']);
+                    $pmayor_var = $var['precio_x_mayor'] !== null ? $var['precio_x_mayor'] : floatval($entry['precio_x_mayor']);
+
+                    $var_id = $this->atributos_model->insertar_variante(array(
+                        'product_id' => $product_id,
+                        'sku' => $sku,
+                        'barcode' => $barcode,
+                        'price' => $price_var,
+                        'precio_x_mayor' => $pmayor_var,
+                        'activo' => '1'
+                    ));
+
+                    // Atributos de la variante
+                    foreach($var['attrs'] as $a){
+                        $this->atributos_model->insertar_variante_atributo(array(
+                            'variante_id' => $var_id,
+                            'atributo_id' => $a['atributo_id'],
+                            'valor_id' => $a['valor_id']
+                        ));
+                    }
+
+                    // Stock inicial
+                    $this->db->insert('tec_prod_store', array(
+                        'product_id' => $product_id,
+                        'store_id' => $store_id,
+                        'stock' => 0,
+                        'variant_id' => $var_id
+                    ));
+                    $nv++;
+                }
+                $cads .= "Fila {$nfila}: <span style='color:green;'>Producto '" . htmlspecialchars($entry['name']) . "' con {$nv} variante(s) importado.</span><br>";
+            }
+        }
+
+        $this->db->trans_complete();
+
+        $total_filas = count($filas) - 1;
+        $cads .= "<br><p style='font-weight:bold;'>Productos importados: {$nr} de {$total_filas} filas procesadas";
+        if($n_errores > 0) $cads .= " ({$n_errores} error(es))";
+        $cads .= "</p>";
+
+        $data["page_title"] = "Importación de Productos";
+        $data["respuesta"] = $cads;
+        $this->template->load('production/index', 'products/importacion', $data);
+    }
+
+    // Modo legacy: CSV sin columna "tipo" (formato anterior)
+    private function _leer_csv_legacy($filas){
+        $cads = "";
+        $nr = 0;
+        for($i = 1; $i < count($filas); $i++){
+            $ar = $filas[$i];
+            $nfila = $i + 1;
+            $code = trim(isset($ar[0]) ? $ar[0] : '');
+            $name = trim(isset($ar[1]) ? $ar[1] : '');
+            $marca = trim(isset($ar[2]) ? $ar[2] : '');
+            $modelo = trim(isset($ar[3]) ? $ar[3] : '');
+            $categoria = trim(isset($ar[4]) ? $ar[4] : '');
+            $unidad = trim(isset($ar[5]) ? $ar[5] : '');
+            $precio_x_menor = trim(isset($ar[6]) ? $ar[6] : '0');
+            $precio_x_mayor = trim(isset($ar[7]) ? $ar[7] : '0');
+            $alerta_cantidad = trim(isset($ar[8]) ? $ar[8] : '0');
+
+            $existe = $this->db->select("id")->where("code", $code)->get("tec_products")->row();
+            $cat_row = $this->db->where("id", $categoria)->get("tec_categories")->row();
+
+            if(!$existe && $cat_row){
+                $this->db->insert('tec_products', array(
+                    'code' => $code, 'name' => $name, 'marca' => $marca,
+                    'category_id' => $categoria, 'unidad' => $unidad,
+                    'price' => floatval($precio_x_menor), 'precio_x_mayor' => floatval($precio_x_mayor),
+                    'alert_cantidad' => intval($alerta_cantidad)
+                ));
+                $nr++;
+            } else {
+                $cads .= $nfila . ") [YA EXISTE O CATEGORÍA INVÁLIDA] " . $code . ' ' . $name . "<br>";
+            }
+        }
+        $cads .= "<p style='font-weight:bold;'>Ingresadas: {$nr} de " . (count($filas)-1) . " filas</p>";
+
+        $data["page_title"] = "Importación de Productos";
+        $data["respuesta"] = $cads;
+        $this->template->load('production/index', 'products/importacion', $data);
     }
 
     public function importacion(){

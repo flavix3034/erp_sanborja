@@ -15,8 +15,8 @@
                 ->order_by('a.id','desc')->get_compiled_select();
             die($cora);*/
 
-            $result = $this->db->select("a.id, a.persona, c.name producto, a.cantidad, d.name store_id, a.fechah, a.inv_id,
-                a.tipo_mov, a.obs, e.name store_id_destino, a.confirmado, b.metodo, concat('<a href=\"#\" onclick=\"eliminar(',a.id,')\"><i class=\"glyphicon glyphicon-remove\"></i></a>') opciones")
+            $result = $this->db->select("a.id, a.persona, fn_product_display_name(a.product_id, a.variant_id) producto, a.cantidad, d.name store_id, a.fechah, a.inv_id,
+                a.tipo_mov, a.obs, e.name store_id_destino, a.confirmado, b.metodo, concat('<a href=\"#\" onclick=\"eliminar(',a.id,')\"><i class=\"glyphicon glyphicon-remove\"></i></a>') opciones", FALSE)
                 ->from('tec_movim a')
                 ->join('tec_metodos_inv b', 'a.metodo = b.id','inner')
                 ->join('tec_products c','a.product_id = c.id')

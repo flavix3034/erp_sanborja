@@ -110,68 +110,68 @@ class Inventarios_model extends CI_Model
         //}
     }
 
-    function kardex($product_id, $id_inv, $store_id){
+    function kardex($product_id, $id_inv, $store_id, $variant_id = 0){
+        $variant_id = intval($variant_id);
+
         // Averiguando la fecha final del inventario
         $fecha = "";
         if(isset($id_inv) && strlen($id_inv."") > 0){
             $cSql = "select fecha_f from tec_maestro_inv where id = {$id_inv}";
             $query = $this->db->query($cSql);
-            //$fecha_f = "";
             foreach($query->result() as $r){
                 $fecha = $r->fecha_f;
             }
         }
 
+        $cad_variant = " and COALESCE(com_i.variant_id,0) = {$variant_id}";
+        $cad_variant_venta = " and COALESCE(sxi.variant_id,0) = {$variant_id}";
+        $cad_variant_mov = " and COALESCE(mo.variant_id,0) = {$variant_id}";
+
         if(strlen($fecha)>0){
-            //$fecha      = "2022-03-01";
-            //$product_id = "1";
-            //$store_id   = "1";
-            //die("IDragon");
-            $cSql = "select a.* from 
+            $cSql = "select a.* from
                 (
-                select date(i.fecha) fecha, if(isnull(i.cantidad),0,i.cantidad) cantidad, 'INICIAL' tipo 
+                select date(i.fecha) fecha, if(isnull(i.cantidad),0,i.cantidad) cantidad, 'INICIAL' tipo
                     from tec_inventarios i
                     where i.product_id = {$product_id}
-                union 
-                select date(com.fecha_ingreso) fecha, if(isnull(com_i.cantidad),0,com_i.cantidad) cantidad, 'COMPRA' tipo 
+                union
+                select date(com.fecha_ingreso) fecha, if(isnull(com_i.cantidad),0,com_i.cantidad) cantidad, 'COMPRA' tipo
                     from tec_compras com
                     inner join tec_compra_items com_i on com.id = com_i.compra_id
-                    where com.store_id='{$store_id}' and com.fecha_ingreso > '{$fecha}' and com_i.product_id = {$product_id}
+                    where com.store_id='{$store_id}' and com.fecha_ingreso > '{$fecha}' and com_i.product_id = {$product_id}{$cad_variant}
                 union
                 select date(sx.`date`) fecha, sxi.quantity cantidad, 'VENTA' tipo
-                    from tec_sales sx 
+                    from tec_sales sx
                     inner join tec_sale_items sxi on sx.id = sxi.sale_id
-                    where sx.store_id='{$store_id}' and sx.date > '{$fecha}' and sx.anulado != '1' and sxi.product_id = {$product_id}
+                    where sx.store_id='{$store_id}' and sx.date > '{$fecha}' and sx.anulado != '1' and sxi.product_id = {$product_id}{$cad_variant_venta}
                 union
                 select date(mo.fechah) fecha, mo.cantidad, if(mo.tipo_mov='I','INGRESO','SALIDA') tipo
                     from tec_movim mo
-                    where mo.store_id='{$store_id}' and fechah > '{$fecha}' and mo.product_id = {$product_id}
-                ) a order by a.fecha";            
+                    where mo.store_id='{$store_id}' and fechah > '{$fecha}' and mo.product_id = {$product_id}{$cad_variant_mov}
+                ) a order by a.fecha";
             $query_kardex = $this->db->query($cSql);
         }else{
-            $cSql = "select a.* from 
+            $cSql = "select a.* from
                 (
-                select date(i.fecha) fecha, if(isnull(i.cantidad),0,i.cantidad) cantidad, 'INICIAL' tipo 
+                select date(i.fecha) fecha, if(isnull(i.cantidad),0,i.cantidad) cantidad, 'INICIAL' tipo
                     from tec_inventarios i
                     where i.product_id = {$product_id}
-                union 
-                select date(com.fecha_ingreso) fecha, sum(if(isnull(com_i.cantidad),0,com_i.cantidad)) cantidad, 'COMPRA' tipo 
+                union
+                select date(com.fecha_ingreso) fecha, sum(if(isnull(com_i.cantidad),0,com_i.cantidad)) cantidad, 'COMPRA' tipo
                     from tec_compras com
                     inner join tec_compra_items com_i on com.id = com_i.compra_id
-                    where com.store_id='{$store_id}' and com_i.product_id = {$product_id}
+                    where com.store_id='{$store_id}' and com_i.product_id = {$product_id}{$cad_variant}
                     group by date(com.fecha_ingreso)
                 union
                 select date(sx.`date`) fecha, sum(sxi.quantity) cantidad, 'VENTA' tipo
-                    from tec_sales sx 
+                    from tec_sales sx
                     inner join tec_sale_items sxi on sx.id = sxi.sale_id
-                    where sx.store_id='{$store_id}' and sx.anulado != '1' and sxi.product_id = {$product_id}
+                    where sx.store_id='{$store_id}' and sx.anulado != '1' and sxi.product_id = {$product_id}{$cad_variant_venta}
                     group by date(sx.`date`)
                 union
                 select date(mo.fechah) fecha, mo.cantidad, if(mo.tipo_mov='I','INGRESO','SALIDA') tipo
                     from tec_movim mo
-                    where mo.store_id='{$store_id}' and mo.product_id = {$product_id}
-                ) a order by a.fecha";            
-            //die($cSql);
+                    where mo.store_id='{$store_id}' and mo.product_id = {$product_id}{$cad_variant_mov}
+                ) a order by a.fecha";
             $query_kardex = $this->db->query($cSql);
         }
 
@@ -180,8 +180,16 @@ class Inventarios_model extends CI_Model
         $estilo_tit_minimo  = "padding:10px 4px;font-style:normal;color:rgb(120,120,120);";
         $estilo_alarma      = "padding:5px 4px;color:red;";
         $estilo_minimo      = "padding:5px 4px; color:rgb(120,120,120);";
-        
-        echo "<h2>" . $this->getNombre_producto($product_id) . "</h2>";
+
+        // Titulo: mostrar nombre con variante si aplica
+        if ($variant_id > 0) {
+            $cSql = "select CONVERT(fn_product_display_name(?, ?) USING latin1) as nombre";
+            $row = $this->db->query($cSql, array($product_id, $variant_id))->row();
+            $nombre = $row ? $row->nombre : $this->getNombre_producto($product_id);
+        } else {
+            $nombre = $this->getNombre_producto($product_id);
+        }
+        echo "<h2>" . $nombre . "</h2>";
 
         echo "<table border='1'>";
         echo "<tr>";
@@ -215,12 +223,13 @@ class Inventarios_model extends CI_Model
         echo "</table>";
     }
 
-    function kardex_guardar($product_id, $store_id){
+    function kardex_guardar($product_id, $store_id, $variant_id = 0){
         // ES LO MISMO QUE LA FUNCION KARDEX, PERO SE CENTRA EN REGISTRAR Y ENTREGAR EL STOCK DEL PRODUCTO
-        
+        $variant_id = $variant_id * 1;
+
         // VERIFICA SI EXISTE EL PRODUCTO EN TABLA STOCK
-        $cSql = "select id from tec_prod_store where product_id = ? and store_id = ?";
-        $query = $this->db->query($cSql, array($product_id, $store_id));
+        $cSql = "select id from tec_prod_store where product_id = ? and store_id = ? and COALESCE(variant_id,0) = ?";
+        $query = $this->db->query($cSql, array($product_id, $store_id, $variant_id));
         $existe = false;
         foreach($query->result() as $r){
             $existe = true;
@@ -228,32 +237,38 @@ class Inventarios_model extends CI_Model
         if (!$existe){
             $ar["product_id"]   = $product_id;
             $ar["store_id"]     = $store_id;
+            $ar["variant_id"]   = $variant_id;
             $this->db->set($ar)->insert('tec_prod_store');
         }
 
+        // Filtro de variant_id para las tablas de transacciones
+        $cad_variant_compra = ($variant_id > 0) ? " and COALESCE(com_i.variant_id,0) = {$variant_id}" : " and COALESCE(com_i.variant_id,0) = 0";
+        $cad_variant_venta  = ($variant_id > 0) ? " and COALESCE(sxi.variant_id,0) = {$variant_id}" : " and COALESCE(sxi.variant_id,0) = 0";
+        $cad_variant_movim  = ($variant_id > 0) ? " and COALESCE(mo.variant_id,0) = {$variant_id}" : " and COALESCE(mo.variant_id,0) = 0";
+
         // CALCULANDO EL STOCK
-        $cSql = "select a.* from 
+        $cSql = "select a.* from
             (
-            select date(i.fecha) fecha, if(isnull(i.cantidad),0,i.cantidad) cantidad, 'INICIAL' tipo 
+            select date(i.fecha) fecha, if(isnull(i.cantidad),0,i.cantidad) cantidad, 'INICIAL' tipo
                 from tec_inventarios i
                 where i.product_id = {$product_id}
-            union 
-            select date(com.fecha_ingreso) fecha, sum(if(isnull(com_i.cantidad),0,com_i.cantidad)) cantidad, 'COMPRA' tipo 
+            union
+            select date(com.fecha_ingreso) fecha, sum(if(isnull(com_i.cantidad),0,com_i.cantidad)) cantidad, 'COMPRA' tipo
                 from tec_compras com
                 inner join tec_compra_items com_i on com.id = com_i.compra_id
-                where com.store_id='{$store_id}' and com_i.product_id = {$product_id}
+                where com.store_id='{$store_id}' and com_i.product_id = {$product_id}{$cad_variant_compra}
                 group by date(com.fecha_ingreso)
             union
             select date(sx.`date`) fecha, sum(sxi.quantity) cantidad, 'VENTA' tipo
-                from tec_sales sx 
+                from tec_sales sx
                 inner join tec_sale_items sxi on sx.id = sxi.sale_id
-                where sx.store_id='{$store_id}' and sx.anulado != '1' and sxi.product_id = {$product_id}
+                where sx.store_id='{$store_id}' and sx.anulado != '1' and sxi.product_id = {$product_id}{$cad_variant_venta}
                 group by date(sx.`date`)
             union
             select date(mo.fechah) fecha, mo.cantidad, if(mo.tipo_mov='I','INGRESO','SALIDA') tipo
                 from tec_movim mo
-                where mo.store_id='{$store_id}' and mo.product_id = {$product_id}
-            ) a order by a.fecha";            
+                where mo.store_id='{$store_id}' and mo.product_id = {$product_id}{$cad_variant_movim}
+            ) a order by a.fecha";
         //die($cSql);
         $query_kardex = $this->db->query($cSql);
 
@@ -266,7 +281,7 @@ class Inventarios_model extends CI_Model
                 if($r->tipo == "SALIDA" || $r->tipo == "VENTA"){
                     $signo = -1;
                 }
-                
+
                 $cont += ($r->cantidad * 1) * ($signo);
 
                 //echo $product_id . "|" . $r->fecha . "|" . $r->tipo . "|" . $r->cantidad . "|" . $cont . "<br>";
@@ -277,11 +292,9 @@ class Inventarios_model extends CI_Model
         // POR ULTIMO GUARDAMOS ESTE VALOR EN LA TABLA TEC_PROD_STORE
         $ar = array();
         $ar['stock'] = ($cont >= 0 ? $cont : 0);
-        
-        $this->db->set($ar)->where('product_id',$product_id)->where('store_id',$store_id)->update("tec_prod_store");
-        //echo $this->db->set($ar)->where('product_id',$product_id)->where('store_id',$store_id)->get_compiled_update("tec_prod_store") . "<br>"; 
-        
-        //$ar_rpta = array( $cont, '');
+
+        $this->db->set($ar)->where('product_id',$product_id)->where('store_id',$store_id)->where('COALESCE(variant_id,0)',$variant_id)->update("tec_prod_store");
+
         return $cont;
     }
 
@@ -322,9 +335,42 @@ class Inventarios_model extends CI_Model
         return "";
     }
 
+    function stock_variantes($store_id){
+        $cSql = "SELECT a.id as product_id, pv.id as variant_id,
+                CONVERT(fn_product_display_name(pv.product_id, pv.id) USING latin1) AS name,
+                if(isnull(compras.cantidad_comprada),0,compras.cantidad_comprada)
+                - if(isnull(ventas.cantidad_vendida),0,ventas.cantidad_vendida)
+                + if(isnull(movim.ingreso),0,movim.ingreso)
+                - if(isnull(movim.salida),0,movim.salida) as stock
+                FROM tec_product_variantes pv
+                INNER JOIN tec_products a ON pv.product_id = a.id
+                left join (
+                    select com_i.product_id, COALESCE(com_i.variant_id,0) variant_id, sum(com_i.cantidad) cantidad_comprada from tec_compras com
+                    inner join tec_compra_items com_i on com.id = com_i.compra_id
+                    where com.store_id='{$store_id}'
+                    group by com_i.product_id, COALESCE(com_i.variant_id,0)
+                ) compras on a.id = compras.product_id AND pv.id = compras.variant_id
+                left join (
+                    select sxi.product_id, COALESCE(sxi.variant_id,0) variant_id, sum(sxi.quantity) cantidad_vendida
+                    from tec_sales sx
+                    inner join tec_sale_items sxi on sx.id = sxi.sale_id
+                    where sx.store_id='{$store_id}' and sx.anulado != '1'
+                    group by sxi.product_id, COALESCE(sxi.variant_id,0)
+                ) ventas on a.id = ventas.product_id AND pv.id = ventas.variant_id
+                left join (
+                    select mo.product_id, COALESCE(mo.variant_id,0) variant_id, sum(if(mo.tipo_mov='I', mo.cantidad, 0)) Ingreso, sum(if(mo.tipo_mov='S', mo.cantidad, 0)) Salida
+                    from tec_movim mo
+                    where mo.store_id='{$store_id}'
+                    group by mo.product_id, COALESCE(mo.variant_id,0)
+                ) movim on a.id = movim.product_id AND pv.id = movim.variant_id
+                where a.activo='1' AND pv.activo='1' AND a.prod_serv='P'
+                order by a.name, pv.id";
+        return $this->db->query($cSql);
+    }
+
     function listar_stock(){
         // LISTA TODOS LOS PRODUCTOS
-        $cSql = "select b.name, b.marca, b.modelo, a.* from tec_prod_store a".
+        $cSql = "select fn_product_display_name(a.product_id, a.variant_id) AS name, b.marca, a.* from tec_prod_store a".
             " left join tec_products b on a.product_id=b.id".
             " where a.store_id = ".$_SESSION["store_id"]." and b.activo='1'".
             " order by b.name";

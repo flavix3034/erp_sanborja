@@ -188,6 +188,9 @@ class Sales extends CI_Controller {
                             // Ingresan las series de cada producto
                             $ard["series"]          = $_REQUEST['series'][$i];
 
+                            // Variante del producto
+                            $ard["variant_id"]      = isset($_REQUEST['variant_id_item'][$i]) ? $_REQUEST['variant_id_item'][$i] : 0;
+
                             // Agrupamiento de items
                             $ard["group_id"]        = !empty($_REQUEST['group_id'][$i]) ? $_REQUEST['group_id'][$i] : null;
                             $ard["group_name"]      = !empty($_REQUEST['group_name'][$i]) ? $_REQUEST['group_name'][$i] : null;
@@ -207,7 +210,8 @@ class Sales extends CI_Controller {
                             $items[] = $itm;
                             traza( "items: " . implode(", ",$itm) );
 
-                            $this->compras_model->disminuir_al_stock($item_id, $_SESSION["store_id"], $_REQUEST['quantity'][$i]);
+                            $variant_id = isset($_REQUEST['variant_id_item'][$i]) ? $_REQUEST['variant_id_item'][$i] : 0;
+                            $this->compras_model->disminuir_al_stock($item_id, $_SESSION["store_id"], $_REQUEST['quantity'][$i], $variant_id);
                         }
 
                         $data = array();
@@ -460,13 +464,14 @@ class Sales extends CI_Controller {
            //$this->db->delete("tec_payments");
 
            //Se agrega al stock cada item
-            $query = $this->db->select("product_id, quantity")->where("sale_id",$id)->get("tec_sale_items");
+            $query = $this->db->select("product_id, quantity, variant_id")->where("sale_id",$id)->get("tec_sale_items");
             foreach($query->result() as $r){
-                
+
                 $product_id = $r->product_id;
                 $cantidad   = $r->quantity;
+                $variant_id = isset($r->variant_id) ? $r->variant_id : 0;
                 //echo "Pasada:" . $product_id . " " . $cantidad . "<br>";
-                $this->compras_model->agregar_al_stock($product_id, $_SESSION["store_id"], $cantidad);
+                $this->compras_model->agregar_al_stock($product_id, $_SESSION["store_id"], $cantidad, $variant_id);
             }
             //die("Fin");
 
@@ -594,29 +599,33 @@ class Sales extends CI_Controller {
         */
 
         if($i==0){
-            $cSql = "select a.id, a.name, a.marca, a.modelo, a.color, if(b.stock is null,0,b.stock) stock, c.name categoria, a.impuesto, a.prod_serv from tec_products a 
-            left join tec_prod_store b on a.id=b.product_id and b.store_id = {$store_id}
-            left join tec_categories c on a.category_id=c.id 
-            where a.activo='1' and (a.name like '%{$code1}%' or a.marca like '%{$code1}%' or a.modelo like '%{$code1}%')
-            and a.category_id != 9000
-            order by a.name, a.marca, a.modelo";
+            $cad_where = "a.name like '%{$code1}%'";
+        }else{
+            $cad_where = "(a.name like '%{$code1}%' and a.name like '%{$code2}%')";
+        }
 
-            $cSql = "select a.id, a.name as nombres, a.color, if(b.stock is null,0,b.stock) stock, c.name categoria, a.impuesto, a.prod_serv from tec_products a
-            left join tec_prod_store b on a.id=b.product_id and b.store_id = {$store_id}
-            left join tec_categories c on a.category_id=c.id
-            where a.activo='1' and a.name like '%{$code1}%'
-            and a.category_id != 9000
-            order by a.name";
-        }
-        if($i>=1){
-            $cSql = "select a.id, a.name as nombres, a.color, if(b.stock is null,0,b.stock) stock, c.name categoria, a.impuesto, a.prod_serv from tec_products a
-            left join tec_prod_store b on a.id=b.product_id and b.store_id = {$store_id}
-            left join tec_categories c on a.category_id=c.id
-            where a.activo='1' and (a.name like '%{$code1}%' and a.name like '%{$code2}%')
-            and a.category_id != 9000
-            order by a.name";
-        }
-        
+        $cSql = "SELECT a.id AS product_id, 0 AS variant_id, a.name AS nombres, IF(b.stock IS NULL,0,b.stock) stock, c.name categoria, a.impuesto, a.prod_serv
+            FROM tec_products a
+            LEFT JOIN tec_prod_store b ON a.id=b.product_id AND b.store_id = {$store_id} AND (b.variant_id IS NULL OR b.variant_id = 0)
+            LEFT JOIN tec_categories c ON a.category_id=c.id
+            WHERE a.activo='1' AND {$cad_where}
+            AND a.category_id != 9000
+            AND a.id NOT IN (SELECT product_id FROM tec_product_variantes WHERE activo='1')
+
+            UNION ALL
+
+            SELECT pv.product_id, pv.id AS variant_id, CONVERT(fn_product_display_name(pv.product_id, pv.id) USING latin1) AS nombres,
+            IF(ps.stock IS NULL,0,ps.stock) stock, c.name categoria, a.impuesto, a.prod_serv
+            FROM tec_product_variantes pv
+            INNER JOIN tec_products a ON pv.product_id = a.id
+            LEFT JOIN tec_prod_store ps ON pv.product_id = ps.product_id AND ps.variant_id = pv.id AND ps.store_id = {$store_id}
+            LEFT JOIN tec_categories c ON a.category_id=c.id
+            WHERE a.activo='1' AND pv.activo='1'
+            AND fn_product_display_name(pv.product_id, pv.id) LIKE '%{$code1}%'
+            AND a.category_id != 9000
+
+            ORDER BY nombres";
+
         $ar = array();
         if(strlen($code)>1){
             $query = $this->db->query($cSql);
@@ -625,11 +634,11 @@ class Sales extends CI_Controller {
             foreach($query->result() as $r){
                 $n++;
                 $cad .= "{";
-                $cad .= '"id":"' . $r->id . '",'; 
-                //$cad .= '"name":"' . str_replace('"','',$r->name . ' ' . $r->marca . ' ' . $r->modelo . ' ' . $r->color) . '",';
+                $cad .= '"id":"' . $r->product_id . '",';
+                $cad .= '"variant_id":"' . $r->variant_id . '",';
                 $cad .= '"name":"' . str_replace('"','',$r->nombres) . '",';
                 $cad .= '"stock":"' . $r->stock . '",';
-                $cad .= '"categoria":"' . $r->categoria . '",'; 
+                $cad .= '"categoria":"' . $r->categoria . '",';
                 $cad .= '"impuesto":"' . $r->impuesto . '",';
                 $cad .= '"prod_serv":"' . $r->prod_serv . '"';
                 $cad .= "},";
@@ -648,59 +657,60 @@ class Sales extends CI_Controller {
     function buscar2(){ // Para Compras
         $code = $_POST["campo"];
         $store_id = $_SESSION['store_id'];
-        
+
         // Parentesis :
         $code = str_replace(" ","%",$code);
 
-        $cSql = "select a.*, if(b.stock is null,0,b.stock) stock, c.name categoria, a.impuesto from tec_products a 
-            left join tec_prod_store b on a.id=b.product_id and b.store_id = {$store_id}
-            left join tec_categories c on a.category_id=c.id 
-            where a.activo='1' and a.prod_serv='P' and a.name like '%{$code}%'";
-        
-        //echo $cSql;
-        
-        $ar = array();
+        $cSql = "SELECT a.id AS product_id, 0 AS variant_id, a.name AS nombres FROM tec_products a
+            WHERE a.activo='1' AND a.prod_serv='P' AND a.name LIKE '%{$code}%'
+            AND a.id NOT IN (SELECT product_id FROM tec_product_variantes WHERE activo='1')
+
+            UNION ALL
+
+            SELECT pv.product_id, pv.id AS variant_id, CONVERT(fn_product_display_name(pv.product_id, pv.id) USING latin1) AS nombres
+            FROM tec_product_variantes pv
+            INNER JOIN tec_products a ON pv.product_id = a.id
+            WHERE a.activo='1' AND pv.activo='1' AND a.prod_serv='P'
+            AND fn_product_display_name(pv.product_id, pv.id) LIKE '%{$code}%'
+
+            ORDER BY nombres";
+
         $cad = "";
         if(strlen($code)>1){
             $query = $this->db->query($cSql);
-            
-            $n = 0;
-            foreach($query->result() as $r){
-                $n++;
-                
-                //$cad .= "{";
-                //$cad .= '"id":"' . $r->id . '",'; 
-                //$cad .= '"name":"' . str_replace('"','',$r->name . ' ' . $r->marca . ' ' . $r->modelo) . '",';
-                //$cad .= '"stock":"' . $r->stock . '",';
-                //$cad .= '"categoria":"' . $r->categoria . '",'; 
-                //$cad .= '"impuesto":"' . $r->impuesto . '"';
-                //$cad .= "},";
-                
 
-                $completo = $r->name;
-                $cad .= "<li onclick=\"mostrar(" . $r->id . ",'" . $completo . "')\">" . $completo . "</li>";
+            foreach($query->result() as $r){
+                $completo = $r->nombres;
+                $cad .= "<li onclick=\"mostrar(" . $r->product_id . ",'" . str_replace("'","\\'",$completo) . "'," . $r->variant_id . ")\">" . $completo . "</li>";
             }
-            if($n>0){
-                //$cad = substr($cad,0,strlen($cad)-1);
-            }
-            //echo $cad;
-        }else{
-            echo "";
         }
 
-        //echo json_encode($cad, JSON_UNESCAPED_UNICODE);
-        //echo json_encode($cad);
         echo $cad;
     }
 
     function buscar_codigo(){ // LO USA LA BUSQUEDA POR CODIGO DE BARRA
         $code = $_POST["code"];
         $store_id = $_SESSION['store_id'];
-        $cSql = "select a.*, b.stock, c.name categoria, a.impuesto from tec_products a 
-            left join tec_prod_store b on a.id=b.product_id and b.store_id = {$store_id}
-            left join tec_categories c on a.category_id=c.id
-            where a.activo='1' and a.code like '%{$code}%'";
-        
+        $cSql = "SELECT a.id AS product_id, 0 AS variant_id, a.name AS nombres, IF(b.stock IS NULL,0,b.stock) stock, c.name categoria, a.impuesto
+            FROM tec_products a
+            LEFT JOIN tec_prod_store b ON a.id=b.product_id AND b.store_id = {$store_id} AND (b.variant_id IS NULL OR b.variant_id = 0)
+            LEFT JOIN tec_categories c ON a.category_id=c.id
+            WHERE a.activo='1' AND a.code LIKE '%{$code}%'
+            AND a.id NOT IN (SELECT product_id FROM tec_product_variantes WHERE activo='1')
+
+            UNION ALL
+
+            SELECT pv.product_id, pv.id AS variant_id, CONVERT(fn_product_display_name(pv.product_id, pv.id) USING latin1) AS nombres,
+            IF(ps.stock IS NULL,0,ps.stock) stock, c.name categoria, a.impuesto
+            FROM tec_product_variantes pv
+            INNER JOIN tec_products a ON pv.product_id = a.id
+            LEFT JOIN tec_prod_store ps ON pv.product_id = ps.product_id AND ps.variant_id = pv.id AND ps.store_id = {$store_id}
+            LEFT JOIN tec_categories c ON a.category_id=c.id
+            WHERE a.activo='1' AND pv.activo='1'
+            AND (a.code LIKE '%{$code}%' OR pv.sku LIKE '%{$code}%' OR pv.barcode LIKE '%{$code}%')
+
+            ORDER BY nombres";
+
         $ar = array();
         if(strlen($code)>1){
             $query = $this->db->query($cSql);
@@ -709,10 +719,11 @@ class Sales extends CI_Controller {
             foreach($query->result() as $r){
                 $n++;
                 $cad .= "{";
-                $cad .= '"id":"' . $r->id . '",'; 
-                $cad .= '"name":"' . str_replace('"','',$r->name) . '",';
+                $cad .= '"id":"' . $r->product_id . '",';
+                $cad .= '"variant_id":"' . $r->variant_id . '",';
+                $cad .= '"name":"' . str_replace('"','',$r->nombres) . '",';
                 $cad .= '"stock":"' . $r->stock . '",';
-                $cad .= '"categoria":"' . $r->categoria . '",'; 
+                $cad .= '"categoria":"' . $r->categoria . '",';
                 $cad .= '"impuesto":"' . $r->impuesto . '"';
                 $cad .= "},";
             }

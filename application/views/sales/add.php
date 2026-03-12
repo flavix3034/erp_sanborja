@@ -263,7 +263,7 @@
 		align-items: flex-end;
 	}
 	.cliente-search-row .csr-tipodoc { width: 150px; flex-shrink: 0; }
-	.cliente-search-row .csr-nrodoc { width: 220px; flex-shrink: 0; }
+	.cliente-search-row .csr-nrodoc { width: 340px; flex-shrink: 0; }
 	.cliente-search-row .csr-nombre { flex: 1; min-width: 180px; }
 	.cliente-search-row .csr-ruc { width: 130px; flex-shrink: 0; }
 	.cliente-search-row .sale-input {
@@ -412,7 +412,6 @@ if(isset($existe_apertura)){
 				<div id="zona_cliente" style="display:none;">
 					<div class="sale-card">
 						<div class="sale-section-title">Cliente</div>
-						<span class="new-client-link" style="float:right; margin-top:-28px;" id="myBtn2">[+ Nuevo]</span>
 						<div class="cliente-search-row">
 							<div class="csr-tipodoc">
 								<div class="sale-label">Tipo Doc.</div>
@@ -427,6 +426,7 @@ if(isset($existe_apertura)){
 								<div style="display:flex; gap:6px; height:38px;">
 									<input type="text" name="dni_cliente" id="dni_cliente" class="form-control sale-input" style="flex:1; margin:0;" maxlength="8" placeholder="00000000">
 									<button id="btn_buscar" type="button" onclick="busqueda_nombre(document.getElementById('dni_cliente'))" class="btn btn-primary" style="height:38px; border-radius:6px; font-size:12px; padding:0 14px; margin:0; flex-shrink:0;">Buscar</button>
+									<button id="myBtn2" type="button" class="btn btn-success" style="height:38px; border-radius:6px; font-size:12px; padding:0 14px; margin:0; flex-shrink:0;" title="Agregar nuevo cliente"><i class="fa fa-user-plus"></i> Nuevo</button>
 								</div>
 							</div>
 							<div class="csr-nombre">
@@ -457,13 +457,13 @@ if(isset($existe_apertura)){
 										<div class="mode-dropdown-content">
 											<a href="#" onclick="$('#hdn_codigo').val('CODIGO');$('#lbl_busqueda').html('C&oacute;digo de Barras');return false;">C&oacute;digo de Barra</a>
 											<a href="#" onclick="$('#hdn_codigo').val('PRODUCTO');$('#lbl_busqueda').html('Producto');return false;">Producto</a>
-											<a href="#" onclick="$('#hdn_codigo').val('LIBRE');$('#lbl_busqueda').html('Libre');return false;">Libre</a>
 										</div>
 									</div>
 								</div>
 								<div class="autocom-box"></div>
 							</div>
 							<input type="hidden" name="product_id" id="product_id">
+							<input type="hidden" name="variant_id" id="variant_id" value="0">
 							<input type="hidden" name="category_id" id="category_id">
 							<input type="hidden" name="impuesto" id="impuesto">
 							<input type="hidden" name="hdn_codigo" id="hdn_codigo" value="CODIGO">
@@ -669,6 +669,7 @@ if(isset($existe_apertura)){
 	?>
 	ar_items.push({
 		id: '<?= $si->product_id ?>',
+		variant_id: '<?= isset($si->variant_id) ? $si->variant_id : 0 ?>',
 		name: '<?= addslashes($si->product_name) ?>',
 		quantity: '<?= $si->quantity + 0 ?>',
 		cost: '<?= number_format($net_cost, 4, '.', '') ?>',
@@ -753,6 +754,7 @@ if(isset($existe_apertura)){
 				var obj = JSON.parse(data)
 				for(registro in obj){
 					$("#product_id").val(obj[registro]["id"])
+					$("#variant_id").val(obj[registro]["variant_id"] || 0)
 					$("#hdn_descrip").val(obj[registro]["name"] + " [" + obj[registro]["stock"] + "]")
 					$("#impuesto").val(obj[registro]["impuesto"])
 				}
@@ -763,8 +765,9 @@ if(isset($existe_apertura)){
 
 	function busqueda_precio(){
 		var datin = document.getElementById("product_id").value
+		var vid = document.getElementById("variant_id").value || 0
 		$.ajax({
-			data: {dato1: datin, tipo_precio: document.getElementById('tipo_precio').checked == true ? 'por_mayor' : 'por_menor'},
+			data: {dato1: datin, variant_id: vid, tipo_precio: document.getElementById('tipo_precio').checked == true ? 'por_mayor' : 'por_menor'},
 			url: '<?= base_url("products/busqueda_precio") ?>',
 			type: "post",
 			success: function(response){
@@ -932,6 +935,7 @@ if(isset($existe_apertura)){
 		var ctrl_descrip = '<input type="text" name="descripo[]" value="' + ar_items[i]["name"] + '" class="form-control" readonly style="' + indent_style + '">'
 		cad += '<td style="text-align:left">' + ctrl_descrip
 		cad += '<input type="hidden" name="item[]" value="' + ar_items[i]['id'] + '">'
+		cad += '<input type="hidden" name="variant_id_item[]" value="' + (ar_items[i]['variant_id'] || 0) + '">'
 		cad += '<input type="hidden" name="group_id[]" value="' + (ar_items[i]['group_id'] || '') + '">'
 		cad += '<input type="hidden" name="group_name[]" value="' + (ar_items[i]['group_name'] || '') + '">'
 		cad += '</td>'
@@ -972,7 +976,9 @@ if(isset($existe_apertura)){
 			x4 = x4.toFixed(2)
 		}
 
-		ar_items.push({id:x1, name:x1_name, quantity:x2, cost:x3, cost_r:x3_r, subtotal:x4, impuesto:nImp, group_id:null, group_name:null})
+		var x1_variant = $('#variant_id').val() || 0;
+		ar_items.push({id:x1, variant_id:x1_variant, name:x1_name, quantity:x2, cost:x3, cost_r:x3_r, subtotal:x4, impuesto:nImp, group_id:null, group_name:null})
+		$('#variant_id').val(0);
 	}
 
 	function quitar_hasta_letra(inputString, character) {
@@ -1128,7 +1134,7 @@ if(isset($existe_apertura)){
 					x++
 					if(x <= 3 && y <= 4){
 						document.getElementById("r"+y+"-"+x+"-img").innerHTML = "<img src=\"../imagenes/" + obj[registro]["imagen"] + "\" style=\"width:90px;height:90px\">";
-						document.getElementById("r"+y+"-"+x+"-label").innerHTML = obj[registro]["name"] + " " + obj[registro]["marca"] + " " + obj[registro]["modelo"] + " " + obj[registro]["color"]
+						document.getElementById("r"+y+"-"+x+"-label").innerHTML = obj[registro]["name"] + " " + obj[registro]["marca"]
 						var la_funcion = 'escoger(' + obj[registro]["id"] + ')'
 						document.getElementById("r"+y+"-"+x+"-btn").setAttribute('onclick',la_funcion)
 					}else{ x = 0; y++ }
@@ -1172,14 +1178,14 @@ if(isset($existe_apertura)){
 						for(let i in obj){
 							let cad_stock = ""
 							if(obj[i]['prod_serv'] == 'P'){ cad_stock = " [" + obj[i]['stock'] + "]" }
-							emptyArray.push('<li mio="' + obj[i]['id'] + '" categoria="' + obj[i]['categoria'] + '" impuesto="' + obj[i]['impuesto'] + '">' + obj[i]['name'] + cad_stock + '</li>')
+							emptyArray.push('<li mio="' + obj[i]['id'] + '" categoria="' + obj[i]['categoria'] + '" impuesto="' + obj[i]['impuesto'] + '" data-variant="' + (obj[i]['variant_id'] || 0) + '">' + obj[i]['name'] + cad_stock + '</li>')
 						}
 						searchWrapper.classList.add("active");
 						$(".autocom-box").empty()
 						showSuggestions(emptyArray)
 						let allList = suggBox.querySelectorAll("li");
 						for(let i = 0; i < allList.length; i++){
-							allList[i].setAttribute("onclick", "$('#product_id').val(this.getAttribute('mio'));$('#category_id').val(this.getAttribute('categoria'));$('#impuesto').val(this.getAttribute('impuesto'));select(this);document.getElementById('hdn_descrip').readOnly=true;");
+							allList[i].setAttribute("onclick", "$('#product_id').val(this.getAttribute('mio'));$('#variant_id').val(this.getAttribute('data-variant')||0);$('#category_id').val(this.getAttribute('categoria'));$('#impuesto').val(this.getAttribute('impuesto'));select(this);document.getElementById('hdn_descrip').readOnly=true;");
 						}
 						if(!userData){ searchWrapper.classList.remove("active"); }
 					}
@@ -1204,90 +1210,226 @@ if(isset($existe_apertura)){
 </script>
 
 <!-- Modal: Agregar Cliente -->
-<?php
-	$name = $cf1 = $cf2 = $phone = $email = $direccion = "";
-	$cerrar = isset($cerrar) ? $cerrar : "";
-?>
 <div class="modal fade" id="pizarra2" role="dialog">
-	<div class="modal-dialog">
+	<div class="modal-dialog" style="max-width:560px;">
 		<div class="modal-content" style="border-radius:10px;">
 			<div class="modal-header" style="border-bottom:1px solid #eee; padding:16px 20px;">
-				<h5 style="margin:0; font-weight:600;">Agregar Cliente</h5>
+				<h5 style="margin:0; font-weight:600;" id="modal_cli_titulo">Agregar Cliente</h5>
 				<button type="button" class="close" data-dismiss="modal">&times;</button>
 			</div>
 			<div class="modal-body" style="padding:20px;">
-				<div class="row">
-					<div class="col-sm-5">
-						<div class="sale-label">Nombre</div>
-						<?= form_input('name', $name, 'class="form-control sale-input" id="name"'); ?>
-					</div>
-					<div class="col-sm-3">
-						<div class="sale-label">DNI</div>
-						<?= form_input('cf1', $cf1, 'class="form-control sale-input" id="cf1"'); ?>
-					</div>
-					<div class="col-sm-3">
-						<div class="sale-label">RUC</div>
-						<?= form_input('cf2', $cf2, 'class="form-control sale-input" id="cf2"'); ?>
+
+				<!-- Mensaje cliente existente -->
+				<div id="cli_msg_existe" class="alert alert-info" style="display:none; font-size:13px; padding:10px 14px; margin-bottom:14px;">
+					<i class="fa fa-info-circle"></i> Este cliente ya est&aacute; registrado, cualquier cambio actualizar&aacute; la informaci&oacute;n del cliente existente.
+				</div>
+
+				<!-- Documento -->
+				<div style="background:#f8f9fa; border:1px solid #e9ecef; border-radius:6px; padding:14px; margin-bottom:14px;">
+					<div style="font-weight:600; font-size:13px; color:#495057; margin-bottom:10px;"><i class="fa fa-id-card-o"></i> Documento</div>
+					<div class="row">
+						<div class="col-sm-4">
+							<label style="font-size:12px;">Tipo Documento</label>
+							<select id="cli_tipo_doc" class="form-control input-sm" onchange="cambiarTipoDocCliente()">
+								<option value="DNI">DNI</option>
+								<option value="RUC">RUC</option>
+								<option value="CE">Carnet Extranjer&iacute;a</option>
+								<option value="PAS">Pasaporte</option>
+							</select>
+						</div>
+						<div class="col-sm-4">
+							<label style="font-size:12px;">N&deg; Documento</label>
+							<input type="text" id="cli_nro_doc" class="form-control input-sm" maxlength="11" placeholder="00000000">
+						</div>
+						<div class="col-sm-4">
+							<label style="font-size:12px;">&nbsp;</label><br>
+							<button type="button" class="btn btn-primary btn-sm" onclick="consultarReniec()" style="border-radius:4px;">
+								<i class="fa fa-search"></i> RENIEC
+							</button>
+						</div>
 					</div>
 				</div>
-				<div class="row" style="margin-top:12px;">
-					<div class="col-sm-4">
-						<div class="sale-label">Tel&eacute;fono</div>
-						<?= form_input('phone', $phone, 'class="form-control sale-input" id="phone"'); ?>
-					</div>
-					<div class="col-sm-5">
-						<div class="sale-label">Email</div>
-						<?= form_input('email', $email, 'class="form-control sale-input" id="email"'); ?>
+
+				<!-- Datos personales -->
+				<div style="background:#f8f9fa; border:1px solid #e9ecef; border-radius:6px; padding:14px; margin-bottom:14px;">
+					<div style="font-weight:600; font-size:13px; color:#495057; margin-bottom:10px;"><i class="fa fa-user"></i> Datos Personales</div>
+					<div class="row">
+						<div class="col-sm-4">
+							<label style="font-size:12px;">Nombres</label>
+							<input type="text" id="cli_nombres" class="form-control input-sm" style="text-transform:uppercase;">
+						</div>
+						<div class="col-sm-4">
+							<label style="font-size:12px;">Ape. Paterno</label>
+							<input type="text" id="cli_ape_paterno" class="form-control input-sm" style="text-transform:uppercase;">
+						</div>
+						<div class="col-sm-4">
+							<label style="font-size:12px;">Ape. Materno</label>
+							<input type="text" id="cli_ape_materno" class="form-control input-sm" style="text-transform:uppercase;">
+						</div>
 					</div>
 				</div>
-				<div class="row" style="margin-top:12px;">
-					<div class="col-sm-12">
-						<div class="sale-label">Direcci&oacute;n</div>
-						<?= form_input('direccion', $direccion, 'class="form-control sale-input" id="direccion"'); ?>
-						<input type="hidden" name="cerrar" value="<?= $cerrar ?>">
+
+				<!-- Informacion de contacto -->
+				<div style="background:#f8f9fa; border:1px solid #e9ecef; border-radius:6px; padding:14px;">
+					<div style="font-weight:600; font-size:13px; color:#495057; margin-bottom:10px;"><i class="fa fa-phone"></i> Informaci&oacute;n de Contacto</div>
+					<div class="row">
+						<div class="col-sm-12">
+							<label style="font-size:12px;">Direcci&oacute;n <small class="text-muted">(Opcional)</small></label>
+							<input type="text" id="cli_direccion" class="form-control input-sm">
+						</div>
+					</div>
+					<div class="row" style="margin-top:8px;">
+						<div class="col-sm-6">
+							<label style="font-size:12px;">Email <small class="text-muted">(Opcional)</small></label>
+							<input type="text" id="cli_email" class="form-control input-sm">
+						</div>
+						<div class="col-sm-6">
+							<label style="font-size:12px;">Tel&eacute;fono <small class="text-muted">(Opcional)</small></label>
+							<input type="text" id="cli_phone" class="form-control input-sm">
+						</div>
 					</div>
 				</div>
-				<div style="margin-top:16px;">
-					<button type="button" class="btn btn-primary" onclick="guardar_cliente()" style="border-radius:6px; padding:8px 24px;">Guardar</button>
-				</div>
+
 			</div>
 			<div class="modal-footer" style="border-top:1px solid #eee; padding:12px 20px;">
-				<button id="cerrar_modal2" type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+				<button type="button" class="btn btn-danger btn-sm" data-dismiss="modal" style="border-radius:4px;">Cancelar</button>
+				<button type="button" class="btn btn-success btn-sm" onclick="guardar_cliente()" style="border-radius:4px;" id="btn_guardar_cli">
+					<i class="fa fa-check"></i> Guardar
+				</button>
 			</div>
 		</div>
 	</div>
 </div>
 
 <script>
-	function guardar_cliente(){
-		if(empty(document.getElementById("name").value)){ mensaje("Ingrese Nombre"); return false; }
-		var cf1 = document.getElementById("cf1").value
-		var cf2 = document.getElementById("cf2").value
-		if(empty(cf1) && empty(cf2)){ mensaje("Falta ingresar datos en dni o Ruc"); return false; }
-		if(document.getElementById("tipoDoc").value == '1'){
-			if(empty("cf2")){ mensaje("Debe ingresar el Ruc, se trata de una Factura."); return false; }
-			if(cf2.length != 11 && cf2.length != 0){ mensaje("Ruc debe tener 11 caracteres"); return false; }
-		}
-		grabar_cliente();
-		document.getElementById("cerrar_modal2").click()
+	var cli_es_existente = false;
+
+	function cambiarTipoDocCliente(){
+		var tipo = $('#cli_tipo_doc').val();
+		var input = $('#cli_nro_doc');
+		if (tipo == 'DNI') { input.attr('maxlength', 8).attr('placeholder','00000000'); }
+		else if (tipo == 'RUC') { input.attr('maxlength', 11).attr('placeholder','20000000000'); }
+		else { input.attr('maxlength', 20).attr('placeholder',''); }
 	}
 
-	function grabar_cliente(){
+	function consultarReniec(){
+		var doc = $('#cli_nro_doc').val().trim();
+		if (doc.length != 8 && doc.length != 11) {
+			alert('Ingrese un DNI (8 d\u00edgitos) o RUC (11 d\u00edgitos)');
+			return;
+		}
+
+		// Primero verificar si ya existe en la base de datos local (sin auto-insertar)
+		$.ajax({
+			data: { documento: doc },
+			url: '<?= base_url("clientes/verificar_existe") ?>',
+			type: 'get',
+			success: function(res){
+				var obj = JSON.parse(res);
+				if (obj.existe) {
+					// Cliente ya existe - mostrar mensaje y precargar datos
+					cli_es_existente = true;
+					$('#cli_msg_existe').show();
+					$('#btn_guardar_cli').html('<i class="fa fa-check"></i> Actualizar');
+					$('#modal_cli_titulo').text('Actualizar Cliente');
+					var partes = obj.name.split(' ');
+					if (partes.length >= 3) {
+						$('#cli_nombres').val(partes.slice(0, partes.length-2).join(' '));
+						$('#cli_ape_paterno').val(partes[partes.length-2]);
+						$('#cli_ape_materno').val(partes[partes.length-1]);
+					} else {
+						$('#cli_nombres').val(obj.name);
+					}
+					if (obj.direccion) $('#cli_direccion').val(obj.direccion);
+					if (obj.email) $('#cli_email').val(obj.email);
+					if (obj.phone) $('#cli_telefono').val(obj.phone);
+				} else {
+					// Cliente nuevo - consultar RENIEC
+					cli_es_existente = false;
+					$('#cli_msg_existe').hide();
+					$('#btn_guardar_cli').html('<i class="fa fa-check"></i> Guardar');
+					$('#modal_cli_titulo').text('Agregar Cliente');
+
+					$('#cli_nombres').val('Consultando RENIEC...');
+					$.ajax({
+						data: { documento: doc },
+						url: '<?= base_url("clientes/consultar_reniec") ?>',
+						type: 'get',
+						success: function(res2){
+							var obj2 = JSON.parse(res2);
+							if (obj2.ok) {
+								$('#cli_nombres').val(obj2.nombres);
+								$('#cli_ape_paterno').val(obj2.ape_paterno);
+								$('#cli_ape_materno').val(obj2.ape_materno);
+								if (obj2.direccion) $('#cli_direccion').val(obj2.direccion);
+							} else {
+								$('#cli_nombres').val('');
+								alert(obj2.msg);
+							}
+						}
+					});
+				}
+			}
+		});
+	}
+
+	function guardar_cliente(){
+		var nombres = $('#cli_nombres').val().trim();
+		var ape_pat = $('#cli_ape_paterno').val().trim();
+		var ape_mat = $('#cli_ape_materno').val().trim();
+		var nro_doc = $('#cli_nro_doc').val().trim();
+		var tipo_doc = $('#cli_tipo_doc').val();
+
+		if (!nombres) { alert('Ingrese Nombres'); return; }
+		if (!nro_doc) { alert('Ingrese N\u00b0 Documento'); return; }
+
+		var name_completo = (nombres + ' ' + ape_pat + ' ' + ape_mat).trim().toUpperCase();
+		var cf1 = '', cf2 = '';
+		if (tipo_doc == 'RUC') { cf2 = nro_doc; }
+		else { cf1 = nro_doc; }
+
 		$.ajax({
 			data: {
-				name: document.getElementById("name").value,
-				cf1: document.getElementById("cf1").value,
-				cf2: document.getElementById("cf2").value,
-				phone: document.getElementById("phone").value,
-				email: document.getElementById("email").value,
-				direccion: document.getElementById("direccion").value
+				name: name_completo,
+				cf1: cf1,
+				cf2: cf2,
+				phone: $('#cli_phone').val(),
+				email: $('#cli_email').val(),
+				direccion: $('#cli_direccion').val()
 			},
-			url: "<?= base_url("clientes/save") ?>",
-			type: "get",
-			success: function(response){
-				console.log(response)
-				document.getElementById("btn_buscar").click()
+			url: '<?= base_url("clientes/save") ?>',
+			type: 'get',
+			success: function(res){
+				var obj = JSON.parse(res);
+				alert(obj.msg);
+				if (obj.ok) {
+					$('#dni_cliente').val(nro_doc);
+					$('#name_cliente').val(name_completo);
+					$('#txt_customer_id').val(obj.id);
+					if (cf2) $('#txt_cf2').val(cf2);
+				}
+				$('#pizarra2').modal('hide');
 			}
-		})
+		});
 	}
+
+	// Override apertura de modal para precargar datos
+	$('#pizarra2').on('show.bs.modal', function(){
+		var dni_val = $('#dni_cliente').val().trim();
+		// Limpiar formulario
+		$('#cli_nombres, #cli_ape_paterno, #cli_ape_materno, #cli_direccion, #cli_email, #cli_phone').val('');
+		cli_es_existente = false;
+		$('#cli_msg_existe').hide();
+		$('#btn_guardar_cli').html('<i class="fa fa-check"></i> Guardar');
+		$('#modal_cli_titulo').text('Agregar Cliente');
+
+		if (dni_val.length == 11) {
+			$('#cli_tipo_doc').val('RUC');
+			cambiarTipoDocCliente();
+		} else {
+			$('#cli_tipo_doc').val('DNI');
+			cambiarTipoDocCliente();
+		}
+		$('#cli_nro_doc').val(dni_val);
+	});
 </script>

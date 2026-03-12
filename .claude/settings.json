@@ -12,7 +12,12 @@
       "Bash(/c/xampp/mysql/bin/mysql.exe -u root erp_surcoc -e \"SHOW INDEX FROM tec_prod_store;\")",
       "Bash(/c/xampp/mysql/bin/mysql.exe -u root erp_surcoc -e \"ALTER TABLE tec_prod_store DROP INDEX product_id, ADD UNIQUE INDEX product_id \\(product_id, store_id, variant_id\\);\")",
       "Bash(/c/xampp/mysql/bin/mysql.exe -u root erp_surcoc -e \"SELECT * FROM tec_product_variantes; SELECT * FROM tec_prod_store WHERE variant_id IS NOT NULL;\")",
-      "Bash(/c/xampp/mysql/bin/mysql.exe -u root erp_surcoc -e \"INSERT INTO tec_prod_store \\(product_id, store_id, stock, variant_id\\) VALUES \\(3, 1, 0, 2\\), \\(4, 1, 0, 4\\);\")"
+      "Bash(/c/xampp/mysql/bin/mysql.exe -u root erp_surcoc -e \"INSERT INTO tec_prod_store \\(product_id, store_id, stock, variant_id\\) VALUES \\(3, 1, 0, 2\\), \\(4, 1, 0, 4\\);\")",
+      "Read(//c/xampp/**)",
+      "Bash(mysql -u root erp_sanborja -e \"DESCRIBE tec_servicio_items\")",
+      "Bash(/c/xampp/php/php.exe c:/xampp/htdocs/erp_sanborja/tmp_check.php)",
+      "Bash(/c/xampp/php/php.exe c:/xampp/htdocs/erp_sanborja/tmp_verify.php)",
+      "Bash(/c/xampp/php/php.exe c:/xampp/htdocs/erp_sanborja/tmp_fix.php)"
     ]
   }
 }

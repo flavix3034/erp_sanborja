@@ -9,8 +9,6 @@
         $price      = "";
         $imagen     = "";
         $marca      = "";
-        $modelo     = "";
-        $color      = "";
         $precio_x_mayor = "";
         $prod_serv  = "";
     }else{
@@ -22,8 +20,6 @@
         $price      = $row->price;
         $imagen     = $row->imagen;
         $marca      = $row->marca;
-        $modelo     = $row->modelo;
-        $color      = $row->color;
         $precio_x_mayor = $row->precio_x_mayor;
         $prod_serv  = $row->prod_serv;
     }
@@ -71,15 +67,6 @@
             <?= form_input('marca', $marca, 'class="form-control tip mayusculas" id="marca"'); ?>
         </div>
 
-        <div class="col-sm-4 col-lg-2 ventas">
-            <label>Modelo (Opcional):</label>
-            <?= form_input('modelo', $modelo, 'class="form-control tip mayusculas" id="modelo"'); ?>
-        </div>
-
-        <div class="col-sm-4 col-lg-2 ventas">
-            <label>Color (Opcional):</label>
-            <?= form_input('color', $color, 'class="form-control tip mayusculas" id="color"'); ?>
-        </div>
 
     </div>
     <div class="row filitas"> 
@@ -309,10 +296,19 @@
     function toggleVariantes() {
         var chk = document.getElementById('chk_variantes');
         var panel = document.getElementById('panel_variantes');
+        var codeField = document.querySelectorAll('input[name="code"]')[0];
         document.getElementById('tiene_variantes').value = chk.checked ? '1' : '0';
         panel.style.display = chk.checked ? 'block' : 'none';
-        if (chk.checked && atributosData.length === 0) {
-            cargarAtributos();
+        if (chk.checked) {
+            codeField.readOnly = true;
+            codeField.value = '';
+            codeField.style.backgroundColor = '#eee';
+            if (atributosData.length === 0) {
+                cargarAtributos();
+            }
+        } else {
+            codeField.readOnly = false;
+            codeField.style.backgroundColor = '';
         }
     }
 

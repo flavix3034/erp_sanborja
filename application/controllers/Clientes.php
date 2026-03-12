@@ -48,52 +48,99 @@ class Clientes extends CI_Controller {
 
     function save(){
     	$name 	= $_REQUEST["name"];
-    	$cf1 	= $_REQUEST["cf1"];
-    	$cf2 	= $_REQUEST["cf2"];
-    	$phone 	= $_REQUEST["phone"];
-    	$email 	= $_REQUEST["email"];
-    	$direccion = $_REQUEST["direccion"];
+    	$cf1 	= isset($_REQUEST["cf1"]) ? trim($_REQUEST["cf1"]) : "";
+    	$cf2 	= isset($_REQUEST["cf2"]) ? trim($_REQUEST["cf2"]) : "";
+    	$phone 	= isset($_REQUEST["phone"]) ? $_REQUEST["phone"] : "";
+    	$email 	= isset($_REQUEST["email"]) ? $_REQUEST["email"] : "";
+    	$direccion = isset($_REQUEST["direccion"]) ? $_REQUEST["direccion"] : "";
 
     	// Verificando si ya existe
-    	$existe_cli = false;
+    	$existe_id = 0;
 
-    	if($cf1 != null){
-	    	$query = $this->db->select("cf1, name")->from("tec_customers")->where("cf1",$cf1)->get();
-	    	foreach($query->result() as $r){
-	    		$existe_cli = true;
-	    		//die("Kero");
-	    	}
+    	if(strlen($cf1) > 0){
+	    	$row = $this->db->select("id")->from("tec_customers")->where("cf1",$cf1)->get()->row();
+	    	if($row) $existe_id = $row->id;
 	    }
 
-    	if($cf2 != null){
-	    	$query = $this->db->select("cf2, name")->from("tec_customers")->where("cf2",$cf2)->get();
-	    	foreach($query->result() as $r){
-	    		$existe_cli = true;
-	    		//die("Mero");
-	    	}
+    	if($existe_id == 0 && strlen($cf2) > 0){
+	    	$row = $this->db->select("id")->from("tec_customers")->where("cf2",$cf2)->get()->row();
+	    	if($row) $existe_id = $row->id;
 	    }
 
-    	if(!$existe_cli){
-	    	
+    	if($existe_id > 0){
+    		// Actualizar cliente existente
+    		$this->db->where("id", $existe_id);
+    		$this->db->update("tec_customers", array(
+    			"name" => $name, "cf1" => $cf1, "cf2" => $cf2,
+    			"phone" => $phone, "email" => $email, "direccion" => $direccion
+    		));
+    		echo json_encode(array("ok" => true, "msg" => "Cliente actualizado", "modo" => "update", "id" => $existe_id));
+    	} else {
 	    	$cSql = "insert into tec_customers(name, cf1, cf2, phone, email, direccion) values(?,?,?,?,?,?)";
-
 	    	if($this->db->query($cSql, array($name, $cf1, $cf2, $phone, $email, $direccion))){
-	    		$this->data['msg'] 		= "Grabacion correcta";
-				$this->data['title'] 	= 'Clientes:';
-			
-				if(isset($_POST["name"])){
-					$this->template->load('production/index', 'clientes/add', $this->data);
-				}else{
-					echo "Grabacion correcta...Modo Ajax";
-				}
+	    		echo json_encode(array("ok" => true, "msg" => "Cliente guardado", "modo" => "insert", "id" => $this->db->insert_id()));
+			} else {
+				echo json_encode(array("ok" => false, "msg" => "Error al guardar"));
 			}
 		}
-
     }
 
     function holak($documento){
     	$obj = $this->fm->consulta_dato_api($documento);
     	print_r($obj);
+    }
+
+    function verificar_existe(){
+        $documento = isset($_REQUEST["documento"]) ? trim($_REQUEST["documento"]) : "";
+        $respuesta = array("existe" => false);
+
+        if(strlen($documento) == 8){
+            $row = $this->db->select("id, name, cf1, cf2, phone, email, direccion")
+                ->from("tec_customers")->where("cf1", $documento)->get()->row();
+        } elseif(strlen($documento) == 11){
+            $row = $this->db->select("id, name, cf1, cf2, phone, email, direccion")
+                ->from("tec_customers")->where("cf2", $documento)->get()->row();
+        } else {
+            $row = null;
+        }
+
+        if($row){
+            $respuesta["existe"] = true;
+            $respuesta["id"] = $row->id;
+            $respuesta["name"] = $row->name;
+            $respuesta["cf1"] = $row->cf1;
+            $respuesta["cf2"] = $row->cf2;
+            $respuesta["phone"] = $row->phone;
+            $respuesta["email"] = $row->email;
+            $respuesta["direccion"] = $row->direccion;
+        }
+        echo json_encode($respuesta);
+    }
+
+    function consultar_reniec(){
+        $documento = isset($_REQUEST["documento"]) ? trim($_REQUEST["documento"]) : "";
+        $respuesta = array("ok" => false, "msg" => "Documento no válido");
+
+        if (strlen($documento) == 8 || strlen($documento) == 11) {
+            $obj = $this->fm->consulta_dato_api($documento);
+            if (isset($obj->error)) {
+                $respuesta["msg"] = $obj->error;
+            } else {
+                $respuesta["ok"] = true;
+                if (strlen($documento) < 11) {
+                    $respuesta["nombres"] = $obj->datos->nombres;
+                    $respuesta["ape_paterno"] = $obj->datos->ape_paterno;
+                    $respuesta["ape_materno"] = $obj->datos->ape_materno;
+                    $respuesta["direccion"] = isset($obj->datos->domiciliado->direccion) ? $obj->datos->domiciliado->direccion : "";
+                } else {
+                    $respuesta["nombres"] = $obj->datos->razon_social;
+                    $respuesta["ape_paterno"] = "";
+                    $respuesta["ape_materno"] = "";
+                    $respuesta["direccion"] = isset($obj->datos->domiciliado->direccion) ? $obj->datos->domiciliado->direccion : "";
+                }
+            }
+        }
+        echo json_encode($respuesta);
     }
 
     function busqueda_nombre(){

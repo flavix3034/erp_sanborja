@@ -202,6 +202,10 @@ function anular(id) {
 function ver(id) {
     window.location.href = '<?= base_url('servicios/view') ?>/' + id;
 }
+
+function print_etiqueta(id) {
+    window.open('<?= base_url('servicios/print_etiqueta') ?>/' + id, 'etiqueta', 'width=500,height=300');
+}
 </script>
 
 <style>
