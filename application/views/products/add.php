@@ -391,34 +391,71 @@
 
         var combinaciones = cartesian(arrays);
 
-        // Resumen
-        var resHtml = '<span style="font-size:12px;color:#495057;"><strong>' + combinaciones.length + '</strong> variante(s) a generar</span>';
-        document.getElementById('resumen_combinaciones').innerHTML = resHtml;
-
-        // Generar filas
-        var codePadre = document.getElementById('code') ? document.getElementById('code').value : '';
+        // Recopilar variantes existentes del tbody (las que tienen var_id)
         var tbody = document.getElementById('tbody_variantes');
+        var filasExistentes = {};
+        var rows = tbody.querySelectorAll('tr');
+        for (var r = 0; r < rows.length; r++) {
+            var hiddenId = rows[r].querySelector('input[name="var_id[]"]');
+            var hiddenAttrs = rows[r].querySelector('input[name="var_attrs[]"]');
+            if (hiddenId && hiddenAttrs) {
+                var attrs = JSON.parse(hiddenAttrs.value);
+                var key = attrs.map(function(a) { return a.atributo_id + ':' + a.valor_id; }).sort().join('|');
+                filasExistentes[key] = rows[r].outerHTML;
+            }
+        }
+
+        // Generar filas: preservar existentes, agregar solo las nuevas
+        var codePadre = document.getElementById('code') ? document.getElementById('code').value : '';
         tbody.innerHTML = '';
+        var totalFilas = 0;
 
         for (var i = 0; i < combinaciones.length; i++) {
             var combo = combinaciones[i];
-            var comboLabel = combo.map(function(c) { return c.valor; }).join(' / ');
-            var skuSuffix = combo.map(function(c) { return c.valor.replace(/\s+/g, '').substring(0, 6).toUpperCase(); }).join('-');
-            var sku = codePadre ? codePadre + '-' + skuSuffix : skuSuffix;
-            var attrJson = JSON.stringify(combo.map(function(c) { return { atributo_id: c.atributo_id, valor_id: c.valor_id }; }));
+            var attrKey = combo.map(function(c) { return c.atributo_id + ':' + c.valor_id; }).sort().join('|');
 
-            tbody.innerHTML += '<tr>'
-                + '<td>' + comboLabel + '<input type="hidden" name="var_attrs[]" value=\'' + attrJson + '\'></td>'
-                + '<td><input type="text" name="var_sku[]" value="' + sku + '" class="form-control input-sm" style="font-size:11px;"></td>'
-                + '<td><input type="text" name="var_barcode[]" value="" class="form-control input-sm" style="font-size:11px;" placeholder="Opcional"></td>'
-                + '<td><input type="text" name="var_price[]" value="" class="form-control input-sm" style="font-size:11px;" placeholder="Heredar"></td>'
-                + '<td><input type="text" name="var_pmayor[]" value="" class="form-control input-sm" style="font-size:11px;" placeholder="Heredar"></td>'
-                + '<td class="text-center"><input type="checkbox" name="var_activo[]" value="' + i + '" checked></td>'
-                + '<td class="text-center"><a href="#" onclick="$(this).closest(\'tr\').remove();return false;" style="color:#dc3545;"><i class="fa fa-times"></i></a></td>'
-                + '</tr>';
+            if (filasExistentes[attrKey]) {
+                // Variante ya existe: preservar fila original con su var_id, sku, barcode, precios, stock
+                tbody.innerHTML += filasExistentes[attrKey];
+            } else {
+                // Variante nueva: crear fila sin var_id
+                var comboLabel = combo.map(function(c) { return c.valor; }).join(' / ');
+                var skuSuffix = combo.map(function(c) { return c.valor.replace(/\s+/g, '').substring(0, 6).toUpperCase(); }).join('-');
+                var sku = codePadre ? codePadre + '-' + skuSuffix : skuSuffix;
+                var attrJson = JSON.stringify(combo.map(function(c) { return { atributo_id: c.atributo_id, valor_id: c.valor_id }; }));
+
+                tbody.innerHTML += '<tr>'
+                    + '<td>' + comboLabel + '<input type="hidden" name="var_attrs[]" value=\'' + attrJson + '\'></td>'
+                    + '<td><input type="text" name="var_sku[]" value="' + sku + '" class="form-control input-sm" style="font-size:11px;"></td>'
+                    + '<td><input type="text" name="var_barcode[]" value="" class="form-control input-sm" style="font-size:11px;" placeholder="Opcional"></td>'
+                    + '<td><input type="text" name="var_price[]" value="" class="form-control input-sm" style="font-size:11px;" placeholder="Heredar"></td>'
+                    + '<td><input type="text" name="var_pmayor[]" value="" class="form-control input-sm" style="font-size:11px;" placeholder="Heredar"></td>'
+                    + '<td class="text-center"><input type="checkbox" name="var_activo[]" value="' + i + '" checked></td>'
+                    + '<td class="text-center"><a href="#" onclick="$(this).closest(\'tr\').remove();return false;" style="color:#dc3545;"><i class="fa fa-times"></i></a></td>'
+                    + '</tr>';
+            }
+            totalFilas++;
         }
 
-        document.getElementById('tabla_variantes').style.display = combinaciones.length > 0 ? 'table' : 'none';
+        // Resumen: mostrar cuántas existentes y cuántas nuevas
+        var nExistentes = Object.keys(filasExistentes).length;
+        var nNuevas = totalFilas - Object.keys(filasExistentes).filter(function(k) {
+            // contar solo las existentes que siguen en las combinaciones
+            var found = false;
+            for (var j = 0; j < combinaciones.length; j++) {
+                var ck = combinaciones[j].map(function(c) { return c.atributo_id + ':' + c.valor_id; }).sort().join('|');
+                if (ck === k) { found = true; break; }
+            }
+            return found;
+        }).length;
+        var resHtml = '<span style="font-size:12px;color:#495057;"><strong>' + totalFilas + '</strong> variante(s)';
+        if (nNuevas > 0 && nNuevas < totalFilas) {
+            resHtml += ' — <span style="color:#28a745;">' + nNuevas + ' nueva(s)</span>, <span style="color:#17a2b8;">' + (totalFilas - nNuevas) + ' existente(s) preservada(s)</span>';
+        }
+        resHtml += '</span>';
+        document.getElementById('resumen_combinaciones').innerHTML = resHtml;
+
+        document.getElementById('tabla_variantes').style.display = totalFilas > 0 ? 'table' : 'none';
     }
 
     function cartesian(arrays) {
