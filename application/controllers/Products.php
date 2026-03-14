@@ -1214,6 +1214,10 @@ class Products extends CI_controller
             }
 
             if($entry['tipo'] == 'P'){
+                // Autogenerar código si está vacío
+                if(strlen($entry['code']) == 0){
+                    $entry['code'] = $this->generar_code_producto_unico();
+                }
                 // Validar código único
                 $existe = $this->db->select("id")->where("code", $entry['code'])->get("tec_products")->row();
                 if($existe){
