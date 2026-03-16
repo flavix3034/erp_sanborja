@@ -115,7 +115,6 @@ if(!isset($store_id)){
 
     <div class="row" id="grilla">
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-            hola cariño <?php echo $this->config->item('ENVIOSUNAT'); ?>
             <table id="example" class="display" style="width:100%; font-size: 12px; margin:0px!important;">
                 <thead>
                     <tr>
