@@ -1,0 +1,2 @@
+<?php
+$config['ENVIOSUNAT'] = true;
