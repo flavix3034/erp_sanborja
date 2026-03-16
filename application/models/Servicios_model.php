@@ -194,6 +194,8 @@ class Servicios_model extends CI_Model
             "Laptop" => "Laptop", 
             "Celular" => "Celular",
             "Tablet" => "Tablet",
+            "Impresora" => "Impresora",
+            "Audífonos" => "Audífonos",
             "Otro" => "Otro"
         );
     }
