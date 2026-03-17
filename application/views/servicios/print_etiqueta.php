@@ -56,14 +56,14 @@
 	}
 
 	.etiqueta .codigo {
-		font-size: 9px;
+		font-size: 10px;
 		font-weight: bold;
 		letter-spacing: 1px;
 		margin-top: 0.5mm;
 	}
 
 	.etiqueta .info {
-		font-size: 7px;
+		font-size: 7.5px;
 		text-align: center;
 		line-height: 1.3;
 		margin-top: 0.5mm;
@@ -74,10 +74,15 @@
 	}
 
 	@media print {
-		body {
+		html, body {
+			width: 50mm;
+			height: 25mm;
 			background: none;
 			padding: 0;
-			display: block;
+			margin: 0;
+			display: flex;
+			align-items: center;
+			justify-content: center;
 		}
 		.no-print { display: none !important; }
 		.etiqueta {
@@ -106,7 +111,7 @@
 JsBarcode("#barcode", "<?= $servicio->codigo ?>", {
 	format: "CODE128",
 	width: 1.5,
-	height: 30,
+	height: 28,
 	displayValue: false,
 	margin: 0
 });
