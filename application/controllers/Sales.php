@@ -94,7 +94,7 @@ class Sales extends CI_Controller {
         $serie                  = $this->serie($tipoDoc);
         $ar["serie"]            = $serie;
         $ar["product_tax"]      = $this->Igv;
-        $ar["correlativo"]      = "1223"; //$correlativo;
+        $ar["correlativo"]      = $correlativo;
         $ar["created_by"]       = $created_by;
         $ar["customer_name"]    = $name_cliente;
 
@@ -439,9 +439,9 @@ class Sales extends CI_Controller {
 
     function serie($tipo){
         if($tipo == "1"){ // factura
-            $serie = "F001";
+            $serie = "F005";
         }elseif($tipo == "2"){ // Boleta
-            $serie = "B001";
+            $serie = "B005";
         }elseif($tipo == "5"){
             $serie = "TK";
         }else{
