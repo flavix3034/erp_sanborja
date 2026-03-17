@@ -52,9 +52,6 @@ $fecha_val = isset($fecha) ? $fecha : date('Y-m-d');
 	.cd-kpi.kpi-ganancia-bruta .kpi-value { color: #1cc88a; }
 	.cd-kpi.kpi-gastos { border-left-color: #e74a3b; }
 	.cd-kpi.kpi-gastos .kpi-value { color: #e74a3b; }
-	.cd-kpi.kpi-ganancia-neta { border-left-color: #f6c23e; }
-	.cd-kpi.kpi-ganancia-neta .kpi-value { color: #f6c23e; }
-
 	/* Caja card special */
 	.caja-resumen-card {
 		background: linear-gradient(135deg, #4e73df, #224abe);
@@ -231,11 +228,6 @@ $fecha_val = isset($fecha) ? $fecha : date('Y-m-d');
 				<div class="kpi-value" id="kpi_total_gastos">S/. 0.00</div>
 				<div style="font-size:11px; color:#6c757d;" id="kpi_detalle_gastos">-</div>
 			</div>
-			<div class="cd-kpi kpi-ganancia-neta">
-				<div class="kpi-label">Ganancia Neta</div>
-				<div class="kpi-value" id="kpi_ganancia_neta">S/. 0.00</div>
-				<div style="font-size:11px; color:#6c757d;" id="kpi_margen">Margen: 0%</div>
-			</div>
 		</div>
 
 		<!-- Fila: Caja + Ventas por Forma de Pago -->
@@ -373,14 +365,6 @@ $fecha_val = isset($fecha) ? $fecha : date('Y-m-d');
 			$('#kpi_ganancia_bruta').text(fmtMoney(data.rentabilidad.ganancia_bruta));
 			$('#kpi_total_gastos').text(fmtMoney(data.totales.total_gastos_dia));
 			$('#kpi_detalle_gastos').text('Op: ' + fmtMoney(data.totales.total_gastos) + ' | CC: ' + fmtMoney(data.totales.total_cajachica));
-			$('#kpi_ganancia_neta').text(fmtMoney(data.rentabilidad.ganancia_neta));
-			$('#kpi_margen').text('Margen: ' + data.rentabilidad.margen + '%');
-
-			// Color ganancia neta
-			if (data.rentabilidad.ganancia_neta < 0) {
-				$('#kpi_ganancia_neta').css('color', '#e74a3b');
-			}
-
 			// === CAJA ===
 			renderCaja(data.caja);
 
@@ -495,11 +479,6 @@ $fecha_val = isset($fecha) ? $fecha : date('Y-m-d');
 		html += '<tr><td>Ventas Netas (sin IGV)</td><td class="text-right">' + fmtMoney(rent.ventas_netas) + '</td></tr>';
 		html += '<tr><td>(-) Costo de Mercader&iacute;a</td><td class="text-right" style="color:#e74a3b;">' + fmtMoney(rent.costos) + '</td></tr>';
 		html += '<tr class="fila-total"><td>= Ganancia Bruta</td><td class="text-right" style="color:#1cc88a;">' + fmtMoney(rent.ganancia_bruta) + '</td></tr>';
-		html += '<tr><td>(-) Gastos del D&iacute;a</td><td class="text-right" style="color:#e74a3b;">' + fmtMoney(rent.gastos_dia) + '</td></tr>';
-
-		var colorNeta = rent.ganancia_neta >= 0 ? '#1cc88a' : '#e74a3b';
-		html += '<tr class="fila-total"><td>= Ganancia Neta Estimada</td><td class="text-right" style="color:' + colorNeta + '; font-size:16px;">' + fmtMoney(rent.ganancia_neta) + '</td></tr>';
-		html += '<tr><td>Margen de Ganancia</td><td class="text-right" style="font-weight:600;">' + rent.margen + '%</td></tr>';
 		$('#tbl_rentabilidad tbody').html(html);
 	}
 
@@ -625,18 +604,15 @@ $fecha_val = isset($fecha) ? $fecha : date('Y-m-d');
 		var kpiBody = [[
 			{ text: 'Total Ventas', style: 'kpiLabel' },
 			{ text: 'Ganancia Bruta', style: 'kpiLabel' },
-			{ text: 'Total Gastos', style: 'kpiLabel' },
-			{ text: 'Ganancia Neta', style: 'kpiLabel' }
+			{ text: 'Total Gastos', style: 'kpiLabel' }
 		],[
 			{ text: fm(d.totales.total_ventas), style: 'kpiValue', color: '#4e73df' },
 			{ text: fm(d.rentabilidad.ganancia_bruta), style: 'kpiValue', color: '#1cc88a' },
-			{ text: fm(d.totales.total_gastos_dia), style: 'kpiValue', color: '#e74a3b' },
-			{ text: fm(d.rentabilidad.ganancia_neta), style: 'kpiValue', color: d.rentabilidad.ganancia_neta >= 0 ? '#f6c23e' : '#e74a3b' }
+			{ text: fm(d.totales.total_gastos_dia), style: 'kpiValue', color: '#e74a3b' }
 		],[
 			{ text: d.totales.cantidad_ventas + ' ventas', fontSize: 7, color: '#888', alignment: 'center' },
 			{ text: 'Sin IGV', fontSize: 7, color: '#888', alignment: 'center' },
-			{ text: 'Op + Caja Chica', fontSize: 7, color: '#888', alignment: 'center' },
-			{ text: 'Margen: ' + d.rentabilidad.margen + '%', fontSize: 7, color: '#888', alignment: 'center' }
+			{ text: 'Op + Caja Chica', fontSize: 7, color: '#888', alignment: 'center' }
 		]];
 
 		// === 2. TABLA RESUMEN DE CAJA ===
@@ -719,11 +695,7 @@ $fecha_val = isset($fecha) ? $fecha : date('Y-m-d');
 		var rentBody = [
 			[{ text: 'Ventas Netas (sin IGV)', fontSize: 9 }, { text: fm(d.rentabilidad.ventas_netas), alignment: 'right', fontSize: 9 }],
 			[{ text: '(-) Costo de Mercaderia', fontSize: 9, color: '#e74a3b' }, { text: fm(d.rentabilidad.costos), alignment: 'right', fontSize: 9, color: '#e74a3b' }],
-			[{ text: '= Ganancia Bruta', fontSize: 10, bold: true, color: '#1cc88a' }, { text: fm(d.rentabilidad.ganancia_bruta), alignment: 'right', fontSize: 10, bold: true, color: '#1cc88a' }],
-			[{ text: '(-) Gastos del Dia', fontSize: 9, color: '#e74a3b' }, { text: fm(d.rentabilidad.gastos_dia), alignment: 'right', fontSize: 9, color: '#e74a3b' }],
-			[{ text: '= Ganancia Neta Estimada', fontSize: 10, bold: true, color: d.rentabilidad.ganancia_neta >= 0 ? '#1cc88a' : '#e74a3b' },
-			 { text: fm(d.rentabilidad.ganancia_neta), alignment: 'right', fontSize: 11, bold: true, color: d.rentabilidad.ganancia_neta >= 0 ? '#1cc88a' : '#e74a3b' }],
-			[{ text: 'Margen de Ganancia', fontSize: 9 }, { text: d.rentabilidad.margen + '%', alignment: 'right', fontSize: 9, bold: true }]
+			[{ text: '= Ganancia Bruta', fontSize: 10, bold: true, color: '#1cc88a' }, { text: fm(d.rentabilidad.ganancia_bruta), alignment: 'right', fontSize: 10, bold: true, color: '#1cc88a' }]
 		];
 
 		// === 6. TABLA GASTOS ===
@@ -822,7 +794,7 @@ $fecha_val = isset($fecha) ? $fecha : date('Y-m-d');
 
 				// KPIs
 				{
-					table: { widths: ['*', '*', '*', '*'], body: kpiBody },
+					table: { widths: ['*', '*', '*'], body: kpiBody },
 					layout: {
 						fillColor: function(rowIndex) { return rowIndex === 0 ? '#f8f9fa' : null; },
 						hLineWidth: function() { return 0.5; }, vLineWidth: function() { return 0.5; },
