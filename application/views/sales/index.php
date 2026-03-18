@@ -244,7 +244,7 @@ if(!isset($store_id)){
                 ,{ 
                     render:function(data, type, row){
                         let valore = row[9]
-                        return "<a href='https://cubifact.com/erp-surco/comprobantes/doc_" + row[0] + "_rpta.txt'>" + (valore.trim().length > 0 ? row[9] : ".") + "</a>"
+                        return "<a href='<?=base_url()?>/doc_" + row[0] + "_rpta.txt'>" + (valore.trim().length > 0 ? row[9] : ".") + "</a>"
                     },
                     "targets":[9]
                 },{
