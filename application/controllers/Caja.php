@@ -35,7 +35,7 @@ class Caja extends CI_Controller {
             return;
         }
 
-        $ventas   = $this->caja_model->ventas_efectivo($store_id, $caja->fecha);
+        $ventas   = $this->caja_model->ventas_efectivo_rango($store_id, $caja->fecha, $caja->hora_apertura);
         $mov_ing  = $this->caja_model->total_movimientos($caja->id, 'INGRESO');
         $mov_egr  = $this->caja_model->total_movimientos($caja->id, 'EGRESO');
         $otros    = $this->caja_model->ventas_otros_medios($store_id, $caja->fecha);
@@ -206,7 +206,7 @@ class Caja extends CI_Controller {
         $observaciones  = isset($_POST['observaciones']) ? trim($_POST['observaciones']) : '';
 
         // Calcular saldo teórico
-        $ventas   = $this->caja_model->ventas_efectivo($store_id, $caja->fecha);
+        $ventas   = $this->caja_model->ventas_efectivo_rango($store_id, $caja->fecha, $caja->hora_apertura);
         $mov_ing  = $this->caja_model->total_movimientos($caja->id, 'INGRESO');
         $mov_egr  = $this->caja_model->total_movimientos($caja->id, 'EGRESO');
         $saldo_teorico = floatval($caja->monto_ini) + $ventas + $mov_ing - $mov_egr;

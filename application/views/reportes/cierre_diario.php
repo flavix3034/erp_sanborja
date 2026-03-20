@@ -230,15 +230,10 @@ $fecha_val = isset($fecha) ? $fecha : date('Y-m-d');
 			</div>
 		</div>
 
-		<!-- Fila: Caja + Ventas por Forma de Pago -->
+		<!-- Fila: Ventas por Forma de Pago + Ventas por Documento -->
 		<div class="row">
-			<!-- Resumen de Caja -->
-			<div class="col-md-5">
-				<div id="caja_contenido"></div>
-			</div>
-
 			<!-- Ventas por Forma de Pago -->
-			<div class="col-md-4">
+			<div class="col-md-6">
 				<div class="cd-card">
 					<h5><i class="fas fa-credit-card" style="color:#4e73df;"></i> Ventas por Forma de Pago</h5>
 					<table class="cd-table" id="tbl_forma_pago">
@@ -255,7 +250,7 @@ $fecha_val = isset($fecha) ? $fecha : date('Y-m-d');
 			</div>
 
 			<!-- Ventas por Tipo Documento -->
-			<div class="col-md-3">
+			<div class="col-md-6">
 				<div class="cd-card">
 					<h5><i class="fas fa-file-invoice" style="color:#1cc88a;"></i> Ventas por Documento</h5>
 					<table class="cd-table" id="tbl_documento">
@@ -317,6 +312,10 @@ $fecha_val = isset($fecha) ? $fecha : date('Y-m-d');
 			</div>
 		</div>
 
+		<!-- Resumen de Cajas -->
+		<h5 style="margin-top:15px; margin-bottom:10px;"><i class="fas fa-cash-register" style="color:#6f42c1;"></i> Resumen de Cajas</h5>
+		<div class="row" id="caja_contenido"></div>
+
 	</div>
 
 </section>
@@ -366,7 +365,7 @@ $fecha_val = isset($fecha) ? $fecha : date('Y-m-d');
 			$('#kpi_total_gastos').text(fmtMoney(data.totales.total_gastos_dia));
 			$('#kpi_detalle_gastos').text('Op: ' + fmtMoney(data.totales.total_gastos) + ' | CC: ' + fmtMoney(data.totales.total_cajachica));
 			// === CAJA ===
-			renderCaja(data.caja);
+			renderCajas(data.cajas);
 
 			// === VENTAS POR FORMA DE PAGO ===
 			renderFormasPago(data.ventas_forma_pago);
@@ -388,46 +387,51 @@ $fecha_val = isset($fecha) ? $fecha : date('Y-m-d');
 		});
 	}
 
-	function renderCaja(caja) {
+	function renderCajas(cajas) {
 		var html = '';
-		if (!caja.tiene_caja) {
-			html = '<div class="caja-no-abierta">';
+		if (!cajas || cajas.length === 0) {
+			html = '<div class="col-md-12"><div class="caja-no-abierta">';
 			html += '<i class="fas fa-info-circle" style="font-size:24px; color:#adb5bd;"></i>';
 			html += '<p style="margin:8px 0 0; font-size:13px;">Sin apertura de caja registrada este d&iacute;a</p>';
-			html += '</div>';
+			html += '</div></div>';
 		} else {
-			html = '<div class="caja-resumen-card">';
-			html += '<div class="caja-titulo"><i class="fas fa-cash-register"></i> Resumen de Caja</div>';
-			html += '<div class="caja-fila"><span class="caja-lbl">Fondo Inicial</span><span class="caja-val">' + fmtMoney(caja.fondo_ini) + '</span></div>';
-			html += '<div class="caja-fila"><span class="caja-lbl">(+) Ventas Efectivo</span><span class="caja-val">' + fmtMoney(caja.ventas_efectivo) + '</span></div>';
-			html += '<div class="caja-fila"><span class="caja-lbl">(+) Ingresos Manuales</span><span class="caja-val">' + fmtMoney(caja.ingresos) + '</span></div>';
-			html += '<div class="caja-fila"><span class="caja-lbl">(-) Egresos Manuales</span><span class="caja-val">' + fmtMoney(caja.egresos) + '</span></div>';
-			html += '<div class="caja-fila caja-total"><span>Saldo Te&oacute;rico</span><span>' + fmtMoney(caja.saldo_teorico) + '</span></div>';
+			for (var idx = 0; idx < cajas.length; idx++) {
+				var caja = cajas[idx];
+				var titulo = 'Caja #' + (idx + 1);
+				html += '<div class="col-md-6" style="margin-bottom:10px;">';
+				html += '<div class="caja-resumen-card" style="height:100%;">';
+				html += '<div class="caja-titulo"><i class="fas fa-cash-register"></i> ' + titulo + '</div>';
+				html += '<div class="caja-fila"><span class="caja-lbl">Fondo Inicial</span><span class="caja-val">' + fmtMoney(caja.fondo_ini) + '</span></div>';
+				html += '<div class="caja-fila"><span class="caja-lbl">(+) Ventas Efectivo</span><span class="caja-val">' + fmtMoney(caja.ventas_efectivo) + '</span></div>';
+				html += '<div class="caja-fila"><span class="caja-lbl">(+) Ingresos Manuales</span><span class="caja-val">' + fmtMoney(caja.ingresos) + '</span></div>';
+				html += '<div class="caja-fila"><span class="caja-lbl">(-) Egresos Manuales</span><span class="caja-val">' + fmtMoney(caja.egresos) + '</span></div>';
+				html += '<div class="caja-fila caja-total"><span>Saldo Te&oacute;rico</span><span>' + fmtMoney(caja.saldo_teorico) + '</span></div>';
 
-			if (caja.estado == 'CERRADA') {
-				html += '<div style="margin-top:10px; border-top:1px solid rgba(255,255,255,0.2); padding-top:8px;">';
-				html += '<div class="caja-fila"><span class="caja-lbl">Conteo Real</span><span class="caja-val">' + fmtMoney(caja.monto_real) + '</span></div>';
+				if (caja.estado == 'CERRADA') {
+					html += '<div style="margin-top:10px; border-top:1px solid rgba(255,255,255,0.2); padding-top:8px;">';
+					html += '<div class="caja-fila"><span class="caja-lbl">Conteo Real</span><span class="caja-val">' + fmtMoney(caja.monto_real) + '</span></div>';
 
-				var dif = parseFloat(caja.diferencia);
-				var difColor = '#fff';
-				var difTexto = '';
-				if (dif > 0.009) {
-					difColor = '#ffc107';
-					difTexto = 'SOBRANTE';
-				} else if (dif < -0.009) {
-					difColor = '#ff6b6b';
-					difTexto = 'FALTANTE';
+					var dif = parseFloat(caja.diferencia);
+					var difColor = '#fff';
+					var difTexto = '';
+					if (dif > 0.009) {
+						difColor = '#ffc107';
+						difTexto = 'SOBRANTE';
+					} else if (dif < -0.009) {
+						difColor = '#ff6b6b';
+						difTexto = 'FALTANTE';
+					} else {
+						difColor = '#69f0ae';
+						difTexto = 'EXACTO';
+					}
+					html += '<div class="caja-fila"><span class="caja-lbl">Diferencia</span><span class="caja-val" style="color:' + difColor + ';">' + fmtMoney(dif) + ' (' + difTexto + ')</span></div>';
+					html += '<div style="text-align:right; margin-top:4px;"><span style="background:rgba(255,255,255,0.2); padding:2px 10px; border-radius:10px; font-size:11px;">CERRADA</span></div>';
+					html += '</div>';
 				} else {
-					difColor = '#69f0ae';
-					difTexto = 'EXACTO';
+					html += '<div style="text-align:right; margin-top:6px;"><span style="background:rgba(40,167,69,0.8); padding:2px 10px; border-radius:10px; font-size:11px;">ABIERTA</span></div>';
 				}
-				html += '<div class="caja-fila"><span class="caja-lbl">Diferencia</span><span class="caja-val" style="color:' + difColor + ';">' + fmtMoney(dif) + ' (' + difTexto + ')</span></div>';
-				html += '<div style="text-align:right; margin-top:4px;"><span style="background:rgba(255,255,255,0.2); padding:2px 10px; border-radius:10px; font-size:11px;">CERRADA</span></div>';
-				html += '</div>';
-			} else {
-				html += '<div style="text-align:right; margin-top:6px;"><span style="background:rgba(40,167,69,0.8); padding:2px 10px; border-radius:10px; font-size:11px;">ABIERTA</span></div>';
+				html += '</div></div>';
 			}
-			html += '</div>';
 		}
 		$('#caja_contenido').html(html);
 	}
@@ -615,29 +619,34 @@ $fecha_val = isset($fecha) ? $fecha : date('Y-m-d');
 			{ text: 'Op + Caja Chica', fontSize: 7, color: '#888', alignment: 'center' }
 		]];
 
-		// === 2. TABLA RESUMEN DE CAJA ===
+		// === 2. TABLA RESUMEN DE CAJAS ===
 		var cajaContent = [];
-		if (d.caja.tiene_caja) {
-			var cajaBody = [
-				[{ text: 'Fondo Inicial', fontSize: 9 }, { text: fm(d.caja.fondo_ini), alignment: 'right', fontSize: 9 }],
-				[{ text: '(+) Ventas Efectivo', fontSize: 9 }, { text: fm(d.caja.ventas_efectivo), alignment: 'right', fontSize: 9 }],
-				[{ text: '(+) Ingresos Manuales', fontSize: 9 }, { text: fm(d.caja.ingresos), alignment: 'right', fontSize: 9 }],
-				[{ text: '(-) Egresos Manuales', fontSize: 9 }, { text: fm(d.caja.egresos), alignment: 'right', fontSize: 9 }],
-				[{ text: 'Saldo Teorico', fontSize: 10, bold: true }, { text: fm(d.caja.saldo_teorico), alignment: 'right', fontSize: 10, bold: true }]
-			];
-			if (d.caja.estado == 'CERRADA') {
-				cajaBody.push([{ text: 'Conteo Real', fontSize: 9 }, { text: fm(d.caja.monto_real), alignment: 'right', fontSize: 9 }]);
-				var difCaja = parseFloat(d.caja.diferencia);
-				var difTxt = difCaja > 0.009 ? 'SOBRANTE' : (difCaja < -0.009 ? 'FALTANTE' : 'EXACTO');
-				var difCol = difCaja > 0.009 ? '#f6c23e' : (difCaja < -0.009 ? '#e74a3b' : '#1cc88a');
-				cajaBody.push([{ text: 'Diferencia (' + difTxt + ')', fontSize: 9, color: difCol, bold: true }, { text: fm(difCaja), alignment: 'right', fontSize: 9, color: difCol, bold: true }]);
+		if (d.cajas && d.cajas.length > 0) {
+			for (var ci = 0; ci < d.cajas.length; ci++) {
+				var cj = d.cajas[ci];
+				var cajaTitle = d.cajas.length > 1 ? 'CAJA #' + (ci + 1) : 'RESUMEN DE CAJA';
+				cajaTitle += (cj.estado == 'CERRADA' ? ' (CERRADA)' : ' (ABIERTA)');
+				var cajaBody = [
+					[{ text: 'Fondo Inicial', fontSize: 9 }, { text: fm(cj.fondo_ini), alignment: 'right', fontSize: 9 }],
+					[{ text: '(+) Ventas Efectivo', fontSize: 9 }, { text: fm(cj.ventas_efectivo), alignment: 'right', fontSize: 9 }],
+					[{ text: '(+) Ingresos Manuales', fontSize: 9 }, { text: fm(cj.ingresos), alignment: 'right', fontSize: 9 }],
+					[{ text: '(-) Egresos Manuales', fontSize: 9 }, { text: fm(cj.egresos), alignment: 'right', fontSize: 9 }],
+					[{ text: 'Saldo Teorico', fontSize: 10, bold: true }, { text: fm(cj.saldo_teorico), alignment: 'right', fontSize: 10, bold: true }]
+				];
+				if (cj.estado == 'CERRADA') {
+					cajaBody.push([{ text: 'Conteo Real', fontSize: 9 }, { text: fm(cj.monto_real), alignment: 'right', fontSize: 9 }]);
+					var difCaja = parseFloat(cj.diferencia);
+					var difTxt = difCaja > 0.009 ? 'SOBRANTE' : (difCaja < -0.009 ? 'FALTANTE' : 'EXACTO');
+					var difCol = difCaja > 0.009 ? '#f6c23e' : (difCaja < -0.009 ? '#e74a3b' : '#1cc88a');
+					cajaBody.push([{ text: 'Diferencia (' + difTxt + ')', fontSize: 9, color: difCol, bold: true }, { text: fm(difCaja), alignment: 'right', fontSize: 9, color: difCol, bold: true }]);
+				}
+				cajaContent.push({ text: cajaTitle, style: 'sectionTitle' });
+				cajaContent.push({
+					table: { headerRows: 0, widths: ['*', 100], body: cajaBody },
+					layout: { hLineWidth: function(i, node) { return i === 5 ? 1.5 : 0.5; }, vLineWidth: function() { return 0; }, hLineColor: function() { return '#ddd'; } },
+					margin: [0, 0, 0, 12]
+				});
 			}
-			cajaContent = [
-				{ text: 'RESUMEN DE CAJA' + (d.caja.estado == 'CERRADA' ? ' (CERRADA)' : ' (ABIERTA)'), style: 'sectionTitle' },
-				{ table: { headerRows: 0, widths: ['*', 100], body: cajaBody },
-				  layout: { hLineWidth: function(i, node) { return i === 5 ? 1.5 : 0.5; }, vLineWidth: function() { return 0; }, hLineColor: function() { return '#ddd'; } },
-				  margin: [0, 0, 0, 12] }
-			];
 		} else {
 			cajaContent = [
 				{ text: 'RESUMEN DE CAJA', style: 'sectionTitle' },
@@ -804,53 +813,42 @@ $fecha_val = isset($fecha) ? $fecha : date('Y-m-d');
 					margin: [0, 0, 0, 15]
 				},
 
-				// Caja + Formas de pago (2 columnas)
+				// Formas de pago + Documentos (2 columnas)
 				{
 					columns: [
-						{
-							width: '50%',
-							stack: cajaContent
-						},
 						{
 							width: '50%',
 							stack: [
 								{ text: 'VENTAS POR FORMA DE PAGO', style: 'sectionTitle' },
 								{ table: { headerRows: 1, widths: ['*', 40, 75], body: fpBody }, layout: 'lightHorizontalLines', margin: [0, 0, 0, 12] }
+							]
+						},
+						{
+							width: '50%',
+							stack: [
+								{ text: 'VENTAS POR DOCUMENTO', style: 'sectionTitle' },
+								{ table: { headerRows: 1, widths: ['*', 40, 75], body: docBody }, layout: 'lightHorizontalLines', margin: [0, 0, 0, 12] }
 							],
 							margin: [10, 0, 0, 0]
 						}
 					]
 				},
 
-				// Documentos + Rentabilidad (2 columnas)
-				{
-					columns: [
-						{
-							width: '45%',
-							stack: [
-								{ text: 'VENTAS POR DOCUMENTO', style: 'sectionTitle' },
-								{ table: { headerRows: 1, widths: ['*', 40, 75], body: docBody }, layout: 'lightHorizontalLines', margin: [0, 0, 0, 12] }
-							]
-						},
-						{
-							width: '55%',
-							stack: [
-								{ text: 'RENTABILIDAD DEL DIA', style: 'sectionTitle' },
-								{ table: { headerRows: 0, widths: ['*', 100], body: rentBody },
-								  layout: { hLineWidth: function(i) { return (i === 3 || i === 5) ? 1.5 : 0.5; }, vLineWidth: function() { return 0; }, hLineColor: function(i) { return (i === 3 || i === 5) ? '#333' : '#e0e0e0'; } },
-								  margin: [0, 0, 0, 12] }
-							],
-							margin: [10, 0, 0, 0]
-						}
-					]
-				},
+				// Rentabilidad
+				{ text: 'RENTABILIDAD DEL DIA', style: 'sectionTitle' },
+				{ table: { headerRows: 0, widths: ['*', 100], body: rentBody },
+				  layout: { hLineWidth: function(i) { return (i === 3 || i === 5) ? 1.5 : 0.5; }, vLineWidth: function() { return 0; }, hLineColor: function(i) { return (i === 3 || i === 5) ? '#333' : '#e0e0e0'; } },
+				  margin: [0, 0, 0, 12] },
 
 				// Gastos
 				gastosContent,
 
 				// Validaciones
 				{ text: 'VALIDACIONES DE CONTROL', style: 'sectionTitle' },
-				{ table: { headerRows: 1, widths: [80, 55, '*'], body: valBody }, layout: 'lightHorizontalLines', margin: [0, 0, 0, 10] }
+				{ table: { headerRows: 1, widths: [80, 55, '*'], body: valBody }, layout: 'lightHorizontalLines', margin: [0, 0, 0, 10] },
+
+				// Resumen de Cajas (al final)
+				cajaContent
 			],
 			styles: {
 				sectionTitle: { fontSize: 11, bold: true, color: '#4e73df', margin: [0, 5, 0, 6], decoration: 'underline' },

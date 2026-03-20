@@ -598,46 +598,54 @@ class Reportes extends CI_Controller {
         $total_gastos = 0;
         $total_cajachica = 0;
 
-        // --- 1. RESUMEN DE CAJA ---
+        // --- 1. RESUMEN DE CAJAS (todas las del día) ---
         try {
-            $caja = $this->db->query("SELECT * FROM tec_registro_cajas WHERE fecha = ? AND store_id = ? LIMIT 1", array($fecha, $store_id))->row();
+            $cajas_db = $this->db->query("SELECT * FROM tec_registro_cajas WHERE fecha = ? AND store_id = ? ORDER BY id ASC", array($fecha, $store_id))->result();
 
-            if ($caja) {
-                $mov = $this->db->query("SELECT
-                    COALESCE(SUM(IF(tipo='INGRESO', monto, 0)), 0) AS ingresos,
-                    COALESCE(SUM(IF(tipo='EGRESO', monto, 0)), 0) AS egresos
-                    FROM tec_caja_movimientos WHERE registro_caja_id = ?", array($caja->id))->row();
+            $resultado['cajas'] = array();
+            if (!empty($cajas_db)) {
+                foreach ($cajas_db as $caja) {
+                    $mov = $this->db->query("SELECT
+                        COALESCE(SUM(IF(tipo='INGRESO', monto, 0)), 0) AS ingresos,
+                        COALESCE(SUM(IF(tipo='EGRESO', monto, 0)), 0) AS egresos
+                        FROM tec_caja_movimientos WHERE registro_caja_id = ?", array($caja->id))->row();
 
-                $vef = $this->db->query("SELECT COALESCE(SUM(c.amount), 0) AS total
-                    FROM tec_sales a
-                    INNER JOIN tec_payments c ON a.id = c.sale_id
-                    WHERE c.paid_by = 'cash' AND a.anulado != '1'
-                    AND DATE(a.`date`) = ? AND a.store_id = ?", array($fecha, $store_id))->row();
+                    // Ventas en efectivo solo del rango horario de esta caja
+                    $hora_ini = isset($caja->hora_apertura) ? $caja->hora_apertura : '00:00:00';
+                    $hora_fin_caja = ($caja->estado_cierre == '1' && isset($caja->hora_cierre)) ? $caja->hora_cierre : date('H:i:s');
+                    $datetime_ini = $fecha . ' ' . $hora_ini;
+                    $datetime_fin = $fecha . ' ' . $hora_fin_caja;
 
-                $fondo = floatval($caja->monto_ini);
-                $ventas_ef = floatval($vef->total);
-                $ingresos = floatval($mov->ingresos);
-                $egresos = floatval($mov->egresos);
-                $saldo_teorico = $fondo + $ventas_ef + $ingresos - $egresos;
+                    $vef = $this->db->query("SELECT COALESCE(SUM(c.amount), 0) AS total
+                        FROM tec_sales a
+                        INNER JOIN tec_payments c ON a.id = c.sale_id
+                        WHERE c.paid_by = 'cash' AND a.anulado != '1'
+                        AND a.`date` >= ? AND a.`date` <= ?
+                        AND a.store_id = ?", array($datetime_ini, $datetime_fin, $store_id))->row();
+                    $ventas_ef = floatval($vef->total);
 
-                $resultado['caja'] = array(
-                    'tiene_caja' => true,
-                    'fondo_ini' => round($fondo, 2),
-                    'ventas_efectivo' => round($ventas_ef, 2),
-                    'ingresos' => round($ingresos, 2),
-                    'egresos' => round($egresos, 2),
-                    'saldo_teorico' => round($saldo_teorico, 2),
-                    'monto_real' => round(floatval($caja->monto_fin), 2),
-                    'diferencia' => round(floatval($caja->diferencia), 2),
-                    'estado' => ($caja->estado_cierre == '1') ? 'CERRADA' : 'ABIERTA',
-                    'hora_apertura' => isset($caja->hora_apertura) ? $caja->hora_apertura : '',
-                    'hora_cierre' => isset($caja->hora_cierre) ? $caja->hora_cierre : ''
-                );
-            } else {
-                $resultado['caja'] = array('tiene_caja' => false);
+                    $fondo = floatval($caja->monto_ini);
+                    $ingresos = floatval($mov->ingresos);
+                    $egresos = floatval($mov->egresos);
+                    $saldo_teorico = $fondo + $ventas_ef + $ingresos - $egresos;
+
+                    $resultado['cajas'][] = array(
+                        'tiene_caja' => true,
+                        'fondo_ini' => round($fondo, 2),
+                        'ventas_efectivo' => round($ventas_ef, 2),
+                        'ingresos' => round($ingresos, 2),
+                        'egresos' => round($egresos, 2),
+                        'saldo_teorico' => round($saldo_teorico, 2),
+                        'monto_real' => round(floatval($caja->monto_fin), 2),
+                        'diferencia' => round(floatval($caja->diferencia), 2),
+                        'estado' => ($caja->estado_cierre == '1') ? 'CERRADA' : 'ABIERTA',
+                        'hora_apertura' => isset($caja->hora_apertura) ? $caja->hora_apertura : '',
+                        'hora_cierre' => isset($caja->hora_cierre) ? $caja->hora_cierre : ''
+                    );
+                }
             }
         } catch (Exception $e) {
-            $resultado['caja'] = array('tiene_caja' => false);
+            $resultado['cajas'] = array();
         }
 
         // --- 2. VENTAS POR FORMA DE PAGO ---
@@ -740,7 +748,7 @@ class Reportes extends CI_Controller {
             'sunat_total' => intval($sunat->total_docs),
             'anuladas' => intval($anuladas->total),
             'stock_negativo' => intval($stock_neg->total),
-            'diferencia_caja' => isset($resultado['caja']['diferencia']) ? $resultado['caja']['diferencia'] : 0
+            'diferencia_caja' => array_sum(array_map(function($c) { return isset($c['diferencia']) ? $c['diferencia'] : 0; }, $resultado['cajas']))
         );
 
         // --- 8. TOTALES ---

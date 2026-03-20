@@ -49,6 +49,25 @@ class Caja_model extends CI_Model
     }
 
     /**
+     * Suma ventas en efectivo por rango horario de una caja específica
+     */
+    function ventas_efectivo_rango($store_id, $fecha, $hora_inicio, $hora_fin = null){
+        $datetime_inicio = $fecha . ' ' . $hora_inicio;
+        $datetime_fin = $hora_fin ? $fecha . ' ' . $hora_fin : date('Y-m-d H:i:s');
+
+        $sql = "SELECT COALESCE(SUM(c.amount), 0) AS total
+                FROM tec_sales a
+                INNER JOIN tec_payments c ON a.id = c.sale_id
+                WHERE c.paid_by = 'cash'
+                  AND a.anulado != '1'
+                  AND a.`date` >= ?
+                  AND a.`date` <= ?
+                  AND a.store_id = ?";
+        $r = $this->db->query($sql, array($datetime_inicio, $datetime_fin, $store_id))->row();
+        return floatval($r->total);
+    }
+
+    /**
      * Suma ventas en efectivo (paid_by='cash') para una fecha y store
      * Solo ventas no anuladas
      */

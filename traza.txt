@@ -1890,3 +1890,189 @@ fma:{
             }
           ]
         }
+
+
+Iniciando...
+grabacion Correcta de TK-1224 <button type="button" onclick="ver_documento(14)" class="btn btn-info">Imprimir</button>
+ard: 14, 10, 1, 18.00, 13.00, 13.00, 13, 13.00, 4, CARAMANDUNGA (25gb, Azul), , , 25, , 
+items: 14, 10, 1, 13.00, 13.00, 13, 13.00, CARAMANDUNGA (25gb, Azul) 
+
+
+Iniciando...
+grabacion Correcta de TK-1225 <button type="button" onclick="ver_documento(15)" class="btn btn-info">Imprimir</button>
+ard: 15, 10, 1, 18.00, 13.00, 13.00, 13, 13.00, 4, CARAMANDUNGA (25gb, Amarillo), , , 23, , 
+items: 15, 10, 1, 13.00, 13.00, 13, 13.00, CARAMANDUNGA (25gb, Amarillo) 
+
+
+Iniciando...
+grabacion Correcta de B005-1 <button type="button" onclick="ver_documento(16)" class="btn btn-info">Imprimir</button>
+ard: 16, 10, 2, 18.00, 50, 42.372881355932, 84.745762711864, 50, 4, CARAMANDUNGA (32gb, Azul), , , 26, , 
+items: 16, 10, 2, 50, 50, 84.745762711864, 50, CARAMANDUNGA (32gb, Azul) 
+
+B005 - 1
+tax : 18
+igv : 15.26
+"mtoOperGravadas": 84.75,
+          "mtoOperExoneradas": 0,
+          "mtoIGV": 15.26,
+          "icbper": 0,
+          "valorVenta": 84.75,
+          "totalImpuestos": 15.26,
+          "subTotal": 100,
+          "redondeo": 0,
+          "mtoImpVenta": 100,
+          "details": [
+fma:{
+          "ublVersion": "2.1",
+          "fecVencimiento": "2026-03-20T00:14:50-05:00",
+          "tipoOperacion": "0101", 
+          "tipoDoc": "03",
+          "serie": "B005",
+          "correlativo": "1",
+          "fechaEmision": "2026-03-20T00:14:50-05:00",
+          "formaPago": {
+            "moneda": "PEN",
+            "tipo": "Contado"
+          },
+          "tipoMoneda": "PEN",
+          "client": {
+            "tipoDoc": "1",
+            "numDoc": "00000000",
+            "rznSocial": "VARIOS",
+            "address": {
+              "direccion": "sin direccion",
+              "provincia": "LIMA",
+              "departamento": "LIMA",
+              "distrito": "LIMA",
+              "ubigueo": "150101"
+            }
+          },"company": {
+            "ruc": 20607786641,
+            "razonSocial": "SBL PERU FIX NOW S.A.C.",
+            "address": {
+              "direccion": "Av. Aviacion 3584 ",
+              "provincia": "San Borja",
+              "departamento": "LIMA",
+              "distrito": "San Borja",
+              "ubigueo": "150130"
+            }
+          },"mtoOperGravadas": 84.75,
+          "mtoOperExoneradas": 0,
+          "mtoIGV": 15.26,
+          "icbper": 0,
+          "valorVenta": 84.75,
+          "totalImpuestos": 15.26,
+          "subTotal": 100,
+          "redondeo": 0,
+          "mtoImpVenta": 100,
+          "details": [{
+              "codProducto": "P10",
+              "unidad": "NIU",
+              "descripcion": "CARAMANDUNGA (32gb, Azul)",
+              "cantidad": 2,
+              "mtoValorUnitario": 42.37,
+              "mtoValorVenta": 84.75,
+              "mtoBaseIgv": 84.75,
+              "porcentajeIgv": 18,
+              "igv": 15.26,
+              "tipAfeIgv": 10,
+              "totalImpuestos": 15.26,
+              "mtoPrecioUnitario": 50
+            }],
+          "legends": [
+            {
+              "code": "1000",
+              "value": "Son  y 00/100 Soles"
+            }
+          ]
+        }
+
+
+Iniciando...
+grabacion Correcta de TK-1226 <button type="button" onclick="ver_documento(17)" class="btn btn-info">Imprimir</button>
+ard: 17, 10, 5, 18.00, 13.00, 13.00, 65, 13.00, 4, CARAMANDUNGA (25gb, Azul), , , 25, , 
+items: 17, 10, 5, 13.00, 13.00, 65, 13.00, CARAMANDUNGA (25gb, Azul) 
+
+
+Iniciando...
+grabacion Correcta de B005-2 <button type="button" onclick="ver_documento(18)" class="btn btn-info">Imprimir</button>
+ard: 18, 10, 3, 18.00, 13.00, 11.016949152542, 33.050847457627, 13.00, 4, CARAMANDUNGA (25gb, Amarillo), , , 23, , 
+items: 18, 10, 3, 13.00, 13.00, 33.050847457627, 13.00, CARAMANDUNGA (25gb, Amarillo) 
+
+B005 - 2
+tax : 18
+igv : 5.95
+"mtoOperGravadas": 33.05,
+          "mtoOperExoneradas": 0,
+          "mtoIGV": 5.95,
+          "icbper": 0,
+          "valorVenta": 33.05,
+          "totalImpuestos": 5.95,
+          "subTotal": 39,
+          "redondeo": 0,
+          "mtoImpVenta": 39,
+          "details": [
+fma:{
+          "ublVersion": "2.1",
+          "fecVencimiento": "2026-03-20T00:16:41-05:00",
+          "tipoOperacion": "0101", 
+          "tipoDoc": "03",
+          "serie": "B005",
+          "correlativo": "2",
+          "fechaEmision": "2026-03-20T00:16:41-05:00",
+          "formaPago": {
+            "moneda": "PEN",
+            "tipo": "Contado"
+          },
+          "tipoMoneda": "PEN",
+          "client": {
+            "tipoDoc": "1",
+            "numDoc": "00000000",
+            "rznSocial": "VARIOS",
+            "address": {
+              "direccion": "sin direccion",
+              "provincia": "LIMA",
+              "departamento": "LIMA",
+              "distrito": "LIMA",
+              "ubigueo": "150101"
+            }
+          },"company": {
+            "ruc": 20607786641,
+            "razonSocial": "SBL PERU FIX NOW S.A.C.",
+            "address": {
+              "direccion": "Av. Aviacion 3584 ",
+              "provincia": "San Borja",
+              "departamento": "LIMA",
+              "distrito": "San Borja",
+              "ubigueo": "150130"
+            }
+          },"mtoOperGravadas": 33.05,
+          "mtoOperExoneradas": 0,
+          "mtoIGV": 5.95,
+          "icbper": 0,
+          "valorVenta": 33.05,
+          "totalImpuestos": 5.95,
+          "subTotal": 39,
+          "redondeo": 0,
+          "mtoImpVenta": 39,
+          "details": [{
+              "codProducto": "P10",
+              "unidad": "NIU",
+              "descripcion": "CARAMANDUNGA (25gb, Amarillo)",
+              "cantidad": 3,
+              "mtoValorUnitario": 11.02,
+              "mtoValorVenta": 33.05,
+              "mtoBaseIgv": 33.05,
+              "porcentajeIgv": 18,
+              "igv": 5.95,
+              "tipAfeIgv": 10,
+              "totalImpuestos": 5.95,
+              "mtoPrecioUnitario": 13
+            }],
+          "legends": [
+            {
+              "code": "1000",
+              "value": "Son  y 90/100 Soles"
+            }
+          ]
+        }

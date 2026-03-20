@@ -1,0 +1,64 @@
+{
+          "ublVersion": "2.1",
+          "fecVencimiento": "2026-03-20T00:14:50-05:00",
+          "tipoOperacion": "0101", 
+          "tipoDoc": "03",
+          "serie": "B005",
+          "correlativo": "1",
+          "fechaEmision": "2026-03-20T00:14:50-05:00",
+          "formaPago": {
+            "moneda": "PEN",
+            "tipo": "Contado"
+          },
+          "tipoMoneda": "PEN",
+          "client": {
+            "tipoDoc": "1",
+            "numDoc": "00000000",
+            "rznSocial": "VARIOS",
+            "address": {
+              "direccion": "sin direccion",
+              "provincia": "LIMA",
+              "departamento": "LIMA",
+              "distrito": "LIMA",
+              "ubigueo": "150101"
+            }
+          },"company": {
+            "ruc": 20607786641,
+            "razonSocial": "SBL PERU FIX NOW S.A.C.",
+            "address": {
+              "direccion": "Av. Aviacion 3584 ",
+              "provincia": "San Borja",
+              "departamento": "LIMA",
+              "distrito": "San Borja",
+              "ubigueo": "150130"
+            }
+          },"mtoOperGravadas": 84.75,
+          "mtoOperExoneradas": 0,
+          "mtoIGV": 15.26,
+          "icbper": 0,
+          "valorVenta": 84.75,
+          "totalImpuestos": 15.26,
+          "subTotal": 100,
+          "redondeo": 0,
+          "mtoImpVenta": 100,
+          "details": [{
+              "codProducto": "P10",
+              "unidad": "NIU",
+              "descripcion": "CARAMANDUNGA (32gb, Azul)",
+              "cantidad": 2,
+              "mtoValorUnitario": 42.37,
+              "mtoValorVenta": 84.75,
+              "mtoBaseIgv": 84.75,
+              "porcentajeIgv": 18,
+              "igv": 15.26,
+              "tipAfeIgv": 10,
+              "totalImpuestos": 15.26,
+              "mtoPrecioUnitario": 50
+            }],
+          "legends": [
+            {
+              "code": "1000",
+              "value": "Son  y 00/100 Soles"
+            }
+          ]
+        }
