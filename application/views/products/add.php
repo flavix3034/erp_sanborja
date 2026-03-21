@@ -76,7 +76,7 @@
             <?php 
                 $result = $this->db->query("select id,name from tec_categories where activo='1' order by name")->result_array();
                 $ar     = $this->fm->conver_dropdown($result,"id","name");
-                echo form_dropdown('category_id',$ar,'','class="form-control tip" id="category_id" required="required"');
+                echo form_dropdown('category_id',$ar,$category_id,'class="form-control tip" id="category_id" required="required"');
             ?>
 
         </div>
@@ -87,7 +87,7 @@
             <?php 
                 $result = $this->db->query("select id, descrip from tec_unidades order by id")->result_array();
                 $ar     = $this->fm->conver_dropdown($result,"id","descrip");
-                echo form_dropdown('unidad',$ar,'','class="form-control tip" id="unidad" required="required"');
+                echo form_dropdown('unidad',$ar,$unidad,'class="form-control tip" id="unidad" required="required"');
             ?>
         </div>
 
