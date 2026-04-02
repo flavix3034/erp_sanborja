@@ -311,6 +311,18 @@ class Servicios extends CI_Controller
         }
     }
 
+    function buscar_proveedor(){
+        $q = isset($_GET["q"]) ? trim($_GET["q"]) : '';
+        if(strlen($q) < 1) {
+            header('Content-Type: application/json');
+            echo json_encode(array());
+            return;
+        }
+        $resultado = $this->Servicios_model->buscar_proveedor($q);
+        header('Content-Type: application/json');
+        echo json_encode($resultado);
+    }
+
     function print_etiqueta($id) {
         $servicio = $this->Servicios_model->get_servicio_by_id($id);
         if (!$servicio) {

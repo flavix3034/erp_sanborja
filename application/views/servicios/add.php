@@ -28,6 +28,17 @@
 	#resultados_busqueda .list-group-item:hover { background-color: #e8f4fd; }
 	#buscar_item { text-transform: uppercase; }
 	#tabla_items_servicio { font-size: 12px; }
+
+	/* Tercerizacion */
+	.tercerizacion-wrap { margin-top: 8px; background: #fff8e1; padding: 10px 15px; border-radius: 4px; border: 1px solid #ffe082; display: none; }
+	.tercerizacion-wrap label.terc-label { font-weight: 600; color: #e65100; }
+	.proveedor-search-wrap { position: relative; }
+	#prov_resultados { position: absolute; z-index: 1000; background: #fff; border: 1px solid #ccc; border-top: none; width: 100%; max-height: 200px; overflow-y: auto; display: none; box-shadow: 0 4px 8px rgba(0,0,0,0.15); border-radius: 0 0 4px 4px; }
+	.prov-item { padding: 6px 10px; cursor: pointer; border-bottom: 1px solid #f0f0f0; font-size: 12px; }
+	.prov-item:hover { background-color: #e8f4fd; }
+	.prov-nombre { font-weight: 600; }
+	.prov-ruc { color: #888; font-size: 11px; margin-left: 8px; }
+	.row-tercerizado { background-color: #fff8e1 !important; font-size: 11px; }
 </style>
 
 <section class="content">
@@ -237,6 +248,46 @@
 				<input type="hidden" id="item_impuesto_selected" value="18">
 				<input type="hidden" id="item_prod_serv_selected" value="S">
 
+				<!-- Fila de tercerizacion (solo visible para servicios) -->
+				<div class="row" style="margin-top:8px; display:none;" id="fila_checkbox_terc">
+					<div class="col-sm-12">
+						<label style="font-weight:normal; cursor:pointer;">
+							<input type="checkbox" id="item_tercerizado" onchange="toggleTercerizacion()"> <strong style="color:#e65100;">Tercerizado (servicio externo)</strong>
+						</label>
+					</div>
+				</div>
+				<div class="tercerizacion-wrap" id="tercerizacion_fields">
+					<div class="row">
+						<div class="col-sm-4">
+							<label class="terc-label">Proveedor</label>
+							<div class="proveedor-search-wrap">
+								<input type="text" id="item_prov_search" class="form-control" placeholder="Buscar proveedor o escribir nombre..." autocomplete="off">
+								<input type="hidden" id="item_prov_id" value="">
+								<div id="prov_resultados"></div>
+							</div>
+						</div>
+						<div class="col-sm-2">
+							<label class="terc-label">Tipo Doc.</label>
+							<select id="item_tipo_doc_prov" class="form-control" onchange="calcularMargenPreview()">
+								<option value="5">Ticket</option>
+								<option value="1">Factura</option>
+							</select>
+						</div>
+						<div class="col-sm-2">
+							<label class="terc-label">Costo Proveedor</label>
+							<input type="number" id="item_costo_prov" class="form-control" step="0.01" min="0" value="0" oninput="calcularMargenPreview()">
+						</div>
+						<div class="col-sm-2">
+							<label class="terc-label">Costo Sin IGV</label>
+							<input type="text" id="item_costo_sin_igv_preview" class="form-control" readonly style="background:#f5f5f5;">
+						</div>
+						<div class="col-sm-2">
+							<label class="terc-label">Margen</label>
+							<input type="text" id="item_margen_preview" class="form-control" readonly style="background:#e8f5e9; color:#2e7d32; font-weight:bold;">
+						</div>
+					</div>
+				</div>
+
 				<div class="row" style="margin-top:10px;">
 					<div class="col-sm-12">
 						<table class="table table-bordered table-striped table-condensed" id="tabla_items_servicio">
@@ -258,6 +309,16 @@
 								<tr style="font-weight:bold; background-color:#f9f9f9;">
 									<td colspan="5" class="text-right">TOTAL:</td>
 									<td id="total_items_servicio">0.00</td>
+									<td colspan="2"></td>
+								</tr>
+								<tr id="resumen_tercerizacion" style="display:none; background-color:#fff8e1;">
+									<td colspan="5" class="text-right"><i class="fa fa-share-alt"></i> Costo Tercerizado:</td>
+									<td id="total_costo_prov" style="color:#d84315;">0.00</td>
+									<td colspan="2"></td>
+								</tr>
+								<tr id="resumen_margen" style="display:none; background-color:#e8f5e9;">
+									<td colspan="5" class="text-right"><i class="fa fa-line-chart"></i> Margen Tercerizacion:</td>
+									<td id="total_margen" style="color:#2e7d32; font-weight:bold;">0.00</td>
 									<td colspan="2"></td>
 								</tr>
 							</tfoot>
@@ -303,7 +364,12 @@ $(document).ready(function() {
 		price: <?= $item->unit_price ?>,
 		impuesto: <?= $item->impuesto ?>,
 		prod_serv: '<?= $item->prod_serv ?>',
-		obs: '<?= addslashes($item->observaciones) ?>'
+		obs: '<?= addslashes($item->observaciones) ?>',
+		es_tercerizado: <?= isset($item->es_tercerizado) ? $item->es_tercerizado : 0 ?>,
+		prov_id: '<?= isset($item->proveedor_id) ? $item->proveedor_id : '' ?>',
+		prov_nombre: '<?= isset($item->proveedor_nombre) ? addslashes($item->proveedor_nombre) : '' ?>',
+		costo_prov: <?= isset($item->costo_proveedor) ? floatval($item->costo_proveedor) : 0 ?>,
+		tipo_doc_prov: '<?= isset($item->tipo_doc_proveedor) ? $item->tipo_doc_proveedor : '5' ?>'
 	});
 	<?php endforeach; ?>
 	renderItemsServicio();
@@ -418,6 +484,19 @@ $(document).ready(function() {
 		$('#item_precio').val($(this).data('price'));
 		$('#item_cantidad').val(1);
 		$('#resultados_busqueda').hide().html('');
+
+		// Mostrar opcion de tercerizado solo para servicios
+		if($(this).data('prod_serv') == 'S') {
+			$('#fila_checkbox_terc').show();
+		} else {
+			$('#fila_checkbox_terc').hide();
+			$('#item_tercerizado').prop('checked', false);
+			$('#tercerizacion_fields').hide();
+			$('#item_prov_id').val('');
+			$('#item_prov_search').val('');
+			$('#item_costo_prov').val(0);
+			$('#item_margen_preview').val('');
+		}
 	});
 
 	// Cerrar dropdown al click fuera
@@ -425,8 +504,81 @@ $(document).ready(function() {
 		if(!$(e.target).closest('#buscar_item, #resultados_busqueda').length) {
 			$('#resultados_busqueda').hide().html('');
 		}
+		if(!$(e.target).closest('#item_prov_search, #prov_resultados').length) {
+			$('#prov_resultados').hide().html('');
+		}
+	});
+
+	// Recalcular margen preview cuando cambia precio o cantidad
+	$('#item_precio, #item_cantidad').on('input', function() {
+		if($('#item_tercerizado').is(':checked')) {
+			calcularMargenPreview();
+		}
+	});
+
+	// Autocomplete de proveedor
+	var provSearchTimer = null;
+	$('#item_prov_search').on('keyup', function() {
+		clearTimeout(provSearchTimer);
+		var q = this.value.trim();
+		$('#item_prov_id').val(''); // Reset seleccion al escribir
+		if(q.length < 2) {
+			$('#prov_resultados').hide().html('');
+			return;
+		}
+		provSearchTimer = setTimeout(function() {
+			$.get('<?= base_url("servicios/buscar_proveedor") ?>', {q: q}, function(data) {
+				var html = '';
+				if(data.length > 0) {
+					for(var i = 0; i < data.length; i++) {
+						html += '<div class="prov-item" data-id="' + data[i].id + '" data-nombre="' + data[i].nombre.replace(/"/g,'&quot;') + '">'
+							+ '<span class="prov-nombre">' + data[i].nombre + '</span>'
+							+ '<span class="prov-ruc">' + (data[i].ruc || '') + '</span></div>';
+					}
+				} else {
+					html = '<div style="padding:8px;color:#999;font-size:12px;">No encontrado (se usara el nombre ingresado)</div>';
+				}
+				$('#prov_resultados').html(html).show();
+			}, 'json');
+		}, 300);
+	});
+
+	// Seleccionar proveedor del autocomplete
+	$(document).on('click', '.prov-item', function() {
+		$('#item_prov_id').val($(this).data('id'));
+		$('#item_prov_search').val($(this).data('nombre'));
+		$('#prov_resultados').hide().html('');
 	});
 });
+
+function toggleTercerizacion() {
+	if($('#item_tercerizado').is(':checked')) {
+		$('#tercerizacion_fields').show();
+		calcularMargenPreview();
+	} else {
+		$('#tercerizacion_fields').hide();
+		$('#item_prov_id').val('');
+		$('#item_prov_search').val('');
+		$('#item_costo_prov').val(0);
+		$('#item_margen_preview').val('');
+		$('#item_costo_sin_igv_preview').val('');
+		$('#item_tipo_doc_prov').val('5');
+	}
+}
+
+function calcularMargenPreview() {
+	var precio = parseFloat($('#item_precio').val()) || 0;
+	var cantidad = parseFloat($('#item_cantidad').val()) || 1;
+	var costoProv = parseFloat($('#item_costo_prov').val()) || 0;
+	var tipoDoc = $('#item_tipo_doc_prov').val();
+
+	// Si es factura, el costo real sin IGV = costo / 1.18
+	var costoSinIgv = (tipoDoc == '1') ? costoProv / 1.18 : costoProv;
+	$('#item_costo_sin_igv_preview').val(costoSinIgv.toFixed(2));
+
+	var margen = (precio - costoProv) * cantidad;
+	$('#item_margen_preview').val('S/ ' + margen.toFixed(2));
+}
 
 function agregarItemServicio() {
 	var id = $('#item_id_selected').val();
@@ -457,7 +609,12 @@ function agregarItemServicio() {
 
 	ar_serv_items.push({
 		id: id, variant_id: variant_id, name: name, quantity: quantity, price: price,
-		impuesto: impuesto, prod_serv: prod_serv, obs: obs
+		impuesto: impuesto, prod_serv: prod_serv, obs: obs,
+		es_tercerizado: $('#item_tercerizado').is(':checked') ? 1 : 0,
+		prov_id: $('#item_prov_id').val() || '',
+		prov_nombre: $('#item_prov_search').val().trim() || '',
+		costo_prov: parseFloat($('#item_costo_prov').val()) || 0,
+		tipo_doc_prov: $('#item_tipo_doc_prov').val() || '5'
 	});
 
 	renderItemsServicio();
@@ -471,6 +628,16 @@ function agregarItemServicio() {
 	$('#item_obs').val('');
 	$('#item_impuesto_selected').val(18);
 	$('#item_prod_serv_selected').val('S');
+	// Reset tercerizacion
+	$('#item_tercerizado').prop('checked', false);
+	$('#item_prov_id').val('');
+	$('#item_prov_search').val('');
+	$('#item_costo_prov').val(0);
+	$('#item_margen_preview').val('');
+	$('#item_costo_sin_igv_preview').val('');
+	$('#item_tipo_doc_prov').val('5');
+	$('#tercerizacion_fields').hide();
+	$('#fila_checkbox_terc').hide();
 	$('#buscar_item').focus();
 }
 
@@ -482,6 +649,8 @@ function quitarItemServicio(index) {
 function renderItemsServicio() {
 	var html = '';
 	var total = 0;
+	var total_costo_prov = 0;
+	var total_margen = 0;
 
 	for(var i = 0; i < ar_serv_items.length; i++) {
 		var item = ar_serv_items[i];
@@ -493,7 +662,7 @@ function renderItemsServicio() {
 
 		html += '<tr>';
 		html += '<td class="text-center">' + tipo_label + '</td>';
-		html += '<td>' + item.name + '</td>';
+		html += '<td>' + item.name + (item.es_tercerizado == 1 ? ' <span class="label" style="background:#e65100;font-size:9px;">TERC</span>' : '') + '</td>';
 		html += '<td class="text-center">' + item.quantity + '</td>';
 		html += '<td class="text-right">' + item.price.toFixed(2) + '</td>';
 		html += '<td class="text-center">' + item.impuesto + '%</td>';
@@ -502,6 +671,23 @@ function renderItemsServicio() {
 		html += '<td class="text-center"><button type="button" class="btn btn-xs btn-danger" onclick="quitarItemServicio(' + i + ')"><i class="fa fa-trash"></i></button></td>';
 		html += '</tr>';
 
+		// Sub-fila de tercerizacion
+		if(item.es_tercerizado == 1) {
+			var margen_item = (item.price - item.costo_prov) * item.quantity;
+			total_costo_prov += item.costo_prov * item.quantity;
+			total_margen += margen_item;
+			var tipoDocLabel = (item.tipo_doc_prov == '1') ? 'Factura' : 'Ticket';
+			html += '<tr class="row-tercerizado">';
+			html += '<td></td>';
+			html += '<td colspan="2"><i class="fa fa-share-alt" style="color:#e65100;"></i> Proveedor: <strong>' + (item.prov_nombre || 'Sin nombre') + '</strong> <span class="label label-default" style="font-size:9px;">' + tipoDocLabel + '</span></td>';
+			html += '<td class="text-right" style="color:#d84315;">' + item.costo_prov.toFixed(2) + '</td>';
+			html += '<td></td>';
+			html += '<td class="text-right" style="color:#2e7d32; font-weight:bold;">Margen: ' + margen_item.toFixed(2) + '</td>';
+			html += '<td colspan="2"></td>';
+			html += '</tr>';
+		}
+
+		// Hidden inputs
 		html += '<input type="hidden" name="item[]" value="' + item.id + '">';
 		html += '<input type="hidden" name="variant_id[]" value="' + (item.variant_id || 0) + '">';
 		html += '<input type="hidden" name="descripo[]" value="' + item.name.replace(/"/g,'&quot;') + '">';
@@ -510,11 +696,25 @@ function renderItemsServicio() {
 		html += '<input type="hidden" name="impuestos[]" value="' + item.impuesto + '">';
 		html += '<input type="hidden" name="obs[]" value="' + (item.obs || '') + '">';
 		html += '<input type="hidden" name="prod_serv_arr[]" value="' + item.prod_serv + '">';
+		html += '<input type="hidden" name="es_tercerizado_arr[]" value="' + (item.es_tercerizado || 0) + '">';
+		html += '<input type="hidden" name="prov_id_arr[]" value="' + (item.prov_id || '') + '">';
+		html += '<input type="hidden" name="prov_nombre_arr[]" value="' + (item.prov_nombre || '').replace(/"/g,'&quot;') + '">';
+		html += '<input type="hidden" name="costo_prov_arr[]" value="' + (item.costo_prov || 0) + '">';
+		html += '<input type="hidden" name="tipo_doc_prov_arr[]" value="' + (item.tipo_doc_prov || '5') + '">';
 	}
 
 	$('#tbody_items_servicio').html(html);
 	$('#total_items_servicio').text(total.toFixed(2));
 	$('#costo_presupuesto').val(total.toFixed(2));
 	$('#costo_final').val(total.toFixed(2));
+
+	// Mostrar resumen de tercerizacion
+	if(total_costo_prov > 0) {
+		$('#resumen_tercerizacion, #resumen_margen').show();
+		$('#total_costo_prov').text(total_costo_prov.toFixed(2));
+		$('#total_margen').text(total_margen.toFixed(2));
+	} else {
+		$('#resumen_tercerizacion, #resumen_margen').hide();
+	}
 }
 </script>

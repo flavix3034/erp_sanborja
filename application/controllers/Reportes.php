@@ -330,11 +330,14 @@ class Reportes extends CI_Controller {
             where a.anulado!='1' $cad_desde $cad_hasta $cad_store_id
             group by a.store_id, date(a.`date`)";*/
 
-        $cSql_sub = "select a.store_id, date(a.`date`) dia, sum(b.net_unit_price*b.quantity) ventas, sum(if(c.precio_sin_igv is null, 0, c.precio_sin_igv*b.quantity)) costos, 
-            sum(b.net_unit_price*b.quantity) - sum(if(c.precio_sin_igv is null, 0, c.precio_sin_igv*b.quantity)) dif   
+        $cSql_sub = "select a.store_id, date(a.`date`) dia, sum(b.net_unit_price*b.quantity) ventas,
+            sum(COALESCE(c.precio_sin_igv, IF(si.es_tercerizado = 1, IF(si.tipo_doc_proveedor = 5, si.costo_proveedor, si.costo_proveedor / (1+".$this->Igv."/100)), NULL), 0)*b.quantity) costos,
+            sum(b.net_unit_price*b.quantity) - sum(COALESCE(c.precio_sin_igv, IF(si.es_tercerizado = 1, IF(si.tipo_doc_proveedor = 5, si.costo_proveedor, si.costo_proveedor / (1+".$this->Igv."/100)), NULL), 0)*b.quantity) dif
             from tec_sales a
             inner join tec_sale_items b on a.id=b.sale_id
             left join tec_compra_items c on b.compra_id=c.compra_id and b.product_id=c.product_id and COALESCE(b.variant_id,0)=COALESCE(c.variant_id,0)
+            left join tec_servicios_tecnicos st on st.sale_id = a.id
+            left join tec_servicio_items si on si.servicio_id = st.id and si.product_id = b.product_id and COALESCE(si.variant_id,0) = COALESCE(b.variant_id,0)
             where a.anulado!='1' $cad_desde $cad_hasta $cad_store_id
             group by a.store_id, date(a.`date`)";
 
@@ -391,14 +394,16 @@ class Reportes extends CI_Controller {
 
         $cSql = "select a.store_id tienda, DATE_FORMAT(a.`date`, '%Y-%m-%d %H:%i') dia, b.product_id, fn_product_display_name(b.product_id, b.variant_id) name,
             round(b.net_unit_price,2) net_unit_price, round(b.quantity,0) quantity,
-            round(b.net_unit_price*b.quantity,2) ventas, 
-            round(if(c.precio_sin_igv is null, 0, c.precio_sin_igv*b.quantity),2) costos, 
-            round((b.net_unit_price*b.quantity) - if(c.precio_sin_igv is null, 0, c.precio_sin_igv*b.quantity),2) ganancia, tc.tipoDoc,
+            round(b.net_unit_price*b.quantity,2) ventas,
+            round(COALESCE(c.precio_sin_igv, IF(si.es_tercerizado = 1, IF(si.tipo_doc_proveedor = 5, si.costo_proveedor, si.costo_proveedor / (1+".$this->Igv."/100)), NULL), 0)*b.quantity,2) costos,
+            round((b.net_unit_price*b.quantity) - COALESCE(c.precio_sin_igv, IF(si.es_tercerizado = 1, IF(si.tipo_doc_proveedor = 5, si.costo_proveedor, si.costo_proveedor / (1+".$this->Igv."/100)), NULL), 0)*b.quantity,2) ganancia, tc.tipoDoc,
             CONCAT(ELT(WEEKDAY(date(a.`date`)) + 1, 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', '<b>Sabado</b>', '<b>Domingo</b>')) as dia_semana
             from tec_sales a
             inner join tec_sale_items b on a.id=b.sale_id
             left join tec_compras tc on b.compra_id = tc.id
             left join tec_compra_items c on b.compra_id=c.compra_id and b.product_id=c.product_id and COALESCE(b.variant_id,0)=COALESCE(c.variant_id,0)
+            left join tec_servicios_tecnicos st on st.sale_id = a.id
+            left join tec_servicio_items si on si.servicio_id = st.id and si.product_id = b.product_id and COALESCE(si.variant_id,0) = COALESCE(b.variant_id,0)
             left join tec_products d on b.product_id = d.id
             where a.anulado!='1' $cad_desde $cad_hasta $cad_store_id
             order by a.store_id, date(a.`date`)";
@@ -668,10 +673,12 @@ class Reportes extends CI_Controller {
         // --- 4. RENTABILIDAD ---
         $rent = $this->db->query("SELECT
             COALESCE(ROUND(SUM(b.net_unit_price * b.quantity), 2), 0) AS ventas_netas,
-            COALESCE(ROUND(SUM(IF(c.precio_sin_igv IS NULL, 0, c.precio_sin_igv * b.quantity)), 2), 0) AS costos
+            COALESCE(ROUND(SUM(COALESCE(c.precio_sin_igv, IF(si.es_tercerizado = 1, IF(si.tipo_doc_proveedor = 5, si.costo_proveedor, si.costo_proveedor / (1+".$this->Igv."/100)), NULL), 0) * b.quantity), 2), 0) AS costos
             FROM tec_sales a
             INNER JOIN tec_sale_items b ON a.id = b.sale_id
             LEFT JOIN tec_compra_items c ON b.compra_id = c.compra_id AND b.product_id = c.product_id AND COALESCE(b.variant_id,0)=COALESCE(c.variant_id,0)
+            LEFT JOIN tec_servicios_tecnicos st ON st.sale_id = a.id
+            LEFT JOIN tec_servicio_items si ON si.servicio_id = st.id AND si.product_id = b.product_id AND COALESCE(si.variant_id,0) = COALESCE(b.variant_id,0)
             WHERE a.anulado != '1' AND DATE(a.`date`) = ? AND a.store_id = ?", array($fecha, $store_id))->row();
 
         $ventas_netas = floatval($rent->ventas_netas);

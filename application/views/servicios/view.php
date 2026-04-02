@@ -169,14 +169,35 @@
 	</div>
 	<div class="panel-body">
 		<div class="row filitas">
-			<div class="col-sm-4">
+			<div class="col-sm-3">
 				<strong>Costo Presupuesto:</strong><br>
 				S/. <?= number_format($servicio->costo_presupuesto, 2) ?>
 			</div>
-			<div class="col-sm-4">
+			<div class="col-sm-3">
 				<strong>Costo Final:</strong><br>
 				S/. <?= number_format($servicio->costo_final, 2) ?>
 			</div>
+			<?php
+			$tot_cp = 0; $tot_mg = 0;
+			if(!empty($items)) {
+				foreach($items as $it) {
+					if(!empty($it->es_tercerizado) && $it->es_tercerizado == 1) {
+						$tot_cp += $it->costo_proveedor * $it->quantity;
+						$tot_mg += ($it->unit_price - $it->costo_proveedor) * $it->quantity;
+					}
+				}
+			}
+			?>
+			<?php if($tot_cp > 0): ?>
+			<div class="col-sm-3">
+				<strong>Costo Tercerizado:</strong><br>
+				<span style="color:#d84315; font-weight:bold;">S/. <?= number_format($tot_cp, 2) ?></span>
+			</div>
+			<div class="col-sm-3">
+				<strong>Margen Tercerizacion:</strong><br>
+				<span style="color:#2e7d32; font-weight:bold;">S/. <?= number_format($tot_mg, 2) ?></span>
+			</div>
+			<?php endif; ?>
 		</div>
 	</div>
 </div>
@@ -203,22 +224,44 @@
 			<tbody>
 				<?php
 				$total_items = 0;
+				$total_costo_prov = 0;
+				$total_margen_terc = 0;
 				foreach($items as $item):
 					$subtotal_item = $item->unit_price * $item->quantity;
 					$total_items += $subtotal_item;
 					$tipo_label = $item->prod_serv == 'P'
 						? '<span class="label label-info">Prod</span>'
 						: '<span class="label label-success">Serv</span>';
+					if(!empty($item->es_tercerizado) && $item->es_tercerizado == 1) {
+						$total_costo_prov += $item->costo_proveedor * $item->quantity;
+						$total_margen_terc += ($item->unit_price - $item->costo_proveedor) * $item->quantity;
+					}
 				?>
 				<tr>
 					<td class="text-center"><?= $tipo_label ?></td>
-					<td><?= $item->product_name ?></td>
+					<td><?= $item->product_name ?><?php if(!empty($item->es_tercerizado) && $item->es_tercerizado == 1): ?> <span class="label" style="background:#e65100;font-size:9px;">TERC</span><?php endif; ?></td>
 					<td class="text-center"><?= $item->quantity + 0 ?></td>
 					<td class="text-right"><?= number_format($item->unit_price, 2) ?></td>
 					<td class="text-center"><?= $item->impuesto ?>%</td>
 					<td class="text-right"><?= number_format($subtotal_item, 2) ?></td>
 					<td><?= $item->observaciones ?></td>
 				</tr>
+				<?php if(!empty($item->es_tercerizado) && $item->es_tercerizado == 1): ?>
+				<tr style="background-color:#fff8e1; font-size:11px;">
+					<td></td>
+					<td colspan="2">
+						<i class="glyphicon glyphicon-share-alt" style="color:#e65100;"></i>
+						Proveedor: <strong><?= $item->proveedor_nombre ?: 'Sin nombre' ?></strong>
+						<span class="label label-default" style="font-size:9px;"><?= (!empty($item->tipo_doc_proveedor) && $item->tipo_doc_proveedor == 1) ? 'Factura' : 'Ticket' ?></span>
+					</td>
+					<td class="text-right" style="color:#d84315;">S/. <?= number_format($item->costo_proveedor, 2) ?></td>
+					<td></td>
+					<td class="text-right" style="color:#2e7d32; font-weight:bold;">
+						Margen: S/. <?= number_format(($item->unit_price - $item->costo_proveedor) * $item->quantity, 2) ?>
+					</td>
+					<td></td>
+				</tr>
+				<?php endif; ?>
 				<?php endforeach; ?>
 			</tbody>
 			<tfoot>
@@ -227,6 +270,18 @@
 					<td class="text-right">S/. <?= number_format($total_items, 2) ?></td>
 					<td></td>
 				</tr>
+				<?php if($total_costo_prov > 0): ?>
+				<tr style="background-color:#fff8e1;">
+					<td colspan="5" class="text-right"><i class="glyphicon glyphicon-share-alt"></i> Costo Tercerizado:</td>
+					<td class="text-right" style="color:#d84315;">S/. <?= number_format($total_costo_prov, 2) ?></td>
+					<td></td>
+				</tr>
+				<tr style="background-color:#e8f5e9;">
+					<td colspan="5" class="text-right"><i class="glyphicon glyphicon-stats"></i> Margen Tercerizacion:</td>
+					<td class="text-right" style="color:#2e7d32; font-weight:bold;">S/. <?= number_format($total_margen_terc, 2) ?></td>
+					<td></td>
+				</tr>
+				<?php endif; ?>
 			</tfoot>
 		</table>
 	</div>

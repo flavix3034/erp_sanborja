@@ -17,7 +17,9 @@
       "Bash(mysql -u root erp_sanborja -e \"DESCRIBE tec_servicio_items\")",
       "Bash(/c/xampp/php/php.exe c:/xampp/htdocs/erp_sanborja/tmp_check.php)",
       "Bash(/c/xampp/php/php.exe c:/xampp/htdocs/erp_sanborja/tmp_verify.php)",
-      "Bash(/c/xampp/php/php.exe c:/xampp/htdocs/erp_sanborja/tmp_fix.php)"
+      "Bash(/c/xampp/php/php.exe c:/xampp/htdocs/erp_sanborja/tmp_fix.php)",
+      "Bash(xargs wc:*)",
+      "Bash(c:/xampp/mysql/bin/mysql -u root erp_sanborja -e \"DESCRIBE tec_servicio_items\")"
     ]
   }
 }

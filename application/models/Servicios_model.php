@@ -51,7 +51,8 @@ class Servicios_model extends CI_Model
 
     function guardar_servicio($data) {
         // Extraer items del POST antes de guardar en tec_servicios_tecnicos
-        $items_keys = array('item', 'variant_id', 'descripo', 'quantity', 'cost', 'impuestos', 'obs', 'prod_serv_arr');
+        $items_keys = array('item', 'variant_id', 'descripo', 'quantity', 'cost', 'impuestos', 'obs', 'prod_serv_arr',
+                            'es_tercerizado_arr', 'prov_id_arr', 'prov_nombre_arr', 'costo_prov_arr', 'tipo_doc_prov_arr');
         $items_data = array();
         foreach($items_keys as $key) {
             if(isset($data[$key])) {
@@ -126,7 +127,12 @@ class Servicios_model extends CI_Model
                 'unit_price'   => $unit_price,
                 'impuesto'     => $imp,
                 'subtotal'     => round($net_price * $qty, 2),
-                'observaciones'=> isset($items_data['obs'][$i]) ? $items_data['obs'][$i] : null
+                'observaciones'=> isset($items_data['obs'][$i]) ? $items_data['obs'][$i] : null,
+                'es_tercerizado'   => isset($items_data['es_tercerizado_arr'][$i]) ? intval($items_data['es_tercerizado_arr'][$i]) : 0,
+                'proveedor_id'     => (!empty($items_data['prov_id_arr'][$i]) && intval($items_data['prov_id_arr'][$i]) > 0) ? intval($items_data['prov_id_arr'][$i]) : null,
+                'proveedor_nombre' => !empty($items_data['prov_nombre_arr'][$i]) ? $items_data['prov_nombre_arr'][$i] : null,
+                'costo_proveedor'  => (!empty($items_data['costo_prov_arr'][$i]) && floatval($items_data['costo_prov_arr'][$i]) > 0) ? floatval($items_data['costo_prov_arr'][$i]) : null,
+                'tipo_doc_proveedor' => (!empty($items_data['tipo_doc_prov_arr'][$i])) ? intval($items_data['tipo_doc_prov_arr'][$i]) : null
             );
             $this->db->insert('tec_servicio_items', $ar);
         }
@@ -257,6 +263,15 @@ class Servicios_model extends CI_Model
                 where a.servicio_id = ".$servicio_id."
                 order by a.fecha_registro desc";
         
+        return $this->db->query($cSql)->result();
+    }
+
+    function buscar_proveedor($q) {
+        $q = $this->db->escape_like_str($q);
+        $cSql = "SELECT id, nombre, ruc, direccion, correo, phone
+                 FROM tec_proveedores
+                 WHERE nombre LIKE '%{$q}%' OR ruc LIKE '%{$q}%'
+                 ORDER BY nombre LIMIT 15";
         return $this->db->query($cSql)->result();
     }
 

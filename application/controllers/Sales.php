@@ -483,6 +483,9 @@ class Sales extends CI_Controller {
                 $cad_a = " con envio a Sunat.";
             }
 
+            // Limpiar sale_id del servicio técnico asociado para permitir generar nueva venta
+            $this->db->set('sale_id', NULL)->where('sale_id', $id)->update('tec_servicios_tecnicos');
+
             $ar["rpta"] = "1";
             $ar["message"] = "Se anula el Documento {$id} {$cad_a}";
         }else{
