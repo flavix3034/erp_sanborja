@@ -827,4 +827,75 @@ class Reportes extends CI_Controller {
         echo $this->json_datatable($ar_campos, $result);
     }
 
+    function top_productos($cDesde='null', $cHasta='null', $cTipo='null') {
+        $this->data['page_title'] = "Productos/Servicios más vendidos";
+        $this->data['desde'] = $cDesde;
+        $this->data['hasta'] = $cHasta;
+        $this->data['tipo']  = $cTipo;
+        $this->template->load('production/index', 'reportes/top_productos', $this->data);
+    }
+
+    function get_top_productos($cDesde, $cHasta, $cTipo) {
+        $cad_desde = $cad_hasta = $cad_tipo = "";
+
+        if (!is_null($cDesde) && strlen($cDesde) > 0 && $cDesde != 'null') {
+            $cad_desde = " AND date(a.`date`) >= '{$cDesde}'";
+        }
+        if (!is_null($cHasta) && strlen($cHasta) > 0 && $cHasta != 'null') {
+            $cad_hasta = " AND date(a.`date`) <= '{$cHasta}'";
+        }
+        if (!is_null($cTipo) && strlen($cTipo) > 0 && $cTipo != 'null' && $cTipo != '') {
+            $tipo_safe = ($cTipo === 'S') ? 'S' : 'P';
+            $cad_tipo  = " AND p.prod_serv = '{$tipo_safe}'";
+        }
+
+        $igv = $this->Igv;
+
+        $cSql = "SELECT
+                    fn_product_display_name(b.product_id, b.variant_id) AS producto,
+                    COALESCE(p.code, '') AS code,
+                    COALESCE(cat.name, 'Sin categoría') AS categoria,
+                    ROUND(SUM(b.quantity), 2) AS unidades,
+                    ROUND(SUM(b.net_unit_price * b.quantity), 2) AS ventas,
+                    ROUND(SUM(COALESCE(c.precio_sin_igv,
+                        IF(si.es_tercerizado = 1,
+                            IF(si.tipo_doc_proveedor = 5, si.costo_proveedor, si.costo_proveedor / (1 + {$igv}/100)),
+                            NULL
+                        ), 0) * b.quantity), 2) AS costos,
+                    ROUND(SUM(b.net_unit_price * b.quantity) - SUM(COALESCE(c.precio_sin_igv,
+                        IF(si.es_tercerizado = 1,
+                            IF(si.tipo_doc_proveedor = 5, si.costo_proveedor, si.costo_proveedor / (1 + {$igv}/100)),
+                            NULL
+                        ), 0) * b.quantity), 2) AS ganancia,
+                    ROUND(
+                        (SUM(b.net_unit_price * b.quantity) - SUM(COALESCE(c.precio_sin_igv,
+                            IF(si.es_tercerizado = 1,
+                                IF(si.tipo_doc_proveedor = 5, si.costo_proveedor, si.costo_proveedor / (1 + {$igv}/100)),
+                                NULL
+                            ), 0) * b.quantity))
+                        / NULLIF(SUM(b.net_unit_price * b.quantity), 0) * 100
+                    , 1) AS margen_pct
+                FROM tec_sales a
+                INNER JOIN tec_sale_items b ON a.id = b.sale_id
+                LEFT JOIN tec_products p ON b.product_id = p.id
+                LEFT JOIN tec_categories cat ON p.category_id = cat.id
+                LEFT JOIN tec_compra_items c ON b.compra_id = c.compra_id
+                    AND b.product_id = c.product_id
+                    AND COALESCE(b.variant_id, 0) = COALESCE(c.variant_id, 0)
+                LEFT JOIN tec_servicios_tecnicos st ON st.sale_id = a.id
+                LEFT JOIN tec_servicio_items si ON si.servicio_id = st.id
+                    AND si.product_id = b.product_id
+                    AND COALESCE(si.variant_id, 0) = COALESCE(b.variant_id, 0)
+                WHERE a.anulado != '1'
+                    {$cad_desde} {$cad_hasta} {$cad_tipo}
+                GROUP BY b.product_id, b.variant_id
+                ORDER BY ganancia DESC";
+
+        $result = $this->db->query($cSql)->result_array();
+
+        $ar_campos = array("producto", "code", "categoria", "unidades", "ventas", "costos", "ganancia", "margen_pct");
+
+        echo $this->json_datatable($ar_campos, $result);
+    }
+
 }

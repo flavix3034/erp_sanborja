@@ -214,6 +214,7 @@ if (!isset($_SESSION["usuario"])){
 											<li><a href="<?= base_url('reportes/ventas_por_forma_pago'); ?>">Ventas x Forma de Pago</a></li>
 											<li><a href="<?= base_url('reportes/ganancias'); ?>">Ganancias Diarias</a></li>
 											<li><a href="<?= base_url('reportes/ganancias_detallado'); ?>">Ganancia Detalles</a></li>
+												<li><a href="<?= base_url('reportes/top_productos'); ?>">Top Productos</a></li>
 											<li><a href="<?= base_url('reportes/productos_sin_compra'); ?>">Productos sin compra</a></li>
 											<li><a href="<?= base_url('reportes/analisis'); ?>">Reportes para An&aacute;lisis</a></li>
 											<li><a href="<?= base_url('reportes/gastos_cajachica'); ?>">Gastos Caja Chica</a></li>
