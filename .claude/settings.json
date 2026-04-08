@@ -21,7 +21,11 @@
       "Bash(xargs wc:*)",
       "Bash(c:/xampp/mysql/bin/mysql -u root erp_sanborja -e \"DESCRIBE tec_servicio_items\")",
       "Bash(mysql -u root -e \"USE erp_sanborja; SHOW TABLES;\")",
-      "Bash(mysql -u root --password=\"\" -e \"USE erp_sanborja; SHOW TABLES;\")"
+      "Bash(mysql -u root --password=\"\" -e \"USE erp_sanborja; SHOW TABLES;\")",
+      "Bash(mysql -u root -e \"DESCRIBE tec_proveedores;\")",
+      "Bash(mysql -u root --password=\"\" -e \"DESCRIBE tec_proveedores;\" erp_sanborja)",
+      "Bash(./mysql/bin/mysql.exe -u root -e \"ALTER TABLE erp_sanborja.tec_proveedores MODIFY direccion VARCHAR\\(255\\);\")",
+      "Bash(./mysql/bin/mysql.exe -u root -e \"SELECT COLUMN_NAME, COLUMN_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='erp_sanborja' AND TABLE_NAME='tec_proveedores' AND COLUMN_NAME='direccion';\")"
     ]
   }
 }

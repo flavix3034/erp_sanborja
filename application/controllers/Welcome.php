@@ -89,10 +89,20 @@ class Welcome extends CI_Controller {
 		// Ganancias del dia (ventas sin IGV - costos)
 		$r = $this->db->query("SELECT
 			COALESCE(SUM(b.net_unit_price * b.quantity), 0) AS ventas,
-			COALESCE(SUM(IF(c.precio_sin_igv IS NULL, 0, c.precio_sin_igv * b.quantity)), 0) AS costos
+			COALESCE(SUM(COALESCE(c.precio_sin_igv,
+				IF(si.es_tercerizado = 1,
+					IF(si.tipo_doc_proveedor = 5, si.costo_proveedor, si.costo_proveedor / (1 + 18/100)),
+					NULL
+				), 0) * b.quantity), 0) AS costos
 			FROM tec_sales a
 			INNER JOIN tec_sale_items b ON a.id = b.sale_id
-			LEFT JOIN tec_compra_items c ON b.compra_id = c.compra_id AND b.product_id = c.product_id
+			LEFT JOIN tec_compra_items c ON b.compra_id = c.compra_id
+				AND b.product_id = c.product_id
+				AND COALESCE(b.variant_id, 0) = COALESCE(c.variant_id, 0)
+			LEFT JOIN tec_servicios_tecnicos st ON st.sale_id = a.id
+			LEFT JOIN tec_servicio_items si ON si.servicio_id = st.id
+				AND si.product_id = b.product_id
+				AND COALESCE(si.variant_id, 0) = COALESCE(b.variant_id, 0)
 			WHERE date(a.date) = CURDATE() AND a.anulado != '1' AND a.store_id = ?", array($store_id))->row();
 		$ganancias_dia = round(floatval($r->ventas) - floatval($r->costos), 2);
 
@@ -138,10 +148,20 @@ class Welcome extends CI_Controller {
 		// Margen promedio del mes
 		$r_margen = $this->db->query("SELECT
 			COALESCE(SUM(b.net_unit_price * b.quantity), 0) AS ventas_netas,
-			COALESCE(SUM(IF(c.precio_sin_igv IS NULL, 0, c.precio_sin_igv * b.quantity)), 0) AS costos
+			COALESCE(SUM(COALESCE(c.precio_sin_igv,
+				IF(si.es_tercerizado = 1,
+					IF(si.tipo_doc_proveedor = 5, si.costo_proveedor, si.costo_proveedor / (1 + 18/100)),
+					NULL
+				), 0) * b.quantity), 0) AS costos
 			FROM tec_sales a
 			INNER JOIN tec_sale_items b ON a.id = b.sale_id
-			LEFT JOIN tec_compra_items c ON b.compra_id = c.compra_id AND b.product_id = c.product_id
+			LEFT JOIN tec_compra_items c ON b.compra_id = c.compra_id
+				AND b.product_id = c.product_id
+				AND COALESCE(b.variant_id, 0) = COALESCE(c.variant_id, 0)
+			LEFT JOIN tec_servicios_tecnicos st ON st.sale_id = a.id
+			LEFT JOIN tec_servicio_items si ON si.servicio_id = st.id
+				AND si.product_id = b.product_id
+				AND COALESCE(si.variant_id, 0) = COALESCE(b.variant_id, 0)
 			WHERE MONTH(a.date) = MONTH(CURDATE()) AND YEAR(a.date) = YEAR(CURDATE())
 			AND a.anulado != '1' AND a.store_id = ?", array($store_id))->row();
 		$ventas_netas = floatval($r_margen->ventas_netas);

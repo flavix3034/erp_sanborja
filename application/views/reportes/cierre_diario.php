@@ -289,6 +289,7 @@ $fecha_val = isset($fecha) ? $fecha : date('Y-m-d');
 								<th>Origen</th>
 								<th>Categor&iacute;a</th>
 								<th>Descripci&oacute;n</th>
+								<th>Tipo Doc</th>
 								<th class="text-right">Monto</th>
 							</tr>
 						</thead>
@@ -363,7 +364,7 @@ $fecha_val = isset($fecha) ? $fecha : date('Y-m-d');
 			$('#kpi_cant_ventas').text(data.totales.cantidad_ventas + ' ventas');
 			$('#kpi_ganancia_bruta').text(fmtMoney(data.rentabilidad.ganancia_bruta));
 			$('#kpi_total_gastos').text(fmtMoney(data.totales.total_gastos_dia));
-			$('#kpi_detalle_gastos').text('Op: ' + fmtMoney(data.totales.total_gastos) + ' | CC: ' + fmtMoney(data.totales.total_cajachica));
+			$('#kpi_detalle_gastos').text('Op: ' + fmtMoney(data.totales.total_gastos) + ' | CC: ' + fmtMoney(data.totales.total_cajachica) + ' | Egr: ' + fmtMoney(data.totales.total_egresos_caja));
 			// === CAJA ===
 			renderCajas(data.cajas);
 
@@ -377,7 +378,7 @@ $fecha_val = isset($fecha) ? $fecha : date('Y-m-d');
 			renderRentabilidad(data.rentabilidad);
 
 			// === GASTOS ===
-			renderGastos(data.gastos, data.gastos_cajachica);
+			renderGastos(data.gastos, data.gastos_cajachica, data.egresos_caja);
 
 			// === VALIDACIONES ===
 			renderValidaciones(data.validaciones);
@@ -486,7 +487,7 @@ $fecha_val = isset($fecha) ? $fecha : date('Y-m-d');
 		$('#tbl_rentabilidad tbody').html(html);
 	}
 
-	function renderGastos(gastos, cajachica) {
+	function renderGastos(gastos, cajachica, egresos_caja) {
 		var tbody = '';
 		var totalGeneral = 0;
 		var hayGastos = false;
@@ -496,9 +497,10 @@ $fecha_val = isset($fecha) ? $fecha : date('Y-m-d');
 			var g = gastos[i];
 			totalGeneral += parseFloat(g.monto);
 			tbody += '<tr>';
-			tbody += '<td><span style="background:#e3f2fd; color:#1565c0; padding:2px 8px; border-radius:4px; font-size:11px;">Gasto</span></td>';
+			tbody += '<td><span style="background:#e3f2fd; color:#1565c0; padding:2px 8px; border-radius:4px; font-size:11px;">Módulo Gastos</span></td>';
 			tbody += '<td>' + (g.categoria || '-') + '</td>';
 			tbody += '<td>' + (g.descripcion || '-') + '</td>';
+			tbody += '<td>' + (g.tipo_doc || '-') + '</td>';
 			tbody += '<td class="text-right">' + fmtMoney(g.monto) + '</td>';
 			tbody += '</tr>';
 		}
@@ -511,13 +513,29 @@ $fecha_val = isset($fecha) ? $fecha : date('Y-m-d');
 			tbody += '<td><span style="background:#fce4ec; color:#c62828; padding:2px 8px; border-radius:4px; font-size:11px;">Caja Chica</span></td>';
 			tbody += '<td>' + (c.categoria || '-') + '</td>';
 			tbody += '<td>' + (c.descripcion || '-') + '</td>';
+			tbody += '<td>' + (c.tipo_doc || '-') + '</td>';
 			tbody += '<td class="text-right">' + fmtMoney(c.monto) + '</td>';
 			tbody += '</tr>';
 		}
 
+		if (egresos_caja) {
+			for (var i = 0; i < egresos_caja.length; i++) {
+				hayGastos = true;
+				var e = egresos_caja[i];
+				totalGeneral += parseFloat(e.monto);
+				tbody += '<tr>';
+				tbody += '<td><span style="background:#fff3e0; color:#e65100; padding:2px 8px; border-radius:4px; font-size:11px;">Egreso Caja</span></td>';
+				tbody += '<td>' + (e.referencia || '-') + '</td>';
+				tbody += '<td>' + (e.descripcion || '-') + '</td>';
+				tbody += '<td>-</td>';
+				tbody += '<td class="text-right">' + fmtMoney(e.monto) + '</td>';
+				tbody += '</tr>';
+			}
+		}
+
 		if (hayGastos) {
 			tbody += '<tr class="fila-total">';
-			tbody += '<td colspan="3">TOTAL GASTOS</td>';
+			tbody += '<td colspan="4">TOTAL GASTOS</td>';
 			tbody += '<td class="text-right">' + fmtMoney(totalGeneral) + '</td>';
 			tbody += '</tr>';
 			$('#tbl_gastos').show();
@@ -709,12 +727,13 @@ $fecha_val = isset($fecha) ? $fecha : date('Y-m-d');
 
 		// === 6. TABLA GASTOS ===
 		var gastosContent = [];
-		var hayGastos = (d.gastos.length > 0 || d.gastos_cajachica.length > 0);
+		var hayGastos = (d.gastos.length > 0 || d.gastos_cajachica.length > 0 || (d.egresos_caja && d.egresos_caja.length > 0));
 		if (hayGastos) {
 			var gastosBody = [[
 				{ text: 'Origen', style: 'tableHeader' },
-				{ text: 'Categoria', style: 'tableHeader' },
+				{ text: 'Categoria/Ref.', style: 'tableHeader' },
 				{ text: 'Descripcion', style: 'tableHeader' },
+				{ text: 'Tipo Doc', style: 'tableHeader' },
 				{ text: 'Monto', style: 'tableHeader', alignment: 'right' }
 			]];
 			var totalG = 0;
@@ -722,9 +741,10 @@ $fecha_val = isset($fecha) ? $fecha : date('Y-m-d');
 				var g = d.gastos[i];
 				totalG += parseFloat(g.monto);
 				gastosBody.push([
-					{ text: 'Gasto', fontSize: 8, color: '#1565c0' },
+					{ text: 'Módulo Gastos', fontSize: 8, color: '#1565c0' },
 					{ text: g.categoria || '-', fontSize: 8 },
 					{ text: g.descripcion || '-', fontSize: 8 },
+					{ text: g.tipo_doc || '-', fontSize: 8 },
 					{ text: fm(g.monto), alignment: 'right', fontSize: 8 }
 				]);
 			}
@@ -735,16 +755,30 @@ $fecha_val = isset($fecha) ? $fecha : date('Y-m-d');
 					{ text: 'Caja Chica', fontSize: 8, color: '#c62828' },
 					{ text: gc.categoria || '-', fontSize: 8 },
 					{ text: gc.descripcion || '-', fontSize: 8 },
+					{ text: gc.tipo_doc || '-', fontSize: 8 },
 					{ text: fm(gc.monto), alignment: 'right', fontSize: 8 }
 				]);
 			}
+			if (d.egresos_caja) {
+				for (var i = 0; i < d.egresos_caja.length; i++) {
+					var ec = d.egresos_caja[i];
+					totalG += parseFloat(ec.monto);
+					gastosBody.push([
+						{ text: 'Egreso Caja', fontSize: 8, color: '#e65100' },
+						{ text: ec.referencia || '-', fontSize: 8 },
+						{ text: ec.descripcion || '-', fontSize: 8 },
+						{ text: '-', fontSize: 8 },
+						{ text: fm(ec.monto), alignment: 'right', fontSize: 8 }
+					]);
+				}
+			}
 			gastosBody.push([
-				{ text: 'TOTAL GASTOS', bold: true, colSpan: 3, fontSize: 9 }, {}, {},
+				{ text: 'TOTAL GASTOS', bold: true, colSpan: 4, fontSize: 9 }, {}, {}, {},
 				{ text: fm(totalG), bold: true, alignment: 'right', fontSize: 9 }
 			]);
 			gastosContent = [
 				{ text: 'GASTOS DEL DIA', style: 'sectionTitle' },
-				{ table: { headerRows: 1, widths: [55, 80, '*', 70], body: gastosBody }, layout: 'lightHorizontalLines', margin: [0, 0, 0, 12] }
+				{ table: { headerRows: 1, widths: [55, 65, '*', 55, 60], body: gastosBody }, layout: 'lightHorizontalLines', margin: [0, 0, 0, 12] }
 			];
 		} else {
 			gastosContent = [

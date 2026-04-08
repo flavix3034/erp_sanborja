@@ -1234,7 +1234,8 @@ class Products extends CI_controller
                     'unidad' => $entry['unidad'],
                     'price' => floatval($entry['precio_x_menor']),
                     'precio_x_mayor' => floatval($entry['precio_x_mayor']),
-                    'alert_cantidad' => intval($entry['alerta_cantidad'])
+                    'alert_cantidad' => intval($entry['alerta_cantidad']),
+                    'impuesto' => $this->Igv
                 ));
                 $nr++;
                 $cads .= "Fila {$nfila}: <span style='color:green;'>Producto '" . htmlspecialchars($entry['name']) . "' importado.</span><br>";
@@ -1256,7 +1257,8 @@ class Products extends CI_controller
                     'unidad' => $entry['unidad'],
                     'price' => floatval($entry['precio_x_menor']),
                     'precio_x_mayor' => floatval($entry['precio_x_mayor']),
-                    'alert_cantidad' => intval($entry['alerta_cantidad'])
+                    'alert_cantidad' => intval($entry['alerta_cantidad']),
+                    'impuesto' => $this->Igv
                 ));
                 $product_id = $this->db->insert_id();
                 $nr++;

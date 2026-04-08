@@ -49,10 +49,11 @@
             
             //$costo = $r->precio_con_igv * 
 
-            echo "ar_items.push({id:".$r->product_id.", 
-            name:       '".$r->nombre."', 
-            quantity:   ".$r->cantidad.", 
-            cost:       ".$r->precio_sin_igv.", 
+            echo "ar_items.push({id:".$r->product_id.",
+            variant_id: ".intval($r->variant_id).",
+            name:       '".$r->nombre."',
+            quantity:   ".$r->cantidad.",
+            cost:       ".$r->precio_sin_igv.",
             subtotal:   ".($r->cantidad * 1 * $r->precio_sin_igv).",
             precio:     ".$r->precio_con_igv."})\n";
 

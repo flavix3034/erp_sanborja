@@ -690,12 +690,15 @@ class Reportes extends CI_Controller {
             FROM tec_sales WHERE anulado != '1' AND DATE(`date`) = ? AND store_id = ?", array($fecha, $store_id))->row();
 
         // --- 5. GASTOS OPERACIONALES ---
+        $igv = $this->Igv;
         try {
             $resultado['gastos'] = $this->db->query("SELECT gc.nombre AS categoria, gi.descripcion,
-                ROUND(gi.subtotal, 2) AS monto
+                COALESCE(td.descrip, '-') AS tipo_doc,
+                ROUND(IF(g.tipoDoc = 1, gi.subtotal, gi.subtotal * (1 + {$igv}/100)), 2) AS monto
                 FROM tec_gastos g
                 INNER JOIN tec_gastos_items gi ON g.id = gi.gasto_id
                 LEFT JOIN tec_gastos_categorias gc ON gi.categoria_id = gc.id
+                LEFT JOIN tec_tipos_doc td ON g.tipoDoc = td.id
                 WHERE DATE(g.fecha) = ? AND g.store_id = ?
                 ORDER BY gi.subtotal DESC", array($fecha, $store_id))->result_array();
         } catch (Exception $e) {
@@ -709,7 +712,14 @@ class Reportes extends CI_Controller {
         // --- 6. GASTOS CAJA CHICA ---
         try {
             $resultado['gastos_cajachica'] = $this->db->query("SELECT cc.nombre AS categoria, g.descripcion,
-                ROUND(g.monto, 2) AS monto
+                CASE g.tipo_documento
+                    WHEN 'FACTURA'           THEN 'Factura'
+                    WHEN 'BOLETA'            THEN 'Boleta'
+                    WHEN 'RECIBO_HONORARIOS' THEN 'Rec. Honorarios'
+                    WHEN 'SIN_COMPROBANTE'   THEN 'Sin Comprobante'
+                    ELSE '-'
+                END AS tipo_doc,
+                ROUND(IF(g.tipo_documento = 'FACTURA', g.monto / (1 + {$igv}/100), g.monto), 2) AS monto
                 FROM tec_cajachica_gastos g
                 INNER JOIN tec_cajachica_categorias cc ON g.categoria_id = cc.id
                 INNER JOIN tec_cajachica_periodos p ON g.periodo_id = p.id
@@ -723,8 +733,25 @@ class Reportes extends CI_Controller {
             $total_cajachica += floatval($gc['monto']);
         }
 
+        // --- 7. EGRESOS DE CAJA ---
+        $total_egresos_caja = 0;
+        try {
+            $resultado['egresos_caja'] = $this->db->query("SELECT m.descripcion, COALESCE(m.referencia,'') AS referencia,
+                ROUND(m.monto, 2) AS monto
+                FROM tec_caja_movimientos m
+                INNER JOIN tec_registro_cajas r ON m.registro_caja_id = r.id
+                WHERE m.tipo = 'EGRESO' AND r.fecha = ? AND r.store_id = ?
+                ORDER BY m.monto DESC", array($fecha, $store_id))->result_array();
+        } catch (Exception $e) {
+            $resultado['egresos_caja'] = array();
+        }
+
+        foreach ($resultado['egresos_caja'] as $ec) {
+            $total_egresos_caja += floatval($ec['monto']);
+        }
+
         // Rentabilidad final
-        $total_gastos_dia = $total_gastos + $total_cajachica;
+        $total_gastos_dia = $total_gastos + $total_cajachica + $total_egresos_caja;
         $ganancia_neta = $ganancia_bruta - $total_gastos_dia;
         $margen = ($ventas_netas > 0) ? round(($ganancia_neta / $ventas_netas) * 100, 1) : 0;
 
@@ -764,6 +791,7 @@ class Reportes extends CI_Controller {
             'cantidad_ventas' => intval($tv->cantidad),
             'total_gastos' => round($total_gastos, 2),
             'total_cajachica' => round($total_cajachica, 2),
+            'total_egresos_caja' => round($total_egresos_caja, 2),
             'total_gastos_dia' => round($total_gastos_dia, 2)
         );
 
