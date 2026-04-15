@@ -1,11 +1,10 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Proveedores extends CI_Controller {
+class Proveedores extends MY_Controller {
 
     function __construct(){
         parent::__construct();
-        session_start();
     }
 
     public function index(){

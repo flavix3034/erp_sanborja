@@ -1,16 +1,9 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
-class Ajustes extends CI_Controller {
+class Ajustes extends MY_Controller {
 
     function __construct() {
         parent::__construct();
-
-        session_start();
-
-        if (!isset($_SESSION["store_id"])) {
-            die("No tiene sesión disponible. <a href=\"" . base_url("welcome/index") . "\">Login</a>");
-        }
-        
     }
 
     function index() {

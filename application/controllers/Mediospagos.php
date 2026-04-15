@@ -1,13 +1,10 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Mediospagos extends CI_controller
+class Mediospagos extends MY_Controller
 {
 
     function __construct() {
         parent::__construct();
-
-        session_start();
-        //$this->load->model('categorias_model');
     }
 
     function index(){

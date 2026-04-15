@@ -1,14 +1,9 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
-class Inventarios extends CI_Controller {
+class Inventarios extends MY_Controller {
 
     function __construct() {
         parent::__construct();
-
-        session_start();
-        if(!isset($_SESSION["user_id"])){ 
-            die("No tiene sesión disponible. <a href=\"" . base_url("welcome/index") . "\">Login</a>"); 
-        }
 		$this->Igv = 18;
         $this->digital_file_types = 'zip|pdf|doc|docx|xls|xlsx|jpg|png|gif';
         $this->load->model('inventarios_model');

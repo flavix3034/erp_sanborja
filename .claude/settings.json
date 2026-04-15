@@ -25,7 +25,29 @@
       "Bash(mysql -u root -e \"DESCRIBE tec_proveedores;\")",
       "Bash(mysql -u root --password=\"\" -e \"DESCRIBE tec_proveedores;\" erp_sanborja)",
       "Bash(./mysql/bin/mysql.exe -u root -e \"ALTER TABLE erp_sanborja.tec_proveedores MODIFY direccion VARCHAR\\(255\\);\")",
-      "Bash(./mysql/bin/mysql.exe -u root -e \"SELECT COLUMN_NAME, COLUMN_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='erp_sanborja' AND TABLE_NAME='tec_proveedores' AND COLUMN_NAME='direccion';\")"
+      "Bash(./mysql/bin/mysql.exe -u root -e \"SELECT COLUMN_NAME, COLUMN_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='erp_sanborja' AND TABLE_NAME='tec_proveedores' AND COLUMN_NAME='direccion';\")",
+      "Bash(cat /c/xampp/htdocs/erp_sanborja/database/*.sql)",
+      "Bash(./mysql/bin/mysql.exe -u root erp_sanborja -e \"ALTER TABLE tec_modulos MODIFY modulo VARCHAR\\(30\\) NOT NULL;\")",
+      "Bash(./mysql/bin/mysql.exe -u root erp_sanborja -e \"TRUNCATE TABLE tec_grupo_modulos;\")",
+      "Bash(./mysql/bin/mysql.exe -u root erp_sanborja -e \"TRUNCATE TABLE tec_modulos;\")",
+      "Bash(./mysql/bin/mysql.exe -u root erp_sanborja -e \"SHOW CREATE TABLE tec_usuario_modulos\\\\G\")",
+      "Bash(./mysql/bin/mysql.exe -u root erp_sanborja -e ':*)",
+      "Bash(xargs -I{} basename {})",
+      "Bash(php -l /c/xampp/htdocs/erp_sanborja/application/core/MY_Controller.php)",
+      "Bash(php -l /c/xampp/htdocs/erp_sanborja/application/controllers/Roles.php)",
+      "Bash(php -l /c/xampp/htdocs/erp_sanborja/application/models/Roles_model.php)",
+      "Bash(php -l /c/xampp/htdocs/erp_sanborja/application/views/roles/form.php)",
+      "Bash(php -l /c/xampp/htdocs/erp_sanborja/application/views/roles/index.php)",
+      "Bash(/c/xampp/php/php.exe -l /c/xampp/htdocs/erp_sanborja/application/core/MY_Controller.php)",
+      "Bash(/c/xampp/php/php.exe -l /c/xampp/htdocs/erp_sanborja/application/controllers/Roles.php)",
+      "Bash(/c/xampp/php/php.exe -l /c/xampp/htdocs/erp_sanborja/application/models/Roles_model.php)",
+      "Bash(/c/xampp/php/php.exe -l /c/xampp/htdocs/erp_sanborja/application/controllers/__TRACKED_VAR__)",
+      "Bash(./mysql/bin/mysql.exe -u root erp_sanborja)",
+      "Bash(/c/xampp/php/php.exe -l /c/xampp/htdocs/erp_sanborja/application/views/roles/form.php)"
+    ],
+    "additionalDirectories": [
+      "C:\\xampp\\htdocs\\erp_sanborja\\application\\views",
+      "C:\\xampp\\htdocs\\erp_sanborja\\application\\views\\errors"
     ]
   }
 }

@@ -1,18 +1,12 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
-class Reportes extends CI_Controller {
+class Reportes extends MY_Controller {
 
     public $Admin = false;
     public $Igv = 18;
 
     function __construct() {
         parent::__construct();
-
-        session_start();
-
-        if (!isset($_SESSION["store_id"])) {
-            die("No tiene sesión disponible. <a href=\"" . base_url("welcome/index") . "\">Login</a>");
-        }
         
         //$this->load->helper('url');
         

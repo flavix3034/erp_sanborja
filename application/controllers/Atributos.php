@@ -1,14 +1,9 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Atributos extends CI_Controller
+class Atributos extends MY_Controller
 {
     function __construct() {
         parent::__construct();
-        session_start();
-        if (!isset($_SESSION["user_id"])) {
-            redirect(base_url("welcome/index"));
-            return;
-        }
         $this->load->helper('url');
         $this->load->model('atributos_model');
     }

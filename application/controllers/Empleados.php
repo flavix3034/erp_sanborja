@@ -1,11 +1,10 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Empleados extends CI_controller {
+class Empleados extends MY_Controller {
 
     function __construct() {
         parent::__construct();
-        session_start();
         $this->load->model('Empleados_model');
     }
 

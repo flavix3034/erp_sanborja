@@ -1,16 +1,10 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Cajachica extends CI_Controller
+class Cajachica extends MY_Controller
 {
     function __construct() {
         parent::__construct();
-        session_start();
-
-        if (!isset($_SESSION["user_id"])) {
-            die("No tiene sesión disponible. <a href=\"" . base_url("welcome/index") . "\">Login</a>");
-        }
-
         $this->load->model('CajaChica_model');
         $this->load->model('Empleados_model');
     }

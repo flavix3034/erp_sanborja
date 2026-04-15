@@ -1,17 +1,12 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
-class Compras extends CI_Controller {
+class Compras extends MY_Controller {
 
     function __construct() {
         parent::__construct();
-
-        session_start();
         $this->load->model('compras_model');
 		$this->Igv = 18;
         $this->digital_file_types = 'zip|pdf|doc|docx|xls|xlsx|jpg|png|gif';
-        if(!isset($_SESSION["user_id"])){ 
-            die("No tiene sesión disponible. <a href=\"" . base_url("welcome/index") . "\">Login</a>"); 
-        }
     }
 
     function index($store_id='', $cDesde='null', $cHasta='null') {

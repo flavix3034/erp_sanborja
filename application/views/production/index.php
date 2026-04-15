@@ -1,8 +1,9 @@
 <?php
 $grupo_id = $_SESSION["group_id"];
+// Solo submódulos (hijos) — parent_id IS NOT NULL
 $ar_permitidos = $this->db->query("select trim(lower(b.modulo)) modulo from tec_grupo_modulos a
 	inner join tec_modulos b on a.modulo_id = b.id
-	where a.grupo_id = $grupo_id")->result_array();
+	where a.grupo_id = $grupo_id and b.parent_id is not null")->result_array();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -100,157 +101,205 @@ if (!isset($_SESSION["usuario"])){
 						<div id="sidebar-menu" class="main_menu_side hidden-print main_menu">
 
 							<!-- ===== SECCION: MENU ===== -->
+							<?php if (busca_en(['welcome','caja','sales','compras','gastos','cajachica'], $ar_permitidos)): ?>
 							<div class="menu_section">
 								<h3>Menu</h3>
 								<ul class="nav side-menu">
+									<?php if (busca_en(['welcome','caja'], $ar_permitidos)): ?>
 									<li><a><i class='bx bx-home-circle'></i> Dashboard <span class="fa fa-chevron-down"></span></a>
 										<ul class="nav child_menu">
 											<?= opcion("welcome/home",$ar_permitidos,"Inicio") ?>
 											<?= opcion("caja/index",$ar_permitidos,"Caja de Ventas") ?>
 										</ul>
 									</li>
+									<?php endif; ?>
+									<?php if (busca_en('sales', $ar_permitidos)): ?>
 									<li><a><i class='bx bx-receipt'></i> Ventas <span class="fa fa-chevron-down"></span></a>
 										<ul class="nav child_menu">
 											<?= opcion("sales/index",$ar_permitidos,"Listar") ?>
 											<?= opcion("sales/add",$ar_permitidos,"Agregar") ?>
 										</ul>
 									</li>
+									<?php endif; ?>
+									<?php if (busca_en('compras', $ar_permitidos)): ?>
 									<li><a><i class='bx bx-cart'></i> Compras <span class="fa fa-chevron-down"></span></a>
 										<ul class="nav child_menu">
-											<li><a href="<?= base_url('compras/index') ?>">Listar</a></li>
-											<li><a href="<?= base_url('compras/add') ?>">Agregar</a></li>
+											<?= opcion("compras/index",$ar_permitidos,"Listar") ?>
+											<?= opcion("compras/add",$ar_permitidos,"Agregar") ?>
 										</ul>
 									</li>
+									<?php endif; ?>
+									<?php if (busca_en('gastos', $ar_permitidos)): ?>
 									<li><a><i class='bx bx-wallet'></i> Gastos <span class="fa fa-chevron-down"></span></a>
 										<ul class="nav child_menu">
-											<li><a href="<?= base_url('gastos/index') ?>">Listar</a></li>
-											<li><a href="<?= base_url('gastos/add') ?>">Agregar</a></li>
-											<li><a href="<?= base_url('gastos/categorias') ?>">Categorias de Gasto</a></li>
+											<?= opcion("gastos/index",$ar_permitidos,"Listar") ?>
+											<?= opcion("gastos/add",$ar_permitidos,"Agregar") ?>
+											<?= opcion("gastos/categorias",$ar_permitidos,"Categorias de Gasto") ?>
 										</ul>
 									</li>
+									<?php endif; ?>
+									<?php if (busca_en('cajachica', $ar_permitidos)): ?>
 									<li><a><i class='bx bx-money'></i> Caja Chica <span class="fa fa-chevron-down"></span></a>
 										<ul class="nav child_menu">
-											<li><a href="<?= base_url('cajachica/index') ?>">Administrar</a></li>
+											<?= opcion("cajachica/index",$ar_permitidos,"Administrar") ?>
 										</ul>
 									</li>
+									<?php endif; ?>
 								</ul>
 							</div>
+							<?php endif; ?>
 
 							<!-- ===== SECCION: OPERACIONES ===== -->
+							<?php if (busca_en(['servicios','products','categorias','atributos','inventarios','mediospagos'], $ar_permitidos)): ?>
 							<div class="menu_section">
 								<h3>Operaciones</h3>
 								<ul class="nav side-menu">
+									<?php if (busca_en('servicios', $ar_permitidos)): ?>
 									<li><a><i class='bx bx-wrench'></i> Servicio T&eacute;cnico <span class="fa fa-chevron-down"></span></a>
 										<ul class="nav child_menu">
-											<li><a href="<?= base_url('servicios/index') ?>">Listar Servicios</a></li>
-											<li><a href="<?= base_url('servicios/add') ?>">Nuevo Servicio</a></li>
+											<?= opcion("servicios/index",$ar_permitidos,"Listar Servicios") ?>
+											<?= opcion("servicios/add",$ar_permitidos,"Nuevo Servicio") ?>
 										</ul>
 									</li>
+									<?php endif; ?>
+									<?php if (busca_en(['products','categorias','atributos','inventarios'], $ar_permitidos)): ?>
 									<li><a><i class='bx bx-package'></i> Productos <span class="fa fa-chevron-down"></span></a>
 										<ul class="nav child_menu">
-											<li><a href="<?= base_url('products/index'); ?>">Listar</a></li>
-											<?php if(in_array($grupo_id,array(1,2))){ ?>
-												<li><a href="<?= base_url('products/add'); ?>">Agregar Productos</a></li>
-												<li><a href="<?= base_url('products/add_servicio'); ?>">Agregar Servicios</a></li>
-												<li><a href="<?= base_url('inventarios/stock_productos'); ?>">Stock Avanzado</a></li>
-											<?php } ?>
-											<li><a href="<?= base_url('products/print_compra'); ?>">C&oacute;digo de Barras</a></li>
+											<?= opcion("products/index",$ar_permitidos,"Listar") ?>
+											<?= opcion("products/add",$ar_permitidos,"Agregar Productos") ?>
+											<?= opcion("products/add_servicio",$ar_permitidos,"Agregar Servicios") ?>
+											<?= opcion("inventarios/stock_productos",$ar_permitidos,"Stock Avanzado") ?>
+											<?= opcion("products/print_compra",$ar_permitidos,"C&oacute;digo de Barras") ?>
+											<?php if (busca_en('categorias', $ar_permitidos)): ?>
 											<li><a><i class='bx bx-purchase-tag'></i> Categorias <span class="fa fa-chevron-down"></span></a>
 												<ul class="nav child_menu">
-													<li><a href="<?= base_url('categorias/index'); ?>">Listar</a></li>
-													<?php if(in_array($grupo_id,array(1,2))){ ?>
-														<li><a href="<?= base_url('categorias/add'); ?>">Agregar</a></li>
-													<?php } ?>
+													<?= opcion("categorias/index",$ar_permitidos,"Listar") ?>
+													<?= opcion("categorias/add",$ar_permitidos,"Agregar") ?>
 												</ul>
 											</li>
-											<?php if(in_array($grupo_id,array(1,2))){ ?>
-											<li><a href="<?= base_url('atributos'); ?>"><i class='bx bx-purchase-tag'></i> Atributos</a></li>
-											<?php } ?>
+											<?php endif; ?>
+											<?= opcion("atributos/index",$ar_permitidos,"<i class='bx bx-purchase-tag'></i> Atributos") ?>
 										</ul>
 									</li>
+									<?php endif; ?>
+									<?php if (tiene_rutas(['inventarios/index','inventarios/add','inventarios/registrar_productos','inventarios/kardex','inventarios/listar_stock','inventarios/actualizar_stock','inventarios/ver_movimientos','inventarios/add_traslados','inventarios/add_movimientos'], $ar_permitidos)): ?>
 									<li><a><i class='bx bx-box'></i> Inventarios <span class="fa fa-chevron-down"></span></a>
 										<ul class="nav child_menu">
-											<li><a href="<?= base_url('inventarios/index'); ?>">Ver</a></li>
-											<li><a href="<?= base_url('inventarios/add'); ?>">Agregar</a></li>
-											<li><a href="<?= base_url('inventarios/registrar_productos'); ?>">Registrar</a></li>
-											<li><a href="<?= base_url('inventarios/kardex'); ?>">Kardex de Producto</a></li>
-											<li><a href="<?= base_url('inventarios/listar_stock'); ?>">Stock de Productos</a></li>
-											<li><a href="<?= base_url('inventarios/actualizar_stock'); ?>">Actualizar Stock</a></li>
-											<li><a href="<?= base_url('inventarios/ver_movimientos'); ?>">Ver movimientos</a></li>
-											<li><a href="<?= base_url('inventarios/add_traslados'); ?>">Movim. Traslado</a></li>
-											<li><a href="<?= base_url('inventarios/add_movimientos'); ?>">Movim. otros</a></li>
+											<?= opcion("inventarios/index",$ar_permitidos,"Ver") ?>
+											<?= opcion("inventarios/add",$ar_permitidos,"Agregar") ?>
+											<?= opcion("inventarios/registrar_productos",$ar_permitidos,"Registrar") ?>
+											<?= opcion("inventarios/kardex",$ar_permitidos,"Kardex de Producto") ?>
+											<?= opcion("inventarios/listar_stock",$ar_permitidos,"Stock de Productos") ?>
+											<?= opcion("inventarios/actualizar_stock",$ar_permitidos,"Actualizar Stock") ?>
+											<?= opcion("inventarios/ver_movimientos",$ar_permitidos,"Ver movimientos") ?>
+											<?= opcion("inventarios/add_traslados",$ar_permitidos,"Movim. Traslado") ?>
+											<?= opcion("inventarios/add_movimientos",$ar_permitidos,"Movim. otros") ?>
 										</ul>
 									</li>
+									<?php endif; ?>
+									<?php if (busca_en('mediospagos', $ar_permitidos)): ?>
 									<li><a><i class='bx bx-credit-card'></i> Medios de Pago <span class="fa fa-chevron-down"></span></a>
 										<ul class="nav child_menu">
-											<li><a href="<?= base_url('mediospagos/index'); ?>">Ver medios</a></li>
-											<li><a href="<?= base_url('mediospagos/add'); ?>">Agregar medios</a></li>
+											<?= opcion("mediospagos/index",$ar_permitidos,"Ver medios") ?>
+											<?= opcion("mediospagos/add",$ar_permitidos,"Agregar medios") ?>
 										</ul>
 									</li>
+									<?php endif; ?>
 								</ul>
 							</div>
+							<?php endif; ?>
 
 							<!-- ===== SECCION: RRHH ===== -->
+							<?php if (busca_en('empleados', $ar_permitidos)): ?>
 							<div class="menu_section">
 								<h3>RRHH</h3>
 								<ul class="nav side-menu">
 									<li><a><i class='bx bx-id-card'></i> Empleados <span class="fa fa-chevron-down"></span></a>
 										<ul class="nav child_menu">
-											<li><a href="<?= base_url('empleados/index') ?>">Listar</a></li>
-											<li><a href="<?= base_url('empleados/add') ?>">Agregar</a></li>
+											<?= opcion("empleados/index",$ar_permitidos,"Listar") ?>
+											<?= opcion("empleados/add",$ar_permitidos,"Agregar") ?>
 										</ul>
 									</li>
 								</ul>
 							</div>
+							<?php endif; ?>
 
-							<!-- ===== SECCION: REPORTES & CONFIG ===== -->
+							<!-- ===== SECCION: REPORTES ===== -->
+							<?php if (busca_en('reportes', $ar_permitidos)): ?>
 							<div class="menu_section">
 								<h3>Reportes</h3>
 								<ul class="nav side-menu">
+									<?php if (busca_en('reportes', $ar_permitidos)): ?>
 									<li><a><i class='bx bx-bar-chart-alt-2'></i> Reportes <span class="fa fa-chevron-down"></span></a>
 										<ul class="nav child_menu">
-											<li><a href="<?= base_url('reportes/contabilidad'); ?>">Contabilidad</a></li>
-											<li><a href="<?= base_url('reportes/ventas_detalles_prod'); ?>">Ventas x Producto</a></li>
-											<li><a href="<?= base_url('reportes/ventas_por_forma_pago'); ?>">Ventas x Forma de Pago</a></li>
-											<li><a href="<?= base_url('reportes/ganancias'); ?>">Ganancias Diarias</a></li>
-											<li><a href="<?= base_url('reportes/ganancias_detallado'); ?>">Ganancia Detalles</a></li>
-												<li><a href="<?= base_url('reportes/top_productos'); ?>">Top Productos</a></li>
-											<li><a href="<?= base_url('reportes/productos_sin_compra'); ?>">Productos sin compra</a></li>
-											<li><a href="<?= base_url('reportes/analisis'); ?>">Reportes para An&aacute;lisis</a></li>
-											<li><a href="<?= base_url('reportes/gastos_cajachica'); ?>">Gastos Caja Chica</a></li>
-											<li><a href="<?= base_url('reportes/cierre_diario'); ?>">Cierre Diario</a></li>
+											<?= opcion("reportes/contabilidad",$ar_permitidos,"Contabilidad") ?>
+											<?= opcion("reportes/ventas_detalles_prod",$ar_permitidos,"Ventas x Producto") ?>
+											<?= opcion("reportes/ventas_por_forma_pago",$ar_permitidos,"Ventas x Forma de Pago") ?>
+											<?= opcion("reportes/ganancias",$ar_permitidos,"Ganancias Diarias") ?>
+											<?= opcion("reportes/ganancias_detallado",$ar_permitidos,"Ganancia Detalles") ?>
+											<?= opcion("reportes/top_productos",$ar_permitidos,"Top Productos") ?>
+											<?= opcion("reportes/productos_sin_compra",$ar_permitidos,"Productos sin compra") ?>
+											<?= opcion("reportes/analisis",$ar_permitidos,"Reportes para An&aacute;lisis") ?>
+											<?= opcion("reportes/gastos_cajachica",$ar_permitidos,"Gastos Caja Chica") ?>
+											<?= opcion("reportes/cierre_diario",$ar_permitidos,"Cierre Diario") ?>
 										</ul>
 									</li>
+									<?php endif; ?>
 								</ul>
 							</div>
+							<?php endif; ?>
 
 							<!-- ===== SECCION: CONFIGURACION ===== -->
+							<?php if (busca_en(['usuarios','ajustes','clientes','proveedores','roles'], $ar_permitidos)): ?>
 							<div class="menu_section">
 								<h3>Configuraci&oacute;n</h3>
 								<ul class="nav side-menu">
+									<?php if (busca_en('usuarios', $ar_permitidos)): ?>
 									<li><a><i class='bx bx-user'></i> Usuarios <span class="fa fa-chevron-down"></span></a>
 										<ul class="nav child_menu">
 											<?= opcion("usuarios/ver_usuarios",$ar_permitidos,"Ver Usuarios") ?>
 											<?= opcion("usuarios/add",$ar_permitidos,"Agregar Usuarios") ?>
 										</ul>
 									</li>
+									<?php endif; ?>
+									<?php if (busca_en(['ajustes','clientes','proveedores'], $ar_permitidos)): ?>
 									<li><a><i class='bx bx-cog'></i> Ajustes <span class="fa fa-chevron-down"></span></a>
 										<ul class="nav child_menu">
-											<li><a href="<?= base_url('ajustes/index'); ?>">Ajustes</a></li>
+											<?= opcion("ajustes/index",$ar_permitidos,"Ajustes") ?>
+											<?php if (busca_en('clientes', $ar_permitidos)): ?>
 											<li><a><i class='bx bx-group'></i> Clientes <span class="fa fa-chevron-down"></span></a>
 												<ul class="nav child_menu">
-													<li><a href="<?= base_url('clientes/index') ?>">Listar</a></li>
-													<li><a href="<?= base_url('clientes/add') ?>">Agregar</a></li>
+													<?= opcion("clientes/index",$ar_permitidos,"Listar") ?>
+													<?= opcion("clientes/add",$ar_permitidos,"Agregar") ?>
 												</ul>
 											</li>
+											<?php endif; ?>
+											<?php if (busca_en('proveedores', $ar_permitidos)): ?>
 											<li><a><i class='bx bx-store'></i> Proveedores <span class="fa fa-chevron-down"></span></a>
 												<ul class="nav child_menu">
-													<li><a href="<?= base_url('proveedores/index'); ?>">Listar</a></li>
-													<li><a href="<?= base_url('proveedores/add'); ?>">Agregar</a></li>
+													<?= opcion("proveedores/index",$ar_permitidos,"Listar") ?>
+													<?= opcion("proveedores/add",$ar_permitidos,"Agregar") ?>
 												</ul>
 											</li>
+											<?php endif; ?>
 										</ul>
 									</li>
+									<?php endif; ?>
+									<?php if (busca_en('roles', $ar_permitidos)): ?>
+									<li><a><i class='bx bx-shield'></i> Roles <span class="fa fa-chevron-down"></span></a>
+										<ul class="nav child_menu">
+											<?= opcion("roles/index",$ar_permitidos,"Gestionar Roles") ?>
+											<?= opcion("roles/add",$ar_permitidos,"Nuevo Rol") ?>
+										</ul>
+									</li>
+									<?php endif; ?>
+								</ul>
+							</div>
+							<?php endif; ?>
+
+							<!-- Cerrar Sesión siempre visible -->
+							<div class="menu_section">
+								<ul class="nav side-menu">
 									<li>
 										<a href="<?= site_url('welcome/cierra_sesion'); ?>">
 											<i class='bx bx-power-off'></i> Cerrar Sesi&oacute;n
@@ -395,23 +444,43 @@ if (!isset($_SESSION["usuario"])){
 	</body>
 </html>
 <?php } 
-function opcion($ruta,$ar_permitidos,$etiqueta){
-	$rpta = "";
-	$grupo_id = $_SESSION["group_id"];
-	$ar_partes = explode("/", $ruta);
-	for($i=0; $i < count($ar_partes); $i++){
-		$palabra = $ar_partes[$i];
-		if (busca_en($palabra, $ar_permitidos)){
-			$rpta = "<li><a href=\"" . base_url($ruta) . "\">$etiqueta</a></li>";
-			break;
+/**
+ * Renderiza un <li> de menú solo si la ruta exacta está en los permisos del grupo.
+ */
+function opcion($ruta, $ar_permitidos, $etiqueta) {
+	foreach ($ar_permitidos as $item) {
+		if (trim(strtolower($item['modulo'])) === trim(strtolower($ruta))) {
+			return '<li><a href="' . base_url($ruta) . '">' . $etiqueta . '</a></li>';
 		}
 	}
-	return $rpta;
+	return '';
 }
 
-function busca_en($palabra, $ar){
-	foreach($ar as $item){
-		if($palabra == $item["modulo"]){
+/**
+ * Devuelve true si algún permiso del grupo pertenece a los controladores indicados.
+ * $controladores puede ser string o array de strings (nombres de controlador).
+ * Ejemplo: busca_en('sales', $ar)  o  busca_en(['welcome','caja'], $ar)
+ */
+function busca_en($controladores, $ar) {
+	if (!is_array($controladores)) {
+		$controladores = [$controladores];
+	}
+	foreach ($ar as $item) {
+		$partes = explode('/', trim(strtolower($item['modulo'])));
+		if (in_array($partes[0], $controladores)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+/**
+ * Devuelve true si alguna de las rutas EXACTAS está en los permisos del grupo.
+ * Útil para secciones cuyos submódulos pertenecen a distintos controladores.
+ */
+function tiene_rutas($rutas_exactas, $ar) {
+	foreach ($ar as $item) {
+		if (in_array(trim(strtolower($item['modulo'])), $rutas_exactas)) {
 			return true;
 		}
 	}

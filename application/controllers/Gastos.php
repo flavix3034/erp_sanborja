@@ -1,10 +1,9 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
-class Gastos extends CI_Controller {
+class Gastos extends MY_Controller {
 
 	function __construct() {
 		parent::__construct();
-		session_start();
 		$this->load->model('gastos_model');
 		$this->Igv = 18;
 	}

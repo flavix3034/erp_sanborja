@@ -1,17 +1,10 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 //ini_set('display_errors', '1');
 //error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT & ~E_USER_NOTICE & ~E_USER_DEPRECATED);
-class Sales extends CI_Controller {
+class Sales extends MY_Controller {
 
     function __construct() {
         parent::__construct();
-
-        session_start();
-
-        if (!isset($_SESSION["store_id"])) {
-            die("No tiene sesión disponible. <a href=\"" . base_url("welcome/index") . "\">Login</a>");
-        }
-        
         $this->load->model('sales_model');
 		$this->Igv                = 18;  // ojo sistema erp
         $this->digital_file_types = 'zip|pdf|doc|docx|xls|xlsx|jpg|png|gif';

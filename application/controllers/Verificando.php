@@ -1,5 +1,5 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed');
-class Verificando extends CI_Controller 
+class Verificando extends MY_Controller
 {
 
     public $nIgv = 18;

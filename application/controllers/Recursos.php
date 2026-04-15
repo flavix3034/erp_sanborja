@@ -1,11 +1,9 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed');
-class Recursos extends CI_Controller //MY_Controller
+class Recursos extends MY_Controller
 {
 
     function __construct() {
-        
         parent::__construct();
-        session_start();
 
         //if (!$this->loggedIn) {
         //    redirect('login');

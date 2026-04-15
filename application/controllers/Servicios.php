@@ -1,16 +1,10 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Servicios extends CI_Controller
+class Servicios extends MY_Controller
 {
     function __construct() {
         parent::__construct();
-        session_start();
-        
-        if (!isset($_SESSION["user_id"])) {
-            die("No tiene sesión disponible. <a href=\"" . base_url("welcome/index") . "\">Login</a>");
-        }
-        
         $this->load->model('Servicios_model');
         $this->load->helper('url');
         $this->load->helper('form');

@@ -1,12 +1,10 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Categorias extends CI_controller
+class Categorias extends MY_Controller
 {
 
     function __construct() {
         parent::__construct();
-
-        session_start();
         $this->load->model('categorias_model');
     }
 

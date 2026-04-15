@@ -1,0 +1,5 @@
+tipo;codigo;nombre;marca;categoria;unidad;precio_x_menor;precio_x_mayor;alerta_cantidad;Color;Capacidad
+P;PAPA001;PAPAS FRITAS;SAMSUNG;6;1;15.00;12.00;10;;
+PV;;AUDIFONO BLUETOOTH;UGREEN;6;1;50.00;40.00;5;;
+V;AU001;;;;;60.00;50.00;1;Blanco;
+V;AU001;;;;;55.00;45.00;1;Azul;

@@ -35,9 +35,8 @@
             $fecha_ingreso  = $r->fecha_ingreso;
         }
 
-        $cSql = "select a.*, b.name nombre
-            from tec_compra_items a 
-            left join tec_products b on a.product_id = b.id
+        $cSql = "select a.*, a.product_name nombre
+            from tec_compra_items a
             where a.compra_id = ?";
         $query = $this->db->query($cSql,array($id_compras));
         $ni = 0;

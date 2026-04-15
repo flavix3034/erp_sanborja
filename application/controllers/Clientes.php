@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Clientes extends CI_Controller {
+class Clientes extends MY_Controller {
 
 	/**
 	 * Index Page for this controller.
@@ -20,9 +20,6 @@ class Clientes extends CI_Controller {
 	 */
     function __construct(){
         parent::__construct();
-        session_start();
-        //$this->load->helper('url');
-        //$this->load->clientes();
     }
 
 	public function index()

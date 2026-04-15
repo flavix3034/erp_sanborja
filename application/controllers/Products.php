@@ -1,13 +1,12 @@
 <?php 
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Products extends CI_controller
+class Products extends MY_Controller
 {
     public $Igv = 18;
-    
+
     function __construct() {
         parent::__construct();
-        session_start();
         $this->load->model('products_model');
     }
 
