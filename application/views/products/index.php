@@ -211,6 +211,10 @@
     }
 
     function editar(id){
-        window.location.href = "<?= base_url("products/add/") ?>" + id 
+        window.location.href = "<?= base_url("products/add/") ?>" + id
+    }
+
+    function printEtiqueta(product_id, variant_id) {
+        window.open('<?= base_url("products/print_etiqueta/") ?>' + product_id + '/' + variant_id, '_blank');
     }
 </script>

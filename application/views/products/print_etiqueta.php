@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Etiqueta <?= htmlspecialchars($producto->sku) ?></title>
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+<style>
+	@page {
+		size: 50mm 25mm;
+		margin: 0;
+	}
+
+	* { margin: 0; padding: 0; box-sizing: border-box; }
+
+	body {
+		font-family: Arial, Helvetica, sans-serif;
+		background: #f0f0f0;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		padding-top: 20px;
+	}
+
+	.no-print { margin-bottom: 12px; }
+	.no-print button {
+		padding: 6px 18px;
+		font-size: 13px;
+		cursor: pointer;
+		border: 1px solid #ccc;
+		border-radius: 4px;
+		background: #fff;
+		margin: 0 4px;
+	}
+	.no-print button.btn-print {
+		background: #337ab7;
+		color: #fff;
+		border-color: #337ab7;
+	}
+
+	.etiqueta {
+		width: 50mm;
+		height: 25mm;
+		background: #fff;
+		border: 1px dashed #ccc;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		padding: 1mm 2mm;
+		overflow: hidden;
+	}
+
+	.etiqueta svg {
+		max-width: 46mm;
+		height: 10mm;
+	}
+
+	.etiqueta .codigo {
+		font-size: 8px;
+		letter-spacing: 1px;
+		margin-top: 0.5mm;
+	}
+
+	.etiqueta .nombre {
+		font-size: 7.5px;
+		font-weight: bold;
+		text-align: center;
+		line-height: 1.3;
+		margin-top: 0.5mm;
+		max-width: 46mm;
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+	}
+
+	.etiqueta .sku {
+		font-size: 7px;
+		text-align: center;
+		margin-top: 0.5mm;
+	}
+
+	@media print {
+		html, body {
+			width: 50mm;
+			height: 25mm;
+			background: none;
+			padding: 0;
+			margin: 0;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+		.no-print { display: none !important; }
+		.etiqueta {
+			border: none;
+			width: 50mm;
+			height: 25mm;
+		}
+	}
+</style>
+</head>
+<body>
+
+<div class="no-print">
+	<button class="btn-print" onclick="window.print()"><b>&#128424;</b> Imprimir</button>
+	<button onclick="window.close()">Cerrar</button>
+</div>
+
+<div class="etiqueta">
+	<svg id="barcode"></svg>
+	<div class="codigo"><?= htmlspecialchars($producto->barcode) ?></div>
+	<div class="nombre"><?= htmlspecialchars(mb_strtoupper($producto->name)) ?></div>
+	<div class="sku">SKU: <?= htmlspecialchars($producto->sku) ?></div>
+</div>
+
+<script>
+JsBarcode("#barcode", "<?= addslashes($producto->barcode) ?>", {
+	format: "CODE128",
+	width: 1.5,
+	height: 28,
+	displayValue: false,
+	margin: 0
+});
+</script>
+
+</body>
+</html>

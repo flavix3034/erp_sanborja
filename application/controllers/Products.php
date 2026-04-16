@@ -689,7 +689,8 @@ class Products extends MY_Controller
 
         $cSql       = "SELECT a.id, a.code, a.name, b.name category_id, a.marca, a.alert_cantidad, a.price, a.precio_x_mayor,
             concat('<button onclick=editar(', a.id, ')><i class=\'glyphicon glyphicon-edit\'></i></button>',
-            '<button onclick=anular(', a.id, ') style=\'color:rgb(255,100,100)\' title=\'Anular\'><i class=\'glyphicon glyphicon-remove\'></i></button>')
+            '<button onclick=anular(', a.id, ') style=\'color:rgb(255,100,100)\' title=\'Anular\'><i class=\'glyphicon glyphicon-remove\'></i></button>',
+            '<button onclick=printEtiqueta(', a.id, ',0) title=\'Etiqueta\'><i class=\'glyphicon glyphicon-barcode\'></i></button>')
             as acciones, z.costo_con_igv
             FROM tec_products a
             LEFT JOIN (
@@ -707,7 +708,8 @@ class Products extends MY_Controller
             b.name category_id, a.marca, a.alert_cantidad,
             COALESCE(pv.price, a.price) price, COALESCE(pv.precio_x_mayor, a.precio_x_mayor) precio_x_mayor,
             concat('<button onclick=editar(', a.id, ')><i class=\'glyphicon glyphicon-edit\'></i></button>',
-            '<button onclick=anular(', a.id, ') style=\'color:rgb(255,100,100)\' title=\'Anular\'><i class=\'glyphicon glyphicon-remove\'></i></button>')
+            '<button onclick=anular(', a.id, ') style=\'color:rgb(255,100,100)\' title=\'Anular\'><i class=\'glyphicon glyphicon-remove\'></i></button>',
+            '<button onclick=printEtiqueta(', a.id, ',', pv.id, ') title=\'Etiqueta\'><i class=\'glyphicon glyphicon-barcode\'></i></button>')
             as acciones, zv.costo_con_igv
             FROM tec_product_variantes pv
             INNER JOIN tec_products a ON pv.product_id = a.id
@@ -805,6 +807,24 @@ class Products extends MY_Controller
 
     function gen_barcode($product_code = NULL, $bcs = 'code128', $height = 60, $text = 1) {
         return $this->tec->barcode($product_code, $bcs, $height, $text);
+    }
+
+    function print_etiqueta($product_id, $variant_id = 0) {
+        if ($variant_id > 0) {
+            $row = $this->db->query(
+                "SELECT pv.barcode, pv.sku, fn_product_display_name(pv.product_id, pv.id) as name
+                 FROM tec_product_variantes pv WHERE pv.id = ?",
+                [(int)$variant_id]
+            )->row();
+        } else {
+            $row = $this->db->query(
+                "SELECT code as barcode, code as sku, name FROM tec_products WHERE id = ?",
+                [(int)$product_id]
+            )->row();
+        }
+        if (!$row) { show_error('Producto no encontrado', 404); return; }
+        $data['producto'] = $row;
+        $this->load->view('products/print_etiqueta', $data);
     }
 
     function print_inicial(){
