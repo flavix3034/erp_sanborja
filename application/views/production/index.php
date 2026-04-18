@@ -313,16 +313,13 @@ if (!isset($_SESSION["usuario"])){
 
 						<!-- /menu footer buttons -->
 						<div class="sidebar-footer hidden-small">
-							<a data-toggle="tooltip" data-placement="top" title="Settings">
+							<a data-toggle="tooltip" data-placement="top" title="Ajustes" href="<?= site_url('ajustes/index'); ?>">
 								<span class="glyphicon glyphicon-cog" aria-hidden="true"></span>
 							</a>
-							<a data-toggle="tooltip" data-placement="top" title="FullScreen">
+							<a data-toggle="tooltip" data-placement="top" title="Pantalla Completa" href="javascript:void(0)" onclick="if(!document.fullscreenElement){document.documentElement.requestFullscreen();}else{document.exitFullscreen();} return false;">
 								<span class="glyphicon glyphicon-fullscreen" aria-hidden="true"></span>
 							</a>
-							<a data-toggle="tooltip" data-placement="top" title="Lock">
-								<span class="glyphicon glyphicon-eye-close" aria-hidden="true"></span>
-							</a>
-							<a data-toggle="tooltip" data-placement="top" title="Logout" href="login.html">
+							<a data-toggle="tooltip" data-placement="top" title="Cerrar Sesión" href="<?= site_url('welcome/cierra_sesion'); ?>">
 								<span class="glyphicon glyphicon-off" aria-hidden="true"></span>
 							</a>
 						</div>
