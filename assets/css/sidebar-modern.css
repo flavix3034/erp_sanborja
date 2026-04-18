@@ -343,6 +343,8 @@ html, body {
 
 /* ======================== SIDEBAR FOOTER ======================== */
 .sidebar-footer {
+	position: relative !important;
+	bottom: auto !important;
 	background: var(--sb-bg) !important;
 	width: var(--sb-width) !important;
 	border-top: 1px solid var(--sb-border);
