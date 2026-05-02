@@ -241,6 +241,7 @@ if (!isset($_SESSION["usuario"])){
 											<?= opcion("reportes/productos_sin_compra",$ar_permitidos,"Productos sin compra") ?>
 											<?= opcion("reportes/analisis",$ar_permitidos,"Reportes para An&aacute;lisis") ?>
 											<?= opcion("reportes/gastos_cajachica",$ar_permitidos,"Gastos Caja Chica") ?>
+											<?= opcion("reportes/gastos_por_tipo",$ar_permitidos,"Gastos x Tipo") ?>
 											<?= opcion("reportes/cierre_diario",$ar_permitidos,"Cierre Diario") ?>
 										</ul>
 									</li>

@@ -43,7 +43,11 @@
       "Bash(/c/xampp/php/php.exe -l /c/xampp/htdocs/erp_sanborja/application/models/Roles_model.php)",
       "Bash(/c/xampp/php/php.exe -l /c/xampp/htdocs/erp_sanborja/application/controllers/__TRACKED_VAR__)",
       "Bash(./mysql/bin/mysql.exe -u root erp_sanborja)",
-      "Bash(/c/xampp/php/php.exe -l /c/xampp/htdocs/erp_sanborja/application/views/roles/form.php)"
+      "Bash(/c/xampp/php/php.exe -l /c/xampp/htdocs/erp_sanborja/application/views/roles/form.php)",
+      "Bash(/c/xampp/mysql/bin/mysql.exe -u root erp_sanborja -e \"SELECT id, modulo, parent_id FROM tec_modulos WHERE modulo LIKE 'reportes%' ORDER BY id;\")",
+      "Bash(/c/xampp/mysql/bin/mysql.exe -u root erp_sanborja -e \"SELECT DISTINCT a.grupo_id FROM tec_grupo_modulos a WHERE a.modulo_id IN \\(SELECT id FROM tec_modulos WHERE modulo LIKE 'reportes/%'\\);\")",
+      "Bash(/c/xampp/mysql/bin/mysql.exe -u root erp_sanborja -e ' *)",
+      "Bash(/c/xampp/mysql/bin/mysql.exe -u root erp_sanborja -e \"SHOW TABLES LIKE 'tec_grup%';\")"
     ],
     "additionalDirectories": [
       "C:\\xampp\\htdocs\\erp_sanborja\\application\\views",

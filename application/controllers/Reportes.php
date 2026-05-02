@@ -920,4 +920,96 @@ class Reportes extends MY_Controller {
         echo $this->json_datatable($ar_campos, $result);
     }
 
+    function gastos_por_tipo($cDesde='null', $cHasta='null') {
+        $this->data['page_title'] = "Gastos por Tipo";
+        $this->data['desde'] = $cDesde;
+        $this->data['hasta'] = $cHasta;
+        $this->template->load('production/index', 'reportes/gastos_por_tipo', $this->data);
+    }
+
+    function get_gastos_por_tipo($cDesde, $cHasta) {
+        $cad_store1 = $cad_store2 = $cad_store3 = "";
+        $cad_desde1 = $cad_desde2 = $cad_desde3 = "";
+        $cad_hasta1 = $cad_hasta2 = $cad_hasta3 = "";
+
+        $store_id = isset($_SESSION['store_id']) ? intval($_SESSION['store_id']) : null;
+        $is_admin = isset($_SESSION['group_id']) && $_SESSION['group_id'] == 1;
+
+        if ($store_id && !$is_admin) {
+            $cad_store1 = " AND g.store_id = {$store_id}";
+            $cad_store2 = " AND per.store_id = {$store_id}";
+            $cad_store3 = " AND r.store_id = {$store_id}";
+        }
+        if (!is_null($cDesde) && strlen($cDesde) > 0 && $cDesde != 'null') {
+            $cad_desde1 = " AND date(g.fecha) >= '{$cDesde}'";
+            $cad_desde2 = " AND date(g.fecha_gasto) >= '{$cDesde}'";
+            $cad_desde3 = " AND r.fecha >= '{$cDesde}'";
+        }
+        if (!is_null($cHasta) && strlen($cHasta) > 0 && $cHasta != 'null') {
+            $cad_hasta1 = " AND date(g.fecha) <= '{$cHasta}'";
+            $cad_hasta2 = " AND date(g.fecha_gasto) <= '{$cHasta}'";
+            $cad_hasta3 = " AND r.fecha <= '{$cHasta}'";
+        }
+
+        $cSql = "SELECT 'Gasto' AS origen,
+                    date(g.fecha) AS fecha,
+                    COALESCE(gc.nombre, '-') AS categoria,
+                    COALESCE(tp.nombre, '-') AS beneficiario,
+                    COALESCE(td.descrip, '-') AS tipo_doc,
+                    COALESCE(g.nroDoc, '') AS nroDoc,
+                    gi.descripcion,
+                    ROUND(gi.subtotal, 2) AS monto
+                 FROM tec_gastos g
+                 INNER JOIN tec_gastos_items gi ON g.id = gi.gasto_id
+                 LEFT JOIN tec_gastos_categorias gc ON gi.categoria_id = gc.id
+                 LEFT JOIN tec_proveedores tp ON g.proveedor_id = tp.id
+                 LEFT JOIN tec_tipos_doc td ON g.tipoDoc = td.id
+                 WHERE 1=1{$cad_store1}{$cad_desde1}{$cad_hasta1}
+
+                 UNION ALL
+
+                 SELECT 'Caja Chica' AS origen,
+                    date(g.fecha_gasto) AS fecha,
+                    c.nombre AS categoria,
+                    COALESCE(g.beneficiario, '-') AS beneficiario,
+                    CASE g.tipo_documento
+                        WHEN 'FACTURA' THEN 'Factura'
+                        WHEN 'BOLETA' THEN 'Boleta'
+                        WHEN 'RECIBO_HONORARIOS' THEN 'Rec. Honorarios'
+                        WHEN 'SIN_COMPROBANTE' THEN 'Sin Comprobante'
+                        ELSE '-'
+                    END AS tipo_doc,
+                    CASE WHEN g.doc_serie IS NOT NULL AND g.doc_serie != ''
+                         THEN CONCAT(g.doc_serie, '-', g.doc_numero)
+                         ELSE '' END AS nroDoc,
+                    g.descripcion,
+                    ROUND(g.monto, 2) AS monto
+                 FROM tec_cajachica_gastos g
+                 INNER JOIN tec_cajachica_categorias c ON g.categoria_id = c.id
+                 INNER JOIN tec_cajachica_periodos per ON g.periodo_id = per.id
+                 WHERE 1=1{$cad_store2}{$cad_desde2}{$cad_hasta2}
+
+                 UNION ALL
+
+                 SELECT 'Egreso Caja' AS origen,
+                    r.fecha,
+                    'Sin Categoría' AS categoria,
+                    COALESCE(m.referencia, '-') AS beneficiario,
+                    'Manual' AS tipo_doc,
+                    '' AS nroDoc,
+                    m.descripcion,
+                    ROUND(m.monto, 2) AS monto
+                 FROM tec_caja_movimientos m
+                 INNER JOIN tec_registro_cajas r ON m.registro_caja_id = r.id
+                 WHERE m.tipo = 'EGRESO'{$cad_store3}{$cad_desde3}{$cad_hasta3}
+
+                 ORDER BY fecha DESC, origen ASC";
+
+        $result = $this->db->query($cSql)->result_array();
+
+        $ar_campos = array("origen", "fecha", "categoria", "beneficiario", "tipo_doc", "nroDoc", "descripcion", "monto");
+
+        echo $this->json_datatable($ar_campos, $result);
+    }
+
 }

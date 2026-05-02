@@ -111,6 +111,84 @@ class Gastos_model extends CI_Model
         $this->db->where('id', $id)->update('tec_gastos_categorias', array('activo' => ''));
     }
 
+    function get_detalle_todos_gastos($store_id, $desde, $hasta) {
+        $cad_store1 = $cad_store2 = $cad_store3 = "";
+        $cad_desde1 = $cad_desde2 = $cad_desde3 = "";
+        $cad_hasta1 = $cad_hasta2 = $cad_hasta3 = "";
+
+        if (!is_null($store_id) && strlen($store_id) > 0 && $store_id != 'null') {
+            $cad_store1 = " AND g.store_id = {$store_id}";
+            $cad_store2 = " AND per.store_id = {$store_id}";
+            $cad_store3 = " AND r.store_id = {$store_id}";
+        }
+        if (!is_null($desde) && strlen($desde) > 0 && $desde != 'null') {
+            $cad_desde1 = " AND date(g.fecha) >= '{$desde}'";
+            $cad_desde2 = " AND date(g.fecha_gasto) >= '{$desde}'";
+            $cad_desde3 = " AND r.fecha >= '{$desde}'";
+        }
+        if (!is_null($hasta) && strlen($hasta) > 0 && $hasta != 'null') {
+            $cad_hasta1 = " AND date(g.fecha) <= '{$hasta}'";
+            $cad_hasta2 = " AND date(g.fecha_gasto) <= '{$hasta}'";
+            $cad_hasta3 = " AND r.fecha <= '{$hasta}'";
+        }
+
+        $cSql = "SELECT 'Gasto' AS origen,
+                    date(g.fecha) AS fecha,
+                    COALESCE(gc.nombre, '-') AS categoria,
+                    COALESCE(tp.nombre, '-') AS beneficiario,
+                    COALESCE(td.descrip, '-') AS tipo_doc,
+                    COALESCE(g.nroDoc, '') AS nroDoc,
+                    gi.descripcion,
+                    ROUND(gi.subtotal, 2) AS monto
+                 FROM tec_gastos g
+                 INNER JOIN tec_gastos_items gi ON g.id = gi.gasto_id
+                 LEFT JOIN tec_gastos_categorias gc ON gi.categoria_id = gc.id
+                 LEFT JOIN tec_proveedores tp ON g.proveedor_id = tp.id
+                 LEFT JOIN tec_tipos_doc td ON g.tipoDoc = td.id
+                 WHERE 1=1{$cad_store1}{$cad_desde1}{$cad_hasta1}
+
+                 UNION ALL
+
+                 SELECT 'Caja Chica' AS origen,
+                    date(g.fecha_gasto) AS fecha,
+                    c.nombre AS categoria,
+                    COALESCE(g.beneficiario, '-') AS beneficiario,
+                    CASE g.tipo_documento
+                        WHEN 'FACTURA' THEN 'Factura'
+                        WHEN 'BOLETA' THEN 'Boleta'
+                        WHEN 'RECIBO_HONORARIOS' THEN 'Rec. Honorarios'
+                        WHEN 'SIN_COMPROBANTE' THEN 'Sin Comprobante'
+                        ELSE '-'
+                    END AS tipo_doc,
+                    CASE WHEN g.doc_serie IS NOT NULL AND g.doc_serie != ''
+                         THEN CONCAT(g.doc_serie, '-', g.doc_numero)
+                         ELSE '' END AS nroDoc,
+                    g.descripcion,
+                    ROUND(g.monto, 2) AS monto
+                 FROM tec_cajachica_gastos g
+                 INNER JOIN tec_cajachica_categorias c ON g.categoria_id = c.id
+                 INNER JOIN tec_cajachica_periodos per ON g.periodo_id = per.id
+                 WHERE 1=1{$cad_store2}{$cad_desde2}{$cad_hasta2}
+
+                 UNION ALL
+
+                 SELECT 'Egreso Caja' AS origen,
+                    r.fecha,
+                    'Sin Categoría' AS categoria,
+                    COALESCE(m.referencia, '-') AS beneficiario,
+                    'Manual' AS tipo_doc,
+                    '' AS nroDoc,
+                    m.descripcion,
+                    ROUND(m.monto, 2) AS monto
+                 FROM tec_caja_movimientos m
+                 INNER JOIN tec_registro_cajas r ON m.registro_caja_id = r.id
+                 WHERE m.tipo = 'EGRESO'{$cad_store3}{$cad_desde3}{$cad_hasta3}
+
+                 ORDER BY fecha DESC, origen ASC";
+
+        return $this->db->query($cSql)->result_array();
+    }
+
     function get_resumen_por_categoria($store_id, $desde, $hasta) {
         $cad = "";
         if ($store_id && $store_id != 'null') $cad .= " AND g.store_id = {$store_id}";
