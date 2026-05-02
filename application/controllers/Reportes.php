@@ -958,7 +958,8 @@ class Reportes extends MY_Controller {
                     COALESCE(td.descrip, '-') AS tipo_doc,
                     COALESCE(g.nroDoc, '') AS nroDoc,
                     gi.descripcion,
-                    ROUND(gi.subtotal, 2) AS monto
+                    ROUND(gi.subtotal * (1 + IF(g.tipoDoc = 'G', 0, g.por_igv)/100), 2) AS monto,
+                    ROUND(IF(g.tipoDoc = 1, gi.subtotal, gi.subtotal * (1 + IF(g.tipoDoc = 'G', 0, g.por_igv)/100)), 2) AS valor
                  FROM tec_gastos g
                  INNER JOIN tec_gastos_items gi ON g.id = gi.gasto_id
                  LEFT JOIN tec_gastos_categorias gc ON gi.categoria_id = gc.id
@@ -983,7 +984,8 @@ class Reportes extends MY_Controller {
                          THEN CONCAT(g.doc_serie, '-', g.doc_numero)
                          ELSE '' END AS nroDoc,
                     g.descripcion,
-                    ROUND(g.monto, 2) AS monto
+                    ROUND(g.monto, 2) AS monto,
+                    ROUND(IF(g.tipo_documento = 'FACTURA', g.monto / (1 + 18/100), g.monto), 2) AS valor
                  FROM tec_cajachica_gastos g
                  INNER JOIN tec_cajachica_categorias c ON g.categoria_id = c.id
                  INNER JOIN tec_cajachica_periodos per ON g.periodo_id = per.id
@@ -998,7 +1000,8 @@ class Reportes extends MY_Controller {
                     'Manual' AS tipo_doc,
                     '' AS nroDoc,
                     m.descripcion,
-                    ROUND(m.monto, 2) AS monto
+                    ROUND(m.monto, 2) AS monto,
+                    ROUND(m.monto, 2) AS valor
                  FROM tec_caja_movimientos m
                  INNER JOIN tec_registro_cajas r ON m.registro_caja_id = r.id
                  WHERE m.tipo = 'EGRESO'{$cad_store3}{$cad_desde3}{$cad_hasta3}
@@ -1007,7 +1010,7 @@ class Reportes extends MY_Controller {
 
         $result = $this->db->query($cSql)->result_array();
 
-        $ar_campos = array("origen", "fecha", "categoria", "beneficiario", "tipo_doc", "nroDoc", "descripcion", "monto");
+        $ar_campos = array("origen", "fecha", "categoria", "beneficiario", "tipo_doc", "nroDoc", "descripcion", "monto", "valor");
 
         echo $this->json_datatable($ar_campos, $result);
     }

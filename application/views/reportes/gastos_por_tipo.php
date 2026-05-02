@@ -52,11 +52,13 @@
                         <th>Tipo Doc.</th>
                         <th>N&deg; Doc.</th>
                         <th>Descripci&oacute;n</th>
-                        <th>Monto</th>
+                        <th>Monto del Gasto<br>(Incluye IGV)</th>
+                        <th>Valor<br>(Sin IGV)</th>
                     </tr>
                 </thead>
                 <tfoot>
                     <tr>
+                        <th></th>
                         <th></th>
                         <th></th>
                         <th></th>
@@ -83,7 +85,7 @@
                 { extend: 'excelHtml5', footer: true, title: 'Gastos_por_Tipo' },
                 { extend: 'csvHtml5', footer: true, title: 'Gastos_por_Tipo' },
                 { extend: 'pdfHtml5', footer: true, orientation: 'landscape', pageSize: 'A4', title: 'Gastos por Tipo',
-                    exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6, 7] }
+                    exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6, 7, 8] }
                 },
                 { extend: 'colvis', text: 'Filtro'}
             ],
@@ -99,13 +101,15 @@
                             i : 0;
                 };
 
-                total = api.column(7).data().reduce( function (a, b){return intVal(a) + intVal(b);}, 0);
+                var totalMonto = api.column(7).data().reduce( function (a, b){return intVal(a) + intVal(b);}, 0);
+                var totalValor = api.column(8).data().reduce( function (a, b){return intVal(a) + intVal(b);}, 0);
 
-                $( api.column(7).footer() ).html('S/ '+ total.toFixed(2));
+                $( api.column(7).footer() ).html('S/ '+ totalMonto.toFixed(2));
+                $( api.column(8).footer() ).html('S/ '+ totalValor.toFixed(2));
             },
 
             "columnDefs":[
-                { className: "suma_fila", "aTargets": [7] }
+                { className: "suma_fila", "aTargets": [7, 8] }
             ]
 
         });
